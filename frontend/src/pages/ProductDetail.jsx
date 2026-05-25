@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star, Heart, ShoppingCart, Truck, Shield, RotateCcw,
-  ChevronLeft, ChevronRight, Minus, Plus, Package, CheckCircle2,
+  ChevronLeft, ChevronRight, Minus, Plus, Package,
 } from 'lucide-react';
 import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
@@ -11,7 +11,6 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice, discountPercent, formatDate } from '../utils/formatters';
 import ProductCard from '../components/product/ProductCard';
-import ProductCardSkeleton from '../components/product/ProductCardSkeleton';
 
 export default function ProductDetail() {
   const { id } = useParams();

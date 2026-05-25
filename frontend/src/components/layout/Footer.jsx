@@ -77,9 +77,9 @@ export default function Footer() {
           <p className="text-sm text-dark-500">© 2026 NexCart. All rights reserved.</p>
           <div className="flex items-center gap-4">
             {[Globe, MessageCircle].map((Icon, i) => (
-              <a key={i} href="#" className="p-2 rounded-lg hover:bg-dark-700 text-dark-500 hover:text-primary-400 transition-all duration-200">
+              <button key={i} type="button" className="p-2 rounded-lg hover:bg-dark-700 text-dark-500 hover:text-primary-400 transition-all duration-200">
                 <Icon className="w-4 h-4" />
-              </a>
+              </button>
             ))}
           </div>
           <p className="text-sm text-dark-500">Made with ❤️ in India 🇮🇳</p>

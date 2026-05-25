@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, Users, TrendingUp,
-  Plus, Edit3, Trash2, CheckCircle2, Loader2, BarChart2, ArrowUpRight,
+  Plus, Edit3, Trash2, Loader2, BarChart2, ArrowUpRight,
   X, Save, Upload,
 } from 'lucide-react';
 import { adminService } from '../services/productService';
@@ -12,7 +12,7 @@ import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
 import { useAuth } from '../context/AuthContext';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar,
+  ResponsiveContainer,
 } from 'recharts';
 import toast from 'react-hot-toast';
 
@@ -23,17 +23,17 @@ export default function AdminDashboard() {
   const [data, setData]     = useState(null);
   const [orders, setOrders] = useState([]);
   const [users, setUsers]   = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [productModal, setProductModal] = useState(null); // null | 'create' | product object
-  const [productForm, setProductForm]   = useState({});
   const [saving, setSaving] = useState(false);
   const [imageMode, setImageMode] = useState('url'); // 'url' | 'upload'
   const [productImageFile, setProductImageFile] = useState(null);
   const [productImagePreview, setProductImagePreview] = useState('');
 
+  const [productModal, setProductModal] = useState(null); // null | 'create' | product object
+  const [productForm, setProductForm]   = useState({});
+  const [loading, setLoading]           = useState(true);
+
   useEffect(() => {
-    if (!isAdmin) { navigate('/'); return; }
+    if (!isAdmin) { navigate('/'); return; } // eslint-disable-line react-hooks/exhaustive-deps
     loadData();
   }, [isAdmin]);
 

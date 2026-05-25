@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, X, ChevronDown, Search, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, Search } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import ProductCardSkeleton from '../components/product/ProductCardSkeleton';
 import { productService } from '../services/productService';

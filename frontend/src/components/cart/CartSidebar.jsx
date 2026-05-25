@@ -7,7 +7,7 @@ import { formatPrice } from '../../utils/formatters';
 
 export default function CartSidebar() {
   const { cart, cartTotal, sidebarOpen, setSidebarOpen, updateQuantity, removeFromCart, cartLoading } = useCart();
-  const { user } = useAuth();
+  const { user: _user } = useAuth(); // eslint-disable-line no-unused-vars
   const navigate = useNavigate();
 
   const handleCheckout = () => {

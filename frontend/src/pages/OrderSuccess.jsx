@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Package, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle2, Package, Home } from 'lucide-react';
 import { orderService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
 

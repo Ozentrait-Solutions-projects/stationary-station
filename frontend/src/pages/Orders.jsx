@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams as _useParams, Link } from 'react-router-dom'; // eslint-disable-line no-unused-vars
 import { Package, ArrowLeft } from 'lucide-react';
 import { orderService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
 
 export default function Orders() {
-  const { id } = useParams(); // May be used for single order view
+  // useParams available if single order view needed in future
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
