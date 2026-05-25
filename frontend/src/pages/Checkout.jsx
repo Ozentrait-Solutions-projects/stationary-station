@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, CreditCard, Tag, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
+import { MapPin, CreditCard, Tag, CheckCircle2, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { orderService } from '../services/productService';
 import { couponService } from '../services/productService';
@@ -15,7 +15,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function Checkout() {
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, cartTotal } = useCart();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1); // 1=Address, 2=Payment, 3=Review

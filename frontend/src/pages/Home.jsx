@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight, Zap, Shield, Truck, RotateCcw, Star,
-  Smartphone, Laptop, Shirt, Home as HomeIcon, Book, Dumbbell, Sparkles, Gamepad2,
+  Smartphone, Shirt, Home as HomeIcon, Book, Dumbbell, Sparkles, Gamepad2,
 } from 'lucide-react';
 
 import { productService } from '../services/productService';
 import ProductCard from '../components/product/ProductCard';
 import ProductCardSkeleton from '../components/product/ProductCardSkeleton';
-import { formatPrice } from '../utils/formatters';
 
 const CATEGORIES = [
   { name: 'Electronics',   icon: Smartphone,  color: 'from-blue-500 to-cyan-500',   bg: 'bg-blue-50 dark:bg-blue-900/20' },
@@ -66,7 +65,6 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
-  const navigate = useNavigate();
 
   useEffect(() => {
     productService.getFeatured()

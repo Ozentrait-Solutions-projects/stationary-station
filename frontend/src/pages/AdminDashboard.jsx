@@ -33,9 +33,9 @@ export default function AdminDashboard() {
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
-    if (!isAdmin) { navigate('/'); return; } // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isAdmin) { navigate('/'); return; }
     loadData();
-  }, [isAdmin]);
+  }, [isAdmin, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     setLoading(true);
