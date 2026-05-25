@@ -13,3 +13,6 @@ yarn-error.log*
 
 # uploads generated locally
 uploads/
+
+# database migration utility
+migrate_local_to_neon.js
