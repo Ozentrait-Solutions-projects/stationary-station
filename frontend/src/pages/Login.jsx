@@ -78,9 +78,9 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium text-[#E7E9EA]">Password</label>
-                <a href="#" className="text-xs text-[#007185] hover:text-[#FF9900] hover:underline transition-colors">
+                <Link to="#" className="text-xs text-[#007185] hover:text-[#FF9900] hover:underline transition-colors">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -114,9 +114,9 @@ export default function Login() {
 
           <p className="text-[10px] text-[#6B7280] mt-4 leading-relaxed">
             By continuing, you agree to NexCart's{' '}
-            <a href="#" className="text-[#007185] hover:underline">Conditions of Use</a>
+            <Link to="#" className="text-[#007185] hover:underline">Conditions of Use</Link>
             {' '}and{' '}
-            <a href="#" className="text-[#007185] hover:underline">Privacy Notice</a>.
+            <Link to="#" className="text-[#007185] hover:underline">Privacy Notice</Link>.
           </p>
         </div>
 

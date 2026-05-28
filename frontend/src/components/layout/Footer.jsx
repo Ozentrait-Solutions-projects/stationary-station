@@ -150,9 +150,9 @@ export default function Footer() {
             <p>© 2026 NexCart.com, Inc. or its affiliates. All rights reserved.</p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
               {['Privacy Policy', 'Terms of Use', 'Interest-Based Ads', 'Cookie Preferences'].map(item => (
-                <a key={item} href="#" className="hover:text-[#E7E9EA] hover:underline transition-colors">
+                <Link key={item} to="#" className="hover:text-[#E7E9EA] hover:underline transition-colors">
                   {item}
-                </a>
+                </Link>
               ))}
             </div>
             <div className="flex items-center gap-2">

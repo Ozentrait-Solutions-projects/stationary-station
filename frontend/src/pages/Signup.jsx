@@ -148,9 +148,9 @@ export default function Signup() {
 
           <p className="text-[10px] text-[#6B7280] mt-4 leading-relaxed">
             By creating an account, you agree to NexCart's{' '}
-            <a href="#" className="text-[#007185] hover:underline">Conditions of Use</a>{' '}
+            <Link to="#" className="text-[#007185] hover:underline">Conditions of Use</Link>{' '}
             and{' '}
-            <a href="#" className="text-[#007185] hover:underline">Privacy Notice</a>.
+            <Link to="#" className="text-[#007185] hover:underline">Privacy Notice</Link>.
           </p>
         </div>
 
