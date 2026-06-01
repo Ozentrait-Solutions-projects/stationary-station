@@ -74,10 +74,6 @@ You can use the following default accounts to log in and explore both the custom
    ```
 3. Create a `.env` file based on `.env.example` and set your credentials:
    ```env
-   DATABASE_URL=postgresql://user:pass@localhost:5432/nexcart_db
-   JWT_SECRET=your_super_secret_key
-   PORT=5000
-   CLIENT_ORIGIN=http://localhost:3000
    ```
 4. Run migrations & seed data:
    ```bash
