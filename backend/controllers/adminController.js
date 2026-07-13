@@ -153,7 +153,7 @@ const createProduct = async (req, res, next) => {
         parseNumberField(original_price),
         category,
         brand,
-        parseNumberField(stock) ?? 0,
+        parseNumberField(stock) ?? 1,
         finalImageUrl,
         finalImages,
         finalTags,

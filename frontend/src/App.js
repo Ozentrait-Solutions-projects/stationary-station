@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 
@@ -106,43 +107,45 @@ function NotFound() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <AppLayout />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  borderRadius: '8px',
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '14px',
-                  background: '#232F3E',
-                  color: '#E7E9EA',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                },
-                success: {
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AppLayout />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
                   style: {
-                    background: '#1a2e1a',
-                    color: '#86efac',
-                    border: '1px solid rgba(134,239,172,0.2)',
+                    borderRadius: '8px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    background: '#232F3E',
+                    color: '#E7E9EA',
+                    border: '1px solid rgba(255,255,255,0.1)',
                   },
-                  iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
-                },
-                error: {
-                  style: {
-                    background: '#2d1a1a',
-                    color: '#fca5a5',
-                    border: '1px solid rgba(252,165,165,0.2)',
+                  success: {
+                    style: {
+                      background: '#1a2e1a',
+                      color: '#86efac',
+                      border: '1px solid rgba(134,239,172,0.2)',
+                    },
+                    iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
                   },
-                  iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
-                },
-              }}
-            />
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+                  error: {
+                    style: {
+                      background: '#2d1a1a',
+                      color: '#fca5a5',
+                      border: '1px solid rgba(252,165,165,0.2)',
+                    },
+                    iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
+                  },
+                }}
+              />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

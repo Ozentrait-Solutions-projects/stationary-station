@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, CreditCard, Tag, CheckCircle2, Loader2, ChevronRight, Shield, Truck, Zap, Navigation } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { orderService, couponService } from '../services/productService';
 import { formatPrice } from '../utils/formatters';
+import { reverseGeocodeLocation, formatDetectedLocation } from '../utils/location';
 import toast from 'react-hot-toast';
 
 const PAYMENT_METHODS = [
@@ -18,6 +20,7 @@ const STEPS = ['Address', 'Payment', 'Review'];
 
 export default function Checkout() {
   const { cart, cartTotal } = useCart();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [step, setStep]                     = useState(1);
@@ -60,16 +63,12 @@ export default function Checkout() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const resp = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'Accept-Language': 'en' } }
-          );
-          const data = await resp.json();
+          const data = await reverseGeocodeLocation(latitude, longitude, 'en');
           const addr = data.address || {};
           setAddress(a => ({
             ...a,
             address_line: [addr.road, addr.suburb, addr.neighbourhood].filter(Boolean).join(', ') || a.address_line,
-            city:    addr.city || addr.town || addr.village || addr.county || a.city,
+            city:    formatDetectedLocation(addr, data.display_name) || a.city,
             state:   addr.state || a.state,
             pincode: addr.postcode || a.pincode,
             country: addr.country || 'India',
@@ -167,7 +166,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#FF9900]" />
-                    <h2 className="font-bold text-[#E7E9EA]">Delivery Address</h2>
+                    <h2 className="font-bold text-[#E7E9EA]">{t('deliveryAddress')}</h2>
                   </div>
                 </div>
                 {step > 1 && (
@@ -200,7 +199,7 @@ export default function Checkout() {
                           ? <Loader2 className="w-4 h-4 animate-spin" />
                           : <Navigation className="w-4 h-4" />
                         }
-                        {locationLoading ? 'Detecting your location…' : '📍 Use My Current Location'}
+                        {locationLoading ? t('detecting') : `📍 ${t('useCurrentLocation')}`}
                       </motion.button>
 
                       <div className="flex items-center gap-3 mb-4">
@@ -211,13 +210,13 @@ export default function Checkout() {
 
                       <div className="grid sm:grid-cols-2 gap-3">
                         {[
-                          { key: 'full_name',    placeholder: 'Full Name *',             span: false },
-                          { key: 'phone',        placeholder: 'Mobile Number *',         span: false },
-                          { key: 'address_line', placeholder: 'Address (House No, Street, Area) *', span: true },
-                          { key: 'city',         placeholder: 'City / District *',       span: false },
-                          { key: 'state',        placeholder: 'State *',                 span: false },
-                          { key: 'pincode',      placeholder: 'PIN Code *',              span: false },
-                          { key: 'country',      placeholder: 'Country',                 span: false },
+                          { key: 'full_name',    placeholder: `${t('fullName')} *`,             span: false },
+                          { key: 'phone',        placeholder: `${t('phone')} *`,                 span: false },
+                          { key: 'address_line', placeholder: `${t('address')} (House No, Street, Area) *`, span: true },
+                          { key: 'city',         placeholder: `${t('cityDistrict')} *`,         span: false },
+                          { key: 'state',        placeholder: `${t('state')} *`,                span: false },
+                          { key: 'pincode',      placeholder: `${t('pinCode')} *`,              span: false },
+                          { key: 'country',      placeholder: `${t('country')}`,                 span: false },
                         ].map(field => (
                           <input
                             key={field.key}
@@ -232,7 +231,7 @@ export default function Checkout() {
                         onClick={() => setStep(2)}
                         className="mt-4 btn-amazon-orange w-full sm:w-auto px-8 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2"
                       >
-                        Continue <ChevronRight className="w-4 h-4" />
+                        {t('continue', 'Continue')} <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   </motion.div>
@@ -260,7 +259,7 @@ export default function Checkout() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-[#FF9900]" />
-                      <h2 className="font-bold text-[#E7E9EA]">Payment Method</h2>
+                      <h2 className="font-bold text-[#E7E9EA]">{t('paymentMethod', 'Payment Method')}</h2>
                     </div>
                   </div>
                   {step > 2 && (
@@ -364,7 +363,7 @@ export default function Checkout() {
                 <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-[#FF9900] flex items-center justify-center text-xs font-bold text-dark-900">3</div>
-                    <h2 className="font-bold text-[#E7E9EA]">Review Your Order</h2>
+                    <h2 className="font-bold text-[#E7E9EA]">{t('reviewOrder', 'Review Your Order')}</h2>
                   </div>
                 </div>
                 <div className="p-5 space-y-3">
