@@ -120,17 +120,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Demo credentials */}
-        <div className="mt-3 rounded-lg p-4" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-xs font-semibold text-[#A0AEC0] mb-2">Demo credentials:</p>
-          <p className="text-xs text-[#6B7280]">
-            👤 <span className="font-mono">john@example.com</span> / <span className="font-mono">password123</span>
-          </p>
-          <p className="text-xs text-[#6B7280] mt-1">
-            🔑 <span className="font-mono">admin@nexcart.com</span> / <span className="font-mono">password123</span>
-          </p>
-        </div>
-
         {/* Divider */}
         <div className="my-5 flex items-center gap-3">
           <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />

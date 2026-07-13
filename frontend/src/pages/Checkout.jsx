@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, CreditCard, Tag, CheckCircle2, Loader2, ChevronRight, Shield, Truck } from 'lucide-react';
+import { MapPin, CreditCard, Tag, CheckCircle2, Loader2, ChevronRight, Shield, Truck, Zap, Navigation } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { orderService, couponService } from '../services/productService';
 import { formatPrice } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 const PAYMENT_METHODS = [
-  { id: 'mock',   label: 'Credit / Debit Card',  desc: 'Visa, Mastercard, Amex', icon: '💳' },
-  { id: 'upi',    label: 'UPI Payment',           desc: 'Google Pay, PhonePe, Paytm', icon: '📱' },
-  { id: 'cod',    label: 'Cash on Delivery',      desc: 'Pay when you receive it', icon: '💵' },
-  { id: 'wallet', label: 'NexCart Wallet',        desc: 'Wallet Balance: ₹500', icon: '👛' },
+  { id: 'mock',   label: 'Credit / Debit Card',  desc: 'Visa, Mastercard, Amex', icon: '💳', online: true },
+  { id: 'upi',    label: 'UPI Payment',           desc: 'Google Pay, PhonePe, Paytm', icon: '📱', online: true },
+  { id: 'cod',    label: 'Cash on Delivery',      desc: 'Pay when you receive it', icon: '💵', online: false },
+  { id: 'wallet', label: 'NexCart Wallet',        desc: 'Wallet Balance: ₹500', icon: '👛', online: true },
 ];
 
 const STEPS = ['Address', 'Payment', 'Review'];
@@ -26,6 +26,7 @@ export default function Checkout() {
   const [couponResult, setCouponResult]     = useState(null);
   const [paymentMethod, setPaymentMethod]   = useState('mock');
   const [couponLoading, setCouponLoading]   = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const [address, setAddress] = useState({
     full_name: '', phone: '', address_line: '',
@@ -46,6 +47,50 @@ export default function Checkout() {
       toast.error(err.response?.data?.message || 'Invalid coupon code');
       setCouponResult(null);
     } finally { setCouponLoading(false); }
+  };
+
+  // ── Use Current Location ──────────────────────────────────────────
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await resp.json();
+          const addr = data.address || {};
+          setAddress(a => ({
+            ...a,
+            address_line: [addr.road, addr.suburb, addr.neighbourhood].filter(Boolean).join(', ') || a.address_line,
+            city:    addr.city || addr.town || addr.village || addr.county || a.city,
+            state:   addr.state || a.state,
+            pincode: addr.postcode || a.pincode,
+            country: addr.country || 'India',
+          }));
+          toast.success('Location detected! Please verify your address.');
+        } catch {
+          toast.error('Could not fetch address details. Please fill manually.');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (err) => {
+        setLocationLoading(false);
+        if (err.code === 1) {
+          toast.error('Location access denied. Please allow location in browser settings.');
+        } else {
+          toast.error('Unable to detect location. Please fill address manually.');
+        }
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const placeOrder = async () => {
@@ -139,6 +184,31 @@ export default function Checkout() {
                     className="overflow-hidden"
                   >
                     <div className="p-5">
+                      {/* Use Current Location Button */}
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={useCurrentLocation}
+                        disabled={locationLoading}
+                        className="w-full mb-4 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border disabled:opacity-60"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(0,113,133,0.15), rgba(0,113,133,0.08))',
+                          border: '1px solid rgba(0,113,133,0.5)',
+                          color: '#007185',
+                        }}
+                      >
+                        {locationLoading
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Navigation className="w-4 h-4" />
+                        }
+                        {locationLoading ? 'Detecting your location…' : '📍 Use My Current Location'}
+                      </motion.button>
+
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                        <span className="text-xs text-[#6B7280]">or fill manually</span>
+                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                      </div>
+
                       <div className="grid sm:grid-cols-2 gap-3">
                         {[
                           { key: 'full_name',    placeholder: 'Full Name *',             span: false },
@@ -204,6 +274,26 @@ export default function Checkout() {
                   {step === 2 && (
                     <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                       <div className="p-5 space-y-2">
+
+                        {/* Pay Now Banner */}
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center gap-3 p-3 rounded-lg mb-3"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(39,174,96,0.12), rgba(6,125,98,0.12))',
+                            border: '1px solid rgba(39,174,96,0.3)',
+                          }}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                            <Zap className="w-4 h-4 text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-green-400">⚡ Pay Now for Faster Delivery!</p>
+                            <p className="text-xs text-green-300/80 mt-0.5">Online payments get priority processing — delivered up to 1 day faster.</p>
+                          </div>
+                        </motion.div>
+
                         {PAYMENT_METHODS.map(pm => (
                           <label
                             key={pm.id}
@@ -221,8 +311,17 @@ export default function Checkout() {
                               className="accent-[#FF9900]"
                             />
                             <span className="text-xl">{pm.icon}</span>
-                            <div>
-                              <p className="font-semibold text-sm text-[#E7E9EA]">{pm.label}</p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-sm text-[#E7E9EA]">{pm.label}</p>
+                                {pm.online && (
+                                  <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                    style={{ backgroundColor: 'rgba(39,174,96,0.15)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)' }}>
+                                    <Zap className="w-2.5 h-2.5" />
+                                    Faster
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-[#6B7280]">{pm.desc}</p>
                             </div>
                           </label>
@@ -243,6 +342,12 @@ export default function Checkout() {
                     <div className="p-3 rounded-lg text-sm flex items-center gap-3" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
                       <span className="text-lg">{PAYMENT_METHODS.find(p => p.id === paymentMethod)?.icon}</span>
                       <span className="font-semibold text-[#E7E9EA]">{PAYMENT_METHODS.find(p => p.id === paymentMethod)?.label}</span>
+                      {PAYMENT_METHODS.find(p => p.id === paymentMethod)?.online && (
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto"
+                          style={{ backgroundColor: 'rgba(39,174,96,0.15)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)' }}>
+                          <Zap className="w-2.5 h-2.5" /> Faster Delivery
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}

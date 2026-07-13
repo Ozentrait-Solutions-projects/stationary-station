@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Package, ChevronRight, Truck, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Package, ChevronRight, Truck, Clock, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { orderService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
+import toast from 'react-hot-toast';
 
 const STATUS_PROGRESS = {
   pending:    1,
@@ -13,9 +14,13 @@ const STATUS_PROGRESS = {
   delivered:  5,
 };
 
+const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
+
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
 
   useEffect(() => {
     orderService.getMyOrders()
@@ -23,6 +28,20 @@ export default function Orders() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCancelOrder = async (orderId) => {
+    setCancellingId(orderId);
+    try {
+      await orderService.cancelOrder(orderId);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+      toast.success('Order cancelled successfully. Stock has been restored.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingId(null);
+      setConfirmCancelId(null);
+    }
+  };
 
   return (
     <div style={{ backgroundColor: '#0F1111' }} className="min-h-screen page-enter">
@@ -76,6 +95,9 @@ export default function Orders() {
             {orders.map((order, i) => {
               const st       = ORDER_STATUS[order.status];
               const progress = STATUS_PROGRESS[order.status] || 1;
+              const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+              const isCancelling = cancellingId === order.id;
+              const isConfirming = confirmCancelId === order.id;
 
               return (
                 <motion.div
@@ -110,20 +132,71 @@ export default function Orders() {
 
                   {/* Status + Progress bar */}
                   <div className="px-4 pt-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{st?.icon}</span>
                         <span className={`font-semibold text-sm badge badge-${st?.color || 'info'}`}>
                           {st?.label}
                         </span>
                       </div>
-                      {order.status !== 'cancelled' && (
-                        <div className="flex items-center gap-1 text-xs text-[#6B7280]">
-                          <Clock className="w-3 h-3" />
-                          <span>Est. delivery: 2-5 days</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {order.status !== 'cancelled' && (
+                          <div className="flex items-center gap-1 text-xs text-[#6B7280]">
+                            <Clock className="w-3 h-3" />
+                            <span>Est. delivery: 2-5 days</span>
+                          </div>
+                        )}
+
+                        {/* Cancel Order Button */}
+                        {canCancel && !isConfirming && (
+                          <button
+                            onClick={() => setConfirmCancelId(order.id)}
+                            disabled={isCancelling}
+                            className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors px-2.5 py-1.5 rounded-lg border border-red-400/30 hover:border-red-400/60 hover:bg-red-500/10 disabled:opacity-50"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            Cancel Order
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Cancel Confirmation */}
+                    <AnimatePresence>
+                      {isConfirming && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden mb-3"
+                        >
+                          <div className="flex items-start gap-3 p-3 rounded-lg"
+                            style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-[#E7E9EA]">Cancel this order?</p>
+                              <p className="text-xs text-[#A0AEC0] mt-0.5">This action cannot be undone. The stock will be restored.</p>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                              <button
+                                onClick={() => setConfirmCancelId(null)}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-[#A0AEC0] hover:bg-white/10 transition-colors"
+                              >
+                                Keep
+                              </button>
+                              <button
+                                onClick={() => handleCancelOrder(order.id)}
+                                disabled={isCancelling}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors flex items-center gap-1 disabled:opacity-60"
+                              >
+                                {isCancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                                {isCancelling ? 'Cancelling…' : 'Yes, Cancel'}
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {order.status !== 'cancelled' && (
                       <div className="relative mb-4">

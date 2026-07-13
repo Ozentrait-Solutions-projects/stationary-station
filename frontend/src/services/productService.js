@@ -15,6 +15,7 @@ export const orderService = {
   createOrder: (data) => api.post('/orders', data),
   getMyOrders: ()     => api.get('/orders'),
   getOrder:    (id)   => api.get(`/orders/${id}`),
+  cancelOrder: (id)   => api.put(`/orders/${id}/cancel`),
 };
 
 export const couponService = {
@@ -22,11 +23,12 @@ export const couponService = {
 };
 
 export const adminService = {
-  getDashboard:      ()         => api.get('/admin/dashboard'),
-  getAllOrders:       (params)   => api.get('/admin/orders', { params }),
+  getDashboard:      ()           => api.get('/admin/dashboard'),
+  getAllOrders:       (params)     => api.get('/admin/orders', { params }),
+  getOrderDetails:   (id)         => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (id, status) => api.put(`/admin/orders/${id}/status`, { status }),
-  getAllUsers:        ()         => api.get('/admin/users'),
-  createProduct:     (data)     => api.post('/admin/products', data),
-  updateProduct:     (id, data) => api.put(`/admin/products/${id}`, data),
-  deleteProduct:     (id)       => api.delete(`/admin/products/${id}`),
+  getAllUsers:        ()           => api.get('/admin/users'),
+  createProduct:     (data)       => api.post('/admin/products', data),
+  updateProduct:     (id, data)   => api.put(`/admin/products/${id}`, data),
+  deleteProduct:     (id)         => api.delete(`/admin/products/${id}`),
 };

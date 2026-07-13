@@ -80,6 +80,36 @@ export default function ProductDetail() {
     } finally { setSubmitting(false); }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: product?.title,
+      text: `Check out ${product?.title} on NexCart — only ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(product?.price)}!`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        // Use a simple toast if available, else alert
+        if (typeof window !== 'undefined') {
+          const { default: t } = await import('react-hot-toast');
+          t.success('Product link copied to clipboard!');
+        }
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          const { default: t } = await import('react-hot-toast');
+          t.success('Product link copied to clipboard!');
+        } catch {
+          alert('Copy this link: ' + window.location.href);
+        }
+      }
+    }
+  };
+
   if (loading) return <ProductDetailSkeleton />;
   if (!product) return null;
 
@@ -382,9 +412,12 @@ export default function ProductDetail() {
               </div>
 
               {/* Share */}
-              <button className="w-full flex items-center justify-center gap-2 text-xs text-[#007185] hover:text-[#FF9900] transition-colors">
+              <button
+                onClick={handleShare}
+                className="w-full flex items-center justify-center gap-2 text-xs text-[#007185] hover:text-[#FF9900] transition-colors py-2 rounded-lg hover:bg-white/5"
+              >
                 <Share2 className="w-3.5 h-3.5" />
-                Share
+                Share this product
               </button>
             </div>
           </div>
