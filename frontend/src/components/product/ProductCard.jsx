@@ -82,7 +82,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           />
 
           {/* Out of stock */}
-          {product.stock === 0 && (
+          {Number(product.stock) === 0 && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
               <span className="text-white text-sm font-semibold px-3 py-1.5 rounded bg-black/50">
                 Out of Stock
@@ -137,7 +137,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           </div>
 
           {/* Delivery badge */}
-          {!compact && product.stock > 0 && (
+          {!compact && Number(product.stock) > 0 && (
             <div className="flex items-center gap-1 mt-1.5">
               <Truck className="w-3 h-3 text-[#27ae60]" />
               <span className="text-[10px] text-[#27ae60] font-medium">Free delivery</span>
@@ -149,18 +149,18 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={Number(product.stock) === 0}
               className="w-full mt-3 py-1.5 rounded text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: product.stock === 0
+                background: Number(product.stock) === 0
                   ? 'rgba(255,255,255,0.06)'
                   : 'linear-gradient(to bottom, #f0c14b, #e47911)',
                 border: '1px solid rgba(255,153,0,0.5)',
-                color: product.stock === 0 ? '#6B7280' : '#131921',
+                color: Number(product.stock) === 0 ? '#6B7280' : '#131921',
               }}
             >
               <ShoppingCart className="w-3 h-3" />
-              {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {Number(product.stock) === 0 ? 'Out of Stock' : 'Add to Cart'}
             </motion.button>
           )}
         </div>

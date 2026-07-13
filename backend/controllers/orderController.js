@@ -126,4 +126,55 @@ const getOrder = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createOrder, getMyOrders, getOrder };
+// ─── CANCEL ORDER ────────────────────────────────────────────────
+const cancelOrder = async (req, res, next) => {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    const { id } = req.params;
+
+    // Verify order belongs to user and is cancellable
+    const { rows } = await client.query(
+      'SELECT * FROM orders WHERE id = $1 AND user_id = $2',
+      [id, req.user.id]
+    );
+    if (!rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const order = rows[0];
+    if (['shipped', 'delivered', 'cancelled'].includes(order.status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: `Cannot cancel an order that is already ${order.status}` });
+    }
+
+    // Restore product stock
+    const items = await client.query(
+      'SELECT product_id, quantity FROM order_items WHERE order_id = $1',
+      [id]
+    );
+    for (const item of items.rows) {
+      await client.query(
+        'UPDATE products SET stock = stock + $1 WHERE id = $2',
+        [item.quantity, item.product_id]
+      );
+    }
+
+    // Cancel the order
+    const updated = await client.query(
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+      ['cancelled', id]
+    );
+    await client.query('COMMIT');
+    res.json({ order: updated.rows[0], message: 'Order cancelled successfully' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getOrder, cancelOrder };
+

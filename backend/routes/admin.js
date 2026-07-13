@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const {
-  getDashboard, getAllOrders, updateOrderStatus,
+  getDashboard, getOrderDetails, getAllOrders, updateOrderStatus,
   getAllUsers, createProduct, updateProduct, deleteProduct,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/auth');
@@ -11,6 +11,7 @@ router.use(protect, adminOnly);
 
 router.get('/dashboard', getDashboard);
 router.get('/orders', getAllOrders);
+router.get('/orders/:id', getOrderDetails);
 router.put('/orders/:id/status', updateOrderStatus);
 router.get('/users', getAllUsers);
 router.post('/products', upload.single('image'), createProduct);

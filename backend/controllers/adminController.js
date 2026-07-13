@@ -60,6 +60,29 @@ const getDashboard = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ─── GET SINGLE ORDER DETAILS (ADMIN) ──────────────────────────
+const getOrderDetails = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(
+      `SELECT o.*, u.name as user_name, u.email as user_email, u.avatar as user_avatar
+       FROM orders o JOIN users u ON o.user_id = u.id
+       WHERE o.id = $1`,
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'Order not found' });
+
+    const items = await db.query(
+      `SELECT oi.*, p.title, p.image_url, p.category, p.brand
+       FROM order_items oi JOIN products p ON oi.product_id = p.id
+       WHERE oi.order_id = $1`,
+      [id]
+    );
+
+    res.json({ order: { ...rows[0], items: items.rows } });
+  } catch (err) { next(err); }
+};
+
 // ─── GET ALL ORDERS (ADMIN) ──────────────────────────────────────
 const getAllOrders = async (req, res, next) => {
   try {
@@ -209,4 +232,4 @@ const deleteProduct = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct };
+module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct };

@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart, Heart, Search, Menu, X, User,
   LogOut, Package, LayoutDashboard, ChevronDown,
-  MapPin, ChevronRight, Globe,
+  MapPin, ChevronRight, Globe, Loader2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -28,6 +28,13 @@ const NAV_LINKS = [
   { label: 'Books',          to: '/products?category=Books' },
 ];
 
+const LANGUAGES = [
+  { code: 'EN', label: 'English',    flag: '🇺🇸' },
+  { code: 'HI', label: 'हिन्दी',    flag: '🇮🇳' },
+  { code: 'TA', label: 'தமிழ்',     flag: '🇮🇳' },
+  { code: 'TE', label: 'తెలుగు',    flag: '🇮🇳' },
+];
+
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const { cartCount, setSidebarOpen } = useCart();
@@ -42,8 +49,23 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [catOpen, setCatOpen]         = useState(false);
   const [scrolled, setScrolled]       = useState(false);
-  const searchRef = useRef(null);
 
+  // Language switcher state
+  const [langOpen, setLangOpen]       = useState(false);
+  const [selectedLang, setSelectedLang] = useState(() => {
+    return localStorage.getItem('nexcart_lang') || 'EN';
+  });
+  const langRef = useRef(null);
+
+  // Location state
+  const [locationText, setLocationText] = useState(() => {
+    return localStorage.getItem('nexcart_location') || 'India';
+  });
+  const [locationLoading, setLocationLoading] = useState(false);
+  const locationRef = useRef(null);
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  const searchRef = useRef(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   useEffect(() => {
@@ -56,6 +78,8 @@ export default function Navbar() {
     setMobileOpen(false);
     setProfileOpen(false);
     setCatOpen(false);
+    setLangOpen(false);
+    setLocationOpen(false);
   }, [location]);
 
   useEffect(() => {
@@ -65,10 +89,13 @@ export default function Navbar() {
       .catch(() => setSuggestions([]));
   }, [debouncedSearch]);
 
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocus(false);
       if (!e.target.closest('.profile-menu')) setProfileOpen(false);
+      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false);
+      if (locationRef.current && !locationRef.current.contains(e.target)) setLocationOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -83,6 +110,52 @@ export default function Navbar() {
     setSearchQuery('');
     setSuggestions([]);
     setSearchFocus(false);
+  };
+
+  const selectLanguage = (code) => {
+    setSelectedLang(code);
+    localStorage.setItem('nexcart_lang', code);
+    setLangOpen(false);
+  };
+
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocationLoading(true);
+    setLocationOpen(false);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await resp.json();
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county ||
+            data.address?.state ||
+            'India';
+          setLocationText(city);
+          localStorage.setItem('nexcart_location', city);
+        } catch {
+          setLocationText('India');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (err) => {
+        console.warn('Location error:', err.message);
+        setLocationLoading(false);
+        alert('Unable to detect location. Please allow location access in your browser settings.');
+      },
+      { timeout: 10000, maximumAge: 300000 }
+    );
   };
 
   return (
@@ -106,16 +179,54 @@ export default function Navbar() {
             </Link>
 
             {/* Delivery Location */}
-            <button
-              className="hidden lg:flex flex-col items-start border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150 min-w-[120px] group"
-              title="Select delivery location"
-            >
-              <span className="text-[#A0AEC0] text-[10px] leading-none group-hover:text-white">Deliver to</span>
-              <div className="flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3.5 h-3.5 text-white flex-shrink-0" />
-                <span className="text-white font-bold text-sm">India</span>
-              </div>
-            </button>
+            <div className="relative hidden lg:block" ref={locationRef}>
+              <button
+                onClick={() => setLocationOpen(!locationOpen)}
+                className="flex flex-col items-start border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150 min-w-[120px] group"
+                title="Select delivery location"
+              >
+                <span className="text-[#A0AEC0] text-[10px] leading-none group-hover:text-white">Deliver to</span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  {locationLoading
+                    ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin flex-shrink-0" />
+                    : <MapPin className="w-3.5 h-3.5 text-white flex-shrink-0" />
+                  }
+                  <span className="text-white font-bold text-sm truncate max-w-[90px]">{locationText}</span>
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {locationOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.1 }}
+                    className="absolute top-full left-0 mt-1 w-64 rounded-lg overflow-hidden shadow-xl z-50"
+                    style={{ backgroundColor: '#232F3E', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <div className="p-3 border-b border-white/10">
+                      <p className="text-xs text-[#A0AEC0]">Current location:</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <MapPin className="w-3.5 h-3.5 text-[#FF9900] flex-shrink-0" />
+                        <span className="text-sm font-semibold text-[#E7E9EA]">{locationText}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={detectLocation}
+                      disabled={locationLoading}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#007185] hover:bg-white/5 transition-colors disabled:opacity-60"
+                    >
+                      {locationLoading
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <MapPin className="w-4 h-4" />
+                      }
+                      {locationLoading ? 'Detecting…' : 'Detect My Location'}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Search Bar */}
             <div className="flex-1 max-w-3xl relative" ref={searchRef}>
@@ -217,12 +328,49 @@ export default function Navbar() {
             {/* Right Actions */}
             <div className="flex items-center gap-1 flex-shrink-0">
 
-              {/* Language */}
-              <button className="hidden xl:flex items-center gap-1 border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150">
-                <Globe className="w-4 h-4 text-white" />
-                <span className="text-white text-sm font-medium">EN</span>
-                <ChevronDown className="w-3 h-3 text-white" />
-              </button>
+              {/* Language Switcher */}
+              <div className="relative hidden xl:block" ref={langRef}>
+                <button
+                  onClick={() => setLangOpen(!langOpen)}
+                  className="flex items-center gap-1 border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150"
+                >
+                  <Globe className="w-4 h-4 text-white" />
+                  <span className="text-white text-sm font-medium">{selectedLang}</span>
+                  <ChevronDown className={`w-3 h-3 text-white transition-transform duration-150 ${langOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {langOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.96, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96, y: -5 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-0 top-full mt-1 w-44 rounded-lg overflow-hidden shadow-xl z-50"
+                      style={{ backgroundColor: '#232F3E', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <p className="px-4 pt-3 pb-1 text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Language</p>
+                      {LANGUAGES.map(lang => (
+                        <button
+                          key={lang.code}
+                          onClick={() => selectLanguage(lang.code)}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            selectedLang === lang.code
+                              ? 'text-[#FF9900] font-semibold bg-white/5'
+                              : 'text-[#E7E9EA] hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="text-base">{lang.flag}</span>
+                          <span>{lang.label}</span>
+                          {selectedLang === lang.code && (
+                            <span className="ml-auto text-[#FF9900] text-xs font-bold">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Account */}
               {user ? (
@@ -429,6 +577,46 @@ export default function Navbar() {
                       Sign In
                     </Link>
                   )}
+                </div>
+
+                {/* Location detection in mobile */}
+                <div className="px-4 py-3 border-b border-white/10">
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">Delivery Location</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-[#FF9900]" />
+                      <span className="text-sm text-[#E7E9EA] font-medium">{locationText}</span>
+                    </div>
+                    <button
+                      onClick={detectLocation}
+                      disabled={locationLoading}
+                      className="text-xs text-[#007185] hover:text-[#FF9900] transition-colors flex items-center gap-1 disabled:opacity-60"
+                    >
+                      {locationLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      {locationLoading ? 'Detecting…' : 'Detect'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Language in mobile */}
+                <div className="px-4 py-3 border-b border-white/10">
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">Language</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {LANGUAGES.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => selectLanguage(lang.code)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          selectedLang === lang.code
+                            ? 'bg-[#FF9900] text-[#131921]'
+                            : 'bg-white/5 text-[#A0AEC0] hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{lang.flag}</span>
+                        <span>{lang.code}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Nav links */}
