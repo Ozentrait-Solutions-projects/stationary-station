@@ -10,13 +10,16 @@ import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatPrice, discountPercent, formatDate } from '../utils/formatters';
 import ProductCard from '../components/product/ProductCard';
+import { normalizeStock } from '../utils/stock';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user }   = useAuth();
+  const { t } = useLanguage();
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
 
@@ -47,6 +50,7 @@ export default function ProductDetail() {
   }, [id, user, navigate]);
 
   const images    = product?.images?.length ? product.images : [product?.image_url].filter(Boolean);
+  const stock     = normalizeStock(product?.stock, 1);
   const wishlisted = isWishlisted(product?.id);
   const discount   = discountPercent(product?.original_price, product?.price);
   const rating     = Number(product?.rating) || 0;
@@ -264,7 +268,7 @@ export default function ProductDetail() {
 
             {/* Offers */}
             <div className="rounded-lg p-3" style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <h3 className="text-sm font-bold text-[#E7E9EA] mb-2">Available Offers</h3>
+              <h3 className="text-sm font-bold text-[#E7E9EA] mb-2">{t('availableOffers')}</h3>
               <ul className="space-y-1.5">
                 {[
                   { icon: '🏦', text: '10% Bank Offer on HDFC Credit Cards' },
@@ -281,18 +285,18 @@ export default function ProductDetail() {
 
             {/* Stock */}
             <div className="flex items-center gap-2">
-              {product.stock > 0 ? (
+              {stock > 0 ? (
                 <>
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">In Stock</span>
-                  {product.stock <= 5 && (
-                    <span className="text-red-400 text-xs">Only {product.stock} left!</span>
+                  <span className="text-green-400 text-sm font-medium">{t('inStock')}</span>
+                  {stock <= 5 && (
+                    <span className="text-red-400 text-xs">Only {stock} left!</span>
                   )}
                 </>
               ) : (
                 <>
                   <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span className="text-red-400 text-sm font-medium">Currently Unavailable</span>
+                  <span className="text-red-400 text-sm font-medium">{t('currentlyUnavailable')}</span>
                 </>
               )}
             </div>
@@ -331,12 +335,12 @@ export default function ProductDetail() {
               </div>
 
               {/* In stock */}
-              {product.stock > 0 && (
-                <p className="text-green-400 text-sm font-medium">In Stock</p>
+              {stock > 0 && (
+                <p className="text-green-400 text-sm font-medium">{t('inStock')}</p>
               )}
 
               {/* Quantity */}
-              {product.stock > 0 && (
+              {stock > 0 && (
                 <div>
                   <label className="text-xs text-[#A0AEC0] font-medium block mb-1.5">Qty:</label>
                   <div className="flex items-center gap-2 rounded-lg overflow-hidden w-fit"
@@ -349,8 +353,8 @@ export default function ProductDetail() {
                     </button>
                     <span className="px-4 py-2 font-bold text-[#E7E9EA] text-sm min-w-[2.5rem] text-center">{qty}</span>
                     <button
-                      onClick={() => setQty(q => Math.min(product.stock, q + 1))}
-                      disabled={qty >= product.stock}
+                      onClick={() => setQty(q => Math.min(stock, q + 1))}
+                      disabled={qty >= stock}
                       className="px-3 py-2 hover:bg-white/5 transition-colors text-[#E7E9EA] disabled:opacity-40"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -363,24 +367,24 @@ export default function ProductDetail() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleAddToCart}
-                disabled={product.stock === 0 || addingCart}
+                disabled={stock === 0 || addingCart}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(to bottom, #f0c14b, #e47911)', border: '1px solid #e47911', color: '#131921' }}
               >
                 <ShoppingCart className="w-4 h-4" />
-                {addingCart ? 'Adding…' : 'Add to Cart'}
+                {addingCart ? 'Adding…' : t('addToCart')}
               </motion.button>
 
               {/* Buy Now */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleBuyNow}
-                disabled={product.stock === 0}
+                disabled={stock === 0}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(to bottom, #FF9900, #e47911)', border: '1px solid #c67600', color: '#131921' }}
               >
                 <Package className="w-4 h-4" />
-                Buy Now
+                {t('buyNow')}
               </motion.button>
 
               {/* Wishlist */}

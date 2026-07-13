@@ -9,6 +9,7 @@ import {
 import { productService } from '../services/productService';
 import ProductCard from '../components/product/ProductCard';
 import ProductCardSkeleton from '../components/product/ProductCardSkeleton';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ─── Static Data ─────────────────────────────────────────────────── */
 const HERO_SLIDES = [
@@ -146,6 +147,7 @@ function ProductSlider({ products, loading, skeletonCount = 5 }) {
 
 /* ─── Main Home Component ─────────────────────────────────────────── */
 export default function Home() {
+  const { t } = useLanguage();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading]                   = useState(true);
   const [activeSlide, setActiveSlide]           = useState(0);
@@ -358,7 +360,7 @@ export default function Home() {
           className="rounded-lg overflow-hidden"
           style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <SectionHeader title="Shop by Category" subtitle="Explore our wide selection" viewAllTo="/products" />
+          <SectionHeader title={t('shopByCategory')} subtitle={t('exploreSelection', 'Explore our wide selection')} viewAllTo="/products" />
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 px-4 pb-4">
             {CATEGORIES.map((cat, i) => (
               <motion.div
@@ -399,8 +401,8 @@ export default function Home() {
           style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           <SectionHeader
-            title="Today's Deals"
-            subtitle="Deals of the day"
+            title={t('todaysDeals')}
+            subtitle={t('dealsOfTheDay', 'Deals of the day')}
             viewAllTo="/products?featured=true"
             icon={Tag}
             accent="#FF9900"
@@ -465,14 +467,14 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <Flame className="w-5 h-5 text-red-500" />
               <div>
-                <h2 className="font-display text-lg font-bold text-[#E7E9EA]">Flash Sale</h2>
-                <p className="text-xs text-[#A0AEC0]">Hurry, limited time offer!</p>
+                <h2 className="font-display text-lg font-bold text-[#E7E9EA]">{t('flashSale', 'Flash Sale')}</h2>
+                <p className="text-xs text-[#A0AEC0]">{t('limitedTimeOffer', 'Hurry, limited time offer!')}</p>
               </div>
             </div>
             {/* Countdown */}
             <div className="flex items-center gap-2">
               <Timer className="w-4 h-4 text-red-400" />
-              <span className="text-[#A0AEC0] text-sm">Ends in:</span>
+              <span className="text-[#A0AEC0] text-sm">{t('endsIn', 'Ends in:')}</span>
               <div className="flex gap-1">
                 {[pad(countdown.h), pad(countdown.m), pad(countdown.s)].map((val, i) => (
                   <span key={i} className="flex items-center">
@@ -494,7 +496,7 @@ export default function Home() {
           className="rounded-lg overflow-hidden"
           style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <SectionHeader title="Trending Now" subtitle="Popular with our customers" viewAllTo="/products" icon={TrendingUp} accent="#FEBD69" />
+          <SectionHeader title={t('trendingNow', 'Trending Now')} subtitle={t('popularWithCustomers', 'Popular with our customers')} viewAllTo="/products" icon={TrendingUp} accent="#FEBD69" />
           <ProductSlider products={trendingProducts} loading={loading} />
         </motion.section>
 
@@ -508,11 +510,11 @@ export default function Home() {
         >
           <div className="flex items-end justify-between px-4 pt-4 mb-3">
             <div>
-              <h2 className="font-display text-lg font-bold text-[#E7E9EA]">Electronics</h2>
-              <p className="text-xs text-[#A0AEC0] mt-0.5">Top-rated tech deals</p>
+              <h2 className="font-display text-lg font-bold text-[#E7E9EA]">{t('electronics', 'Electronics')}</h2>
+              <p className="text-xs text-[#A0AEC0] mt-0.5">{t('topRatedTechDeals', 'Top-rated tech deals')}</p>
             </div>
             <Link to="/products?category=Electronics" className="text-sm font-medium text-[#007185] hover:text-[#FF9900] transition-colors flex items-center gap-1">
-              See all <ArrowRight className="w-3.5 h-3.5" />
+              {t('seeAll', 'See all')} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 px-4 pb-4">

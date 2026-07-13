@@ -96,7 +96,7 @@ export default function AdminDashboard() {
       setProductImageFile(null);
       setProductImagePreview(product.image_url || '');
     } else {
-      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'', image_url:'', images:'', tags:'', is_featured:false });
+      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false });
       setProductModal('create');
       setImageMode('url');
       setProductImageFile(null);

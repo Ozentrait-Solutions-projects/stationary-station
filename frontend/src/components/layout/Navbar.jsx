@@ -8,9 +8,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import { reverseGeocodeLocation, formatDetectedLocation } from '../../utils/location';
 
 const CATEGORIES = [
   'All', 'Electronics', 'Fashion', 'Home & Kitchen',
@@ -28,16 +30,10 @@ const NAV_LINKS = [
   { label: 'Books',          to: '/products?category=Books' },
 ];
 
-const LANGUAGES = [
-  { code: 'EN', label: 'English',    flag: '🇺🇸' },
-  { code: 'HI', label: 'हिन्दी',    flag: '🇮🇳' },
-  { code: 'TA', label: 'தமிழ்',     flag: '🇮🇳' },
-  { code: 'TE', label: 'తెలుగు',    flag: '🇮🇳' },
-];
-
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const { cartCount, setSidebarOpen } = useCart();
+  const { language, setLanguage, languages, t } = useLanguage();
   const navigate  = useNavigate();
   const location  = useLocation();
 
@@ -50,11 +46,7 @@ export default function Navbar() {
   const [catOpen, setCatOpen]         = useState(false);
   const [scrolled, setScrolled]       = useState(false);
 
-  // Language switcher state
   const [langOpen, setLangOpen]       = useState(false);
-  const [selectedLang, setSelectedLang] = useState(() => {
-    return localStorage.getItem('nexcart_lang') || 'EN';
-  });
   const langRef = useRef(null);
 
   // Location state
@@ -113,8 +105,7 @@ export default function Navbar() {
   };
 
   const selectLanguage = (code) => {
-    setSelectedLang(code);
-    localStorage.setItem('nexcart_lang', code);
+    setLanguage(code);
     setLangOpen(false);
   };
 
@@ -129,18 +120,8 @@ export default function Navbar() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const resp = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'Accept-Language': 'en' } }
-          );
-          const data = await resp.json();
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.county ||
-            data.address?.state ||
-            'India';
+          const data = await reverseGeocodeLocation(latitude, longitude, 'en');
+          const city = formatDetectedLocation(data.address, data.display_name);
           setLocationText(city);
           localStorage.setItem('nexcart_location', city);
         } catch {
@@ -185,7 +166,7 @@ export default function Navbar() {
                 className="flex flex-col items-start border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150 min-w-[120px] group"
                 title="Select delivery location"
               >
-                <span className="text-[#A0AEC0] text-[10px] leading-none group-hover:text-white">Deliver to</span>
+                <span className="text-[#A0AEC0] text-[10px] leading-none group-hover:text-white">{t('deliverTo')}</span>
                 <div className="flex items-center gap-1 mt-0.5">
                   {locationLoading
                     ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin flex-shrink-0" />
@@ -206,7 +187,7 @@ export default function Navbar() {
                     style={{ backgroundColor: '#232F3E', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
                     <div className="p-3 border-b border-white/10">
-                      <p className="text-xs text-[#A0AEC0]">Current location:</p>
+                      <p className="text-xs text-[#A0AEC0]">{t('currentLocation')}</p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <MapPin className="w-3.5 h-3.5 text-[#FF9900] flex-shrink-0" />
                         <span className="text-sm font-semibold text-[#E7E9EA]">{locationText}</span>
@@ -221,7 +202,7 @@ export default function Navbar() {
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <MapPin className="w-4 h-4" />
                       }
-                      {locationLoading ? 'Detecting…' : 'Detect My Location'}
+                      {locationLoading ? t('detecting') : t('detectMyLocation')}
                     </button>
                   </motion.div>
                 )}
@@ -274,7 +255,7 @@ export default function Navbar() {
                 {/* Input */}
                 <input
                   type="text"
-                  placeholder="Search NexCart…"
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocus(true)}
@@ -335,7 +316,7 @@ export default function Navbar() {
                   className="flex items-center gap-1 border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150"
                 >
                   <Globe className="w-4 h-4 text-white" />
-                  <span className="text-white text-sm font-medium">{selectedLang}</span>
+                  <span className="text-white text-sm font-medium">{language}</span>
                   <ChevronDown className={`w-3 h-3 text-white transition-transform duration-150 ${langOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -349,20 +330,20 @@ export default function Navbar() {
                       className="absolute right-0 top-full mt-1 w-44 rounded-lg overflow-hidden shadow-xl z-50"
                       style={{ backgroundColor: '#232F3E', border: '1px solid rgba(255,255,255,0.1)' }}
                     >
-                      <p className="px-4 pt-3 pb-1 text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Language</p>
-                      {LANGUAGES.map(lang => (
+                      <p className="px-4 pt-3 pb-1 text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">{t('language')}</p>
+                      {languages.map(lang => (
                         <button
                           key={lang.code}
                           onClick={() => selectLanguage(lang.code)}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                            selectedLang === lang.code
+                            language === lang.code
                               ? 'text-[#FF9900] font-semibold bg-white/5'
                               : 'text-[#E7E9EA] hover:bg-white/5'
                           }`}
                         >
                           <span className="text-base">{lang.flag}</span>
                           <span>{lang.label}</span>
-                          {selectedLang === lang.code && (
+                          {language === lang.code && (
                             <span className="ml-auto text-[#FF9900] text-xs font-bold">✓</span>
                           )}
                         </button>
@@ -461,7 +442,7 @@ export default function Navbar() {
               <Link to="/orders"
                 className="hidden md:flex flex-col items-start border-2 border-transparent hover:border-white/30 rounded px-2 py-1 transition-all duration-150 min-w-[80px]"
               >
-                <span className="text-[#A0AEC0] text-[10px] leading-none">Returns</span>
+                <span className="text-[#A0AEC0] text-[10px] leading-none">{t('returns')}</span>
                 <span className="text-white font-bold text-sm mt-0.5">& Orders</span>
               </Link>
 
@@ -495,7 +476,7 @@ export default function Navbar() {
                     )}
                   </AnimatePresence>
                 </div>
-                <span className="text-white font-bold text-sm hidden sm:block pb-1">Cart</span>
+                <span className="text-white font-bold text-sm hidden sm:block pb-1">{t('cart')}</span>
               </button>
 
               {/* Mobile Hamburger */}
@@ -534,7 +515,7 @@ export default function Navbar() {
               <Link to="/products"
                 className="px-3 h-full flex items-center text-sm text-[#FEBD69] whitespace-nowrap hover:text-[#FF9900] transition-colors duration-150 ml-auto"
               >
-                See All Deals →
+                {t('seeAllDeals')}
               </Link>
             </div>
           </div>
@@ -581,7 +562,7 @@ export default function Navbar() {
 
                 {/* Location detection in mobile */}
                 <div className="px-4 py-3 border-b border-white/10">
-                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">Delivery Location</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">{t('deliverTo')}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-[#FF9900]" />
@@ -593,21 +574,21 @@ export default function Navbar() {
                       className="text-xs text-[#007185] hover:text-[#FF9900] transition-colors flex items-center gap-1 disabled:opacity-60"
                     >
                       {locationLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                      {locationLoading ? 'Detecting…' : 'Detect'}
+                      {locationLoading ? t('detecting') : t('detectMyLocation')}
                     </button>
                   </div>
                 </div>
 
                 {/* Language in mobile */}
                 <div className="px-4 py-3 border-b border-white/10">
-                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">Language</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-wider mb-2 font-semibold">{t('language')}</p>
                   <div className="flex gap-2 flex-wrap">
-                    {LANGUAGES.map(lang => (
+                    {languages.map(lang => (
                       <button
                         key={lang.code}
                         onClick={() => selectLanguage(lang.code)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          selectedLang === lang.code
+                          language === lang.code
                             ? 'bg-[#FF9900] text-[#131921]'
                             : 'bg-white/5 text-[#A0AEC0] hover:bg-white/10'
                         }`}
@@ -621,7 +602,7 @@ export default function Navbar() {
 
                 {/* Nav links */}
                 <div className="py-2">
-                  <p className="px-4 py-2 text-xs text-[#6B7280] uppercase tracking-wider font-semibold">Browse</p>
+                  <p className="px-4 py-2 text-xs text-[#6B7280] uppercase tracking-wider font-semibold">{t('browse')}</p>
                   {NAV_LINKS.map(link => (
                     <Link key={link.to} to={link.to}
                       className="flex items-center justify-between px-4 py-3 text-sm text-[#E7E9EA] hover:bg-white/5 border-b border-white/5 transition-colors"

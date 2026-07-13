@@ -6,13 +6,17 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatPrice, discountPercent } from '../../utils/formatters';
+import { useLanguage } from '../../context/LanguageContext';
+import { normalizeStock } from '../../utils/stock';
 
 export default function ProductCard({ product, index = 0, compact = false }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate  = useNavigate();
 
+  const stock = normalizeStock(product.stock, 1);
   const wishlisted = isWishlisted(product.id);
   const discount   = discountPercent(product.original_price, product.price);
   const rating     = Number(product.rating) || 0;
@@ -82,10 +86,10 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           />
 
           {/* Out of stock */}
-          {Number(product.stock) === 0 && (
+          {stock === 0 && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
               <span className="text-white text-sm font-semibold px-3 py-1.5 rounded bg-black/50">
-                Out of Stock
+                {t('outOfStock')}
               </span>
             </div>
           )}
@@ -137,10 +141,10 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           </div>
 
           {/* Delivery badge */}
-          {!compact && Number(product.stock) > 0 && (
+          {!compact && stock > 0 && (
             <div className="flex items-center gap-1 mt-1.5">
               <Truck className="w-3 h-3 text-[#27ae60]" />
-              <span className="text-[10px] text-[#27ae60] font-medium">Free delivery</span>
+              <span className="text-[10px] text-[#27ae60] font-medium">{t('freeDelivery')}</span>
             </div>
           )}
 
@@ -149,18 +153,18 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleAddToCart}
-              disabled={Number(product.stock) === 0}
+              disabled={stock === 0}
               className="w-full mt-3 py-1.5 rounded text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: Number(product.stock) === 0
+                background: stock === 0
                   ? 'rgba(255,255,255,0.06)'
                   : 'linear-gradient(to bottom, #f0c14b, #e47911)',
                 border: '1px solid rgba(255,153,0,0.5)',
-                color: Number(product.stock) === 0 ? '#6B7280' : '#131921',
+                color: stock === 0 ? '#6B7280' : '#131921',
               }}
             >
               <ShoppingCart className="w-3 h-3" />
-              {Number(product.stock) === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {stock === 0 ? t('outOfStock') : t('addToCart')}
             </motion.button>
           )}
         </div>
