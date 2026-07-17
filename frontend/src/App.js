@@ -25,20 +25,20 @@ const Wishlist       = lazy(() => import('./pages/Wishlist'));
 const Orders         = lazy(() => import('./pages/Orders'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
-// Page loader — Amazon dark theme
+// Page loader — NexCart light theme
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex items-center justify-center bg-[#0F1111]">
+  <div className="min-h-[60vh] flex items-center justify-center bg-[#F9FAFB]">
     <div className="flex flex-col items-center gap-4">
       <div className="flex gap-2">
         {[0, 1, 2].map(i => (
           <div
             key={i}
-            className="w-3 h-3 rounded-full bg-[#FF9900] animate-bounce"
+            className="w-3 h-3 rounded-full bg-[#6366F1] animate-bounce"
             style={{ animationDelay: `${i * 0.15}s` }}
           />
         ))}
       </div>
-      <p className="text-[#A0AEC0] text-sm">Loading…</p>
+      <p className="text-[#6B7280] text-sm">Loading…</p>
     </div>
   </div>
 );
@@ -61,7 +61,7 @@ function AdminRoute({ children }) {
 
 function AppLayout() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0F1111', color: '#E7E9EA' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F9FAFB', color: '#374151' }}>
       <Navbar />
       <main className="flex-1">
         <Suspense fallback={<PageLoader />}>

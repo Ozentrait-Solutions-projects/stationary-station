@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Mail, Phone, MapPin, Globe, MessageCircle, Camera, Play, Shield } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageCircle, Camera, Play, Shield } from 'lucide-react';
 
 const FOOTER_LINKS = {
   'Get to Know Us': [
@@ -42,12 +42,11 @@ export default function Footer() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <footer style={{ backgroundColor: '#131921' }}>
+    <footer className="bg-gray-50 border-t border-gray-200">
       {/* Back to top */}
       <button
         onClick={scrollToTop}
-        className="w-full py-3.5 text-sm text-[#E7E9EA] hover:text-white transition-colors text-center font-medium"
-        style={{ backgroundColor: '#37475A' }}
+        className="w-full py-3.5 text-sm text-gray-700 hover:bg-gray-200 transition-colors text-center font-medium bg-gray-100 border-b border-gray-200"
       >
         Back to top
       </button>
@@ -57,13 +56,13 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section}>
-              <h4 className="text-white font-bold text-sm mb-4">{section}</h4>
+              <h4 className="text-gray-900 font-bold text-sm mb-4">{section}</h4>
               <ul className="space-y-2">
                 {links.map(link => (
                   <li key={link.label}>
                     <Link
                       to={link.to}
-                      className="text-[#A0AEC0] text-sm hover:text-[#E7E9EA] hover:underline transition-colors duration-150"
+                      className="text-gray-500 text-sm hover:text-indigo-600 hover:underline transition-colors duration-150 font-medium"
                     >
                       {link.label}
                     </Link>
@@ -76,18 +75,20 @@ export default function Footer() {
       </div>
 
       {/* Divider */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+      <div className="border-t border-gray-200" />
 
       {/* Brand + Social + Payments */}
       <div className="nexcart-container py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded bg-[#FF9900] flex items-center justify-center">
-              <ShoppingCart className="w-4 h-4 text-[#131921]" />
-            </div>
-            <span className="font-display font-bold text-white text-xl">
-              Nex<span className="text-[#FF9900]">Cart</span>
+            <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="transform group-hover:scale-105 transition-transform duration-200">
+              <path d="M6 6H13.5L22.5 30H15L6 6Z" fill="url(#nexLogoG1)" />
+              <path d="M22.5 30H30V6H22.5V30Z" fill="url(#nexLogoG2)" />
+              <path d="M6 6V18L13.5 30L22.5 30L6 6Z" fill="url(#nexLogoG3)" />
+            </svg>
+            <span className="font-display font-bold text-gray-900 text-lg">
+              Nex<span className="text-[#6366F1]">Cart</span>
             </span>
           </Link>
 
@@ -102,8 +103,7 @@ export default function Footer() {
                 key={i}
                 type="button"
                 aria-label={label}
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-[#A0AEC0] hover:text-white transition-colors"
-                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors border border-gray-200 bg-white"
               >
                 <Icon className="w-4 h-4" />
               </button>
@@ -111,13 +111,13 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="flex items-center gap-6 text-sm text-[#A0AEC0]">
+          <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
             <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-[#FF9900]" />
+              <Phone className="w-4 h-4 text-[#6366F1]" />
               <span>1800-123-4567</span>
             </div>
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-[#FF9900]" />
+              <Mail className="w-4 h-4 text-[#6366F1]" />
               <span>support@nexcart.com</span>
             </div>
           </div>
@@ -125,16 +125,15 @@ export default function Footer() {
 
         {/* Payment Methods */}
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-[#A0AEC0] text-sm">
-            <Shield className="w-4 h-4 text-green-400" />
+          <div className="flex items-center gap-2 text-gray-500 text-sm font-semibold">
+            <Shield className="w-4 h-4 text-emerald-500" />
             <span>Secure Payments</span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {PAYMENT_ICONS.map(p => (
               <span
                 key={p}
-                className="px-3 py-1 text-xs font-bold text-[#E7E9EA] rounded"
-                style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="px-3 py-1 text-xs font-bold text-gray-600 rounded bg-gray-100 border border-gray-200"
               >
                 {p}
               </span>
@@ -144,19 +143,19 @@ export default function Footer() {
       </div>
 
       {/* Sub-footer */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', backgroundColor: '#0F1111' }}>
+      <div className="border-t border-gray-200 bg-gray-100">
         <div className="nexcart-container py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[#6B7280]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-500">
             <p>© 2026 NexCart.com, Inc. or its affiliates. All rights reserved.</p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
               {['Privacy Policy', 'Terms of Use', 'Interest-Based Ads', 'Cookie Preferences'].map(item => (
-                <Link key={item} to="#" className="hover:text-[#E7E9EA] hover:underline transition-colors">
+                <Link key={item} to="#" className="hover:text-indigo-600 hover:underline transition-colors">
                   {item}
                 </Link>
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="w-3 h-3 text-[#FF9900]" />
+              <MapPin className="w-3 h-3 text-[#6366F1]" />
               <span>Made with ❤️ in India 🇮🇳</span>
             </div>
           </div>

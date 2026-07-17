@@ -153,23 +153,23 @@ export default function AdminDashboard() {
   };
 
   const STAT_CARDS = data ? [
-    { label: 'Total Revenue', value: formatPrice(data.stats.totalRevenue), icon: TrendingUp,  gradient: 'linear-gradient(135deg, #FF9900, #e47911)', change: '+12.5%' },
-    { label: 'Total Orders',  value: data.stats.totalOrders.toLocaleString(), icon: ShoppingBag, gradient: 'linear-gradient(135deg, #7C3AED, #6d28d9)', change: '+8.2%' },
-    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: Users,       gradient: 'linear-gradient(135deg, #27ae60, #1e8449)', change: '+5.1%' },
-    { label: 'Products',      value: data.stats.totalProducts.toLocaleString(), icon: Package,  gradient: 'linear-gradient(135deg, #3498db, #2980b9)', change: '+2 new' },
+    { label: 'Total Revenue', value: formatPrice(data.stats.totalRevenue), icon: TrendingUp,  gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)', change: '+12.5%' },
+    { label: 'Total Orders',  value: data.stats.totalOrders.toLocaleString(), icon: ShoppingBag, gradient: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', change: '+8.2%' },
+    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: Users,       gradient: 'linear-gradient(135deg, #10B981, #059669)', change: '+5.1%' },
+    { label: 'Products',      value: data.stats.totalProducts.toLocaleString(), icon: Package,  gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)', change: '+2 new' },
   ] : [];
 
   return (
-    <div style={{ backgroundColor: '#0F1111' }} className="min-h-screen">
+    <div className="min-h-screen bg-[#FAFBFD]">
       <div className="nexcart-container py-6">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-display text-2xl font-bold text-[#E7E9EA]">Admin Panel</h1>
-            <p className="text-sm text-[#6B7280] mt-0.5">Welcome back, {user?.name}</p>
+            <h1 className="font-display text-2xl font-black text-gray-900">Admin Panel</h1>
+            <p className="text-sm text-gray-400 font-bold mt-0.5">Welcome back, {user?.name}</p>
           </div>
-          <Link to="/" className="btn-amazon-secondary text-sm px-4 py-2 rounded-lg">
+          <Link to="/" className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm">
             ← Back to Store
           </Link>
         </div>
@@ -179,12 +179,11 @@ export default function AdminDashboard() {
           <aside className="hidden lg:block w-52 flex-shrink-0 space-y-1">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
                   tab === t.id
-                    ? 'text-[#131921] font-bold'
-                    : 'text-[#A0AEC0] hover:text-[#E7E9EA] hover:bg-white/5'
+                    ? 'text-white bg-[#6366F1] shadow-md shadow-indigo-100'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'
                 }`}
-                style={{ backgroundColor: tab === t.id ? '#FF9900' : 'transparent' }}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
               </button>
@@ -195,10 +194,9 @@ export default function AdminDashboard() {
           <div className="lg:hidden flex gap-2 overflow-x-auto no-scrollbar mb-4 w-full">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  tab === t.id ? 'text-[#131921] font-bold' : 'text-[#A0AEC0]'
+                className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  tab === t.id ? 'text-white bg-[#6366F1] shadow-sm' : 'text-gray-500 bg-white border border-gray-100 shadow-xs'
                 }`}
-                style={{ backgroundColor: tab === t.id ? '#FF9900' : 'rgba(255,255,255,0.06)' }}
               >
                 <t.icon className="w-3.5 h-3.5" /> {t.label}
               </button>
@@ -213,25 +211,25 @@ export default function AdminDashboard() {
                 {/* Stat Cards */}
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                   {loading
-                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg" />)
+                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg animate-pulse" />)
                     : STAT_CARDS.map((card, i) => (
                         <motion.div key={card.label}
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="rounded-lg p-5 text-white overflow-hidden relative"
+                          className="rounded-2xl p-5 text-white overflow-hidden relative shadow-sm"
                           style={{ background: card.gradient }}
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                               <card.icon className="w-5 h-5" />
                             </div>
-                            <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded-full flex items-center gap-1">
                               <ArrowUpRight className="w-3 h-3" /> {card.change}
                             </span>
                           </div>
-                          <p className="font-display text-2xl font-extrabold">{card.value}</p>
-                          <p className="text-white/80 text-xs mt-1">{card.label}</p>
+                          <p className="font-display text-2xl font-black">{card.value}</p>
+                          <p className="text-white/80 text-xs mt-1 font-semibold">{card.label}</p>
                         </motion.div>
                       ))
                   }
@@ -239,20 +237,20 @@ export default function AdminDashboard() {
 
                 {/* Revenue Chart */}
                 {!loading && data?.revenueByDay?.length > 0 && (
-                  <div className="rounded-lg p-5" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h3 className="font-bold text-[#E7E9EA] mb-4 flex items-center gap-2">
-                      <BarChart2 className="w-5 h-5 text-[#FF9900]" /> Revenue (Last 30 Days)
+                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-950 mb-4 flex items-center gap-2">
+                      <BarChart2 className="w-5 h-5 text-indigo-600" /> Revenue (Last 30 Days)
                     </h3>
                     <ResponsiveContainer width="100%" height={220}>
                       <LineChart data={data.revenueByDay}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6B7280' }} tickFormatter={d => d.slice(5)} />
-                        <YAxis tick={{ fontSize: 11, fill: '#6B7280' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={d => d.slice(5)} />
+                        <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
                         <Tooltip
                           formatter={v => formatPrice(v)}
-                          contentStyle={{ background: '#1B2533', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#E7E9EA', fontSize: '13px' }}
+                          contentStyle={{ background: '#FFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px', color: '#111', fontSize: '13px' }}
                         />
-                        <Line type="monotone" dataKey="revenue" stroke="#FF9900" strokeWidth={2.5} dot={false} />
+                        <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2.5} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -260,44 +258,44 @@ export default function AdminDashboard() {
 
                 {/* Recent Orders + Top Products */}
                 <div className="grid lg:grid-cols-2 gap-5">
-                  <div className="rounded-lg p-5" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h3 className="font-bold text-[#E7E9EA] mb-4">Recent Orders</h3>
+                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-950 mb-4">Recent Orders</h3>
                     <div className="space-y-3">
                       {(data?.recentOrders || []).slice(0, 5).map(order => (
-                        <div key={order.id} className="flex items-center justify-between gap-2 text-sm py-2 cursor-pointer hover:bg-white/3 rounded transition-colors" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                        <div key={order.id} className="flex items-center justify-between gap-2 text-sm py-2 border-b border-gray-50 last:border-b-0 cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors"
                           onClick={() => openOrderDetails(order)}>
                           <div className="min-w-0">
-                            <p className="font-medium text-[#E7E9EA] truncate">{order.user_name}</p>
-                            <p className="text-xs text-[#6B7280]">#{order.id} · {formatDate(order.created_at)}</p>
+                            <p className="font-bold text-gray-800 truncate">{order.user_name}</p>
+                            <p className="text-xs text-gray-400 font-semibold">#{order.id} · {formatDate(order.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[10px]`}>
                               {ORDER_STATUS[order.status]?.label}
                             </span>
-                            <span className="font-bold text-[#E7E9EA] text-sm">{formatPrice(order.final_price)}</span>
+                            <span className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-lg p-5" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h3 className="font-bold text-[#E7E9EA] mb-4">Top Selling Products</h3>
+                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-955 mb-4">Top Selling Products</h3>
                     <div className="space-y-3">
                       {(data?.topProducts || []).map((p, i) => (
-                        <div key={i} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                          <span className="font-bold text-[#6B7280] text-sm w-5">#{i + 1}</span>
-                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded flex-shrink-0"
+                        <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-b-0">
+                          <span className="font-bold text-gray-400 text-sm w-5">#{i + 1}</span>
+                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#E7E9EA] truncate">{p.title}</p>
-                            <p className="text-xs text-[#6B7280]">{Number(p.total_sold).toLocaleString()} sold</p>
+                            <p className="text-sm font-bold text-gray-805 truncate">{p.title}</p>
+                            <p className="text-xs text-gray-400 font-semibold">{Number(p.total_sold).toLocaleString()} sold</p>
                           </div>
-                          <p className="text-sm font-bold text-[#FF9900] flex-shrink-0">{formatPrice(p.revenue)}</p>
+                          <p className="text-sm font-black text-indigo-650 flex-shrink-0">{formatPrice(p.revenue)}</p>
                         </div>
                       ))}
                       {(!data?.topProducts || data.topProducts.length === 0) && (
-                        <p className="text-[#6B7280] text-sm text-center py-6">No sales data yet</p>
+                        <p className="text-gray-400 text-sm text-center py-6 font-semibold">No sales data yet</p>
                       )}
                     </div>
                   </div>
@@ -305,12 +303,12 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* ── Orders Tab ────────────────────────────────────── */}
+             {/* ── Orders Tab ────────────────────────────────────── */}
             {tab === 'orders' && (
-              <div className="rounded-lg overflow-hidden" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 className="font-bold text-[#E7E9EA]">All Orders ({orders.length})</h3>
-                  <p className="text-xs text-[#6B7280] mt-1">Click any row to view full order details</p>
+              <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <h3 className="font-black text-gray-950">All Orders ({orders.length})</h3>
+                  <p className="text-xs text-gray-400 font-bold mt-1">Click any row to view full order details</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="amazon-table">
@@ -323,21 +321,20 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {orders.map(order => (
-                        <tr key={order.id} className="cursor-pointer hover:bg-white/2 transition-colors">
-                          <td className="font-mono text-[#FF9900] font-bold">#{order.id}</td>
+                        <tr key={order.id} className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => openOrderDetails(order)}>
+                          <td className="font-mono text-indigo-650 font-extrabold">#{order.id}</td>
                           <td>
-                            <p className="font-medium text-[#E7E9EA] truncate max-w-[140px]">{order.user_name}</p>
-                            <p className="text-xs text-[#6B7280] truncate max-w-[140px]">{order.user_email}</p>
+                            <p className="font-bold text-gray-800 truncate max-w-[140px]">{order.user_name}</p>
+                            <p className="text-xs text-gray-400 font-semibold truncate max-w-[140px]">{order.user_email}</p>
                           </td>
-                          <td className="text-[#6B7280] whitespace-nowrap">{formatDate(order.created_at)}</td>
-                          <td className="font-bold text-[#E7E9EA] whitespace-nowrap">{formatPrice(order.final_price)}</td>
+                          <td className="text-gray-500 font-semibold whitespace-nowrap">{formatDate(order.created_at)}</td>
+                          <td className="font-black text-gray-900 whitespace-nowrap">{formatPrice(order.final_price)}</td>
                           <td><span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'}`}>{ORDER_STATUS[order.status]?.label}</span></td>
                           <td>
                             <select
                               value={order.status}
                               onChange={e => { e.stopPropagation(); updateStatus(order.id, e.target.value); }}
-                              className="text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#FF9900]"
-                              style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.12)', color: '#E7E9EA' }}
+                              className="text-xs bg-gray-50 border border-gray-200 text-gray-750 font-bold rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                               onClick={e => e.stopPropagation()}
                             >
                               {Object.keys(ORDER_STATUS).map(s => <option key={s} value={s}>{ORDER_STATUS[s].label}</option>)}
@@ -357,7 +354,7 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                   {orders.length === 0 && (
-                    <p className="text-center text-[#6B7280] py-8">No orders found</p>
+                    <p className="text-center text-gray-400 py-8 font-semibold">No orders found</p>
                   )}
                 </div>
               </div>
@@ -367,12 +364,12 @@ export default function AdminDashboard() {
             {tab === 'products' && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-[#E7E9EA]">Product Management</h3>
-                  <button onClick={() => openProductModal(null)} className="btn-amazon-orange text-sm px-4 py-2 rounded-lg flex items-center gap-2">
+                  <h3 className="font-black text-gray-950">Product Management</h3>
+                  <button onClick={() => openProductModal(null)} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-4 py-2.5 rounded-xl font-bold shadow-md shadow-indigo-100 flex items-center gap-2">
                     <Plus className="w-4 h-4" /> Add Product
                   </button>
                 </div>
-                <div className="rounded-lg overflow-hidden" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
                   <div className="p-4">
                     <AdminProductList onEdit={openProductModal} onDelete={deleteProduct} />
                   </div>
@@ -382,9 +379,9 @@ export default function AdminDashboard() {
 
             {/* ── Users Tab ─────────────────────────────────────── */}
             {tab === 'users' && (
-              <div className="rounded-lg overflow-hidden" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 className="font-bold text-[#E7E9EA]">All Users ({users.length})</h3>
+              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <h3 className="font-black text-gray-950">All Users ({users.length})</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="amazon-table">
@@ -396,15 +393,19 @@ export default function AdminDashboard() {
                         <tr key={u.id}>
                           <td>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-[#FF9900] flex items-center justify-center text-dark-900 text-xs font-bold flex-shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black flex-shrink-0">
                                 {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : u.name?.[0]?.toUpperCase()}
                               </div>
-                              <span className="font-medium text-[#E7E9EA]">{u.name}</span>
+                              <span className="font-bold text-gray-800">{u.name}</span>
                             </div>
                           </td>
-                          <td className="text-[#6B7280]">{u.email}</td>
-                          <td><span className={`badge ${u.role === 'admin' ? 'badge-warning' : 'badge-success'}`}>{u.role}</span></td>
-                          <td className="text-[#6B7280] whitespace-nowrap">{formatDate(u.created_at)}</td>
+                          <td className="text-gray-500 font-semibold">{u.email}</td>
+                          <td>
+                            <span className={`badge ${u.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="text-gray-500 font-semibold whitespace-nowrap">{formatDate(u.created_at)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -419,68 +420,66 @@ export default function AdminDashboard() {
       {/* ── Order Detail Modal ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedOrder && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl rounded-xl overflow-hidden max-h-[90vh] flex flex-col"
-              style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.12)' }}
+              className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[90vh] flex flex-col bg-white border border-gray-200 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, #1B2533, #131921)' }}>
+              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b border-gray-150 bg-[#F9FAFB]">
                 <div>
-                  <h3 className="font-bold text-lg text-[#E7E9EA]">Order Details</h3>
-                  <p className="text-sm text-[#FF9900] font-mono mt-0.5">#{selectedOrder.id}</p>
+                  <h3 className="font-black text-lg text-gray-900">Order Details</h3>
+                  <p className="text-sm text-indigo-650 font-bold font-mono mt-0.5">#{selectedOrder.id}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-sm`}>
                     {ORDER_STATUS[selectedOrder.status]?.icon} {ORDER_STATUS[selectedOrder.status]?.label}
                   </span>
                   <button onClick={() => setSelectedOrder(null)}
-                    className="p-2 rounded-lg hover:bg-white/5 transition-colors text-[#6B7280] hover:text-[#E7E9EA]">
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Modal Body */}
-              <div className="overflow-y-auto flex-1 p-6 space-y-5">
+              <div className="overflow-y-auto flex-1 p-6 space-y-5 bg-[#FAFBFD]">
                 {orderDetailLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#FF9900]" />
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-650" />
                   </div>
                 ) : (
                   <>
                     {/* Info Grid */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Customer Info */}
-                      <div className="rounded-lg p-4" style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <h4 className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
+                      <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
+                        <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
                           <UserIcon className="w-3.5 h-3.5" /> Customer
                         </h4>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-9 h-9 rounded-full bg-[#FF9900] flex items-center justify-center text-dark-900 font-bold text-sm flex-shrink-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0">
                             {selectedOrder.user_avatar
                               ? <img src={selectedOrder.user_avatar} alt="" className="w-full h-full rounded-full object-cover" />
                               : selectedOrder.user_name?.[0]?.toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-sm text-[#E7E9EA]">{selectedOrder.user_name}</p>
-                            <p className="text-xs text-[#6B7280]">Customer ID #{selectedOrder.user_id}</p>
+                            <p className="font-bold text-sm text-gray-900">{selectedOrder.user_name}</p>
+                            <p className="text-xs text-gray-400 font-semibold">Customer ID #{selectedOrder.user_id}</p>
                           </div>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-xs text-[#A0AEC0]">
-                            <Mail className="w-3.5 h-3.5 text-[#6B7280]" />
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold">
+                            <Mail className="w-3.5 h-3.5 text-gray-400" />
                             <span>{selectedOrder.user_email}</span>
                           </div>
                           {selectedOrder.shipping_address?.phone && (
-                            <div className="flex items-center gap-2 text-xs text-[#A0AEC0]">
-                              <Phone className="w-3.5 h-3.5 text-[#6B7280]" />
+                            <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold">
+                              <Phone className="w-3.5 h-3.5 text-gray-400" />
                               <span>{selectedOrder.shipping_address.phone}</span>
                             </div>
                           )}
@@ -488,44 +487,44 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Payment Info */}
-                      <div className="rounded-lg p-4" style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <h4 className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
+                      <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
+                        <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
                           <CreditCard className="w-3.5 h-3.5" /> Payment
                         </h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#6B7280]">Method</span>
-                            <span className="text-[#E7E9EA] font-medium capitalize">{selectedOrder.payment_method || 'Card'}</span>
+                        <div className="space-y-2.5">
+                          <div className="flex justify-between text-xs font-semibold">
+                            <span className="text-gray-400">Method</span>
+                            <span className="text-gray-700 capitalize">{selectedOrder.payment_method || 'Card'}</span>
                           </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#6B7280]">Subtotal</span>
-                            <span className="text-[#E7E9EA]">{formatPrice(selectedOrder.total_price)}</span>
+                          <div className="flex justify-between text-xs font-semibold">
+                            <span className="text-gray-400">Subtotal</span>
+                            <span className="text-gray-700">{formatPrice(selectedOrder.total_price)}</span>
                           </div>
                           {selectedOrder.discount > 0 && (
-                            <div className="flex justify-between text-xs">
-                              <span className="text-[#6B7280]">Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ''}</span>
-                              <span className="text-green-400">-{formatPrice(selectedOrder.discount)}</span>
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-gray-400">Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ''}</span>
+                              <span className="text-emerald-600">-{formatPrice(selectedOrder.discount)}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#6B7280]">Delivery</span>
-                            <span className="text-green-400">FREE</span>
+                          <div className="flex justify-between text-xs font-semibold">
+                            <span className="text-gray-400">Delivery</span>
+                            <span className="text-emerald-600">FREE</span>
                           </div>
-                          <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                            <span className="text-[#E7E9EA]">Total Paid</span>
-                            <span className="text-[#FF9900]">{formatPrice(selectedOrder.final_price)}</span>
+                          <div className="flex justify-between text-sm font-black pt-2 border-t border-gray-100">
+                            <span className="text-gray-900">Total Paid</span>
+                            <span className="text-indigo-600">{formatPrice(selectedOrder.final_price)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Delivery Address */}
                       {selectedOrder.shipping_address && (
-                        <div className="rounded-lg p-4" style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.06)' }}>
-                          <h4 className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
+                        <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
+                          <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
                             <MapPin className="w-3.5 h-3.5" /> Delivery Address
                           </h4>
-                          <div className="text-xs text-[#A0AEC0] space-y-0.5">
-                            <p className="font-semibold text-[#E7E9EA] text-sm">{selectedOrder.shipping_address.full_name}</p>
+                          <div className="text-xs text-gray-500 font-semibold space-y-1">
+                            <p className="font-black text-gray-900 text-sm mb-1">{selectedOrder.shipping_address.full_name}</p>
                             <p>{selectedOrder.shipping_address.address_line}</p>
                             <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.pincode}</p>
                             <p>{selectedOrder.shipping_address.country}</p>
@@ -534,28 +533,27 @@ export default function AdminDashboard() {
                       )}
 
                       {/* Order Meta */}
-                      <div className="rounded-lg p-4" style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <h4 className="text-xs text-[#6B7280] uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
+                      <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
+                        <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Order Info
                         </h4>
-                        <div className="space-y-2 text-xs">
+                        <div className="space-y-2.5 text-xs font-semibold">
                           <div className="flex justify-between">
-                            <span className="text-[#6B7280]">Placed on</span>
-                            <span className="text-[#E7E9EA]">{formatDate(selectedOrder.created_at)}</span>
+                            <span className="text-gray-400">Placed on</span>
+                            <span className="text-gray-700">{formatDate(selectedOrder.created_at)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-[#6B7280]">Status</span>
+                            <span className="text-gray-400">Status</span>
                             <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-[10px]`}>
                               {ORDER_STATUS[selectedOrder.status]?.label}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                            <span className="text-[#6B7280]">Update Status</span>
+                          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                            <span className="text-gray-450 font-bold">Update Status</span>
                             <select
                               value={selectedOrder.status}
                               onChange={e => updateStatus(selectedOrder.id, e.target.value)}
-                              className="text-xs rounded px-2 py-1 focus:outline-none"
-                              style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.15)', color: '#E7E9EA' }}
+                              className="text-xs bg-gray-50 border border-gray-200 text-gray-750 font-bold rounded-lg px-2 py-1 focus:outline-none"
                             >
                               {Object.keys(ORDER_STATUS).map(s => <option key={s} value={s}>{ORDER_STATUS[s].label}</option>)}
                             </select>
@@ -565,35 +563,35 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Ordered Products */}
-                    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="px-4 py-3" style={{ backgroundColor: '#1B2533', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                        <h4 className="text-sm font-bold text-[#E7E9EA] flex items-center gap-2">
-                          <Package className="w-4 h-4 text-[#FF9900]" />
+                    <div className="rounded-2xl overflow-hidden bg-white border border-gray-150 shadow-xs">
+                      <div className="px-5 py-4 border-b border-gray-100 bg-[#F9FAFB]">
+                        <h4 className="text-sm font-black text-gray-900 flex items-center gap-2">
+                          <Package className="w-4 h-4 text-indigo-650" />
                           Ordered Products ({selectedOrder.items?.length || 0})
                         </h4>
                       </div>
-                      <div className="divide-y divide-white/5">
+                      <div className="divide-y divide-gray-100">
                         {(selectedOrder.items || []).map(item => (
                           <div key={item.id} className="flex items-center gap-4 p-4">
-                            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ backgroundColor: '#1B2533' }}>
-                              <img src={item.image_url} alt={item.title} className="w-full h-full object-cover"
+                            <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 p-1 flex items-center justify-center">
+                              <img src={item.image_url} alt={item.title} className="w-full h-full object-contain"
                                 onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=56'; }} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-[#E7E9EA] truncate">{item.title}</p>
-                              <p className="text-xs text-[#6B7280] mt-0.5">{item.category}{item.brand ? ` · ${item.brand}` : ''}</p>
-                              <p className="text-xs text-[#A0AEC0] mt-1">
+                              <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
+                              <p className="text-xs text-gray-400 font-semibold mt-0.5">{item.category}{item.brand ? ` · ${item.brand}` : ''}</p>
+                              <p className="text-xs text-indigo-655 font-bold mt-1">
                                 {formatPrice(item.price_at_purchase)} × {item.quantity}
                               </p>
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <p className="font-bold text-sm text-[#E7E9EA]">{formatPrice(item.price_at_purchase * item.quantity)}</p>
-                              <p className="text-[10px] text-[#6B7280] mt-1">Qty: {item.quantity}</p>
+                              <p className="font-black text-sm text-gray-900">{formatPrice(item.price_at_purchase * item.quantity)}</p>
+                              <p className="text-[10px] text-gray-450 font-bold mt-1">Qty: {item.quantity}</p>
                             </div>
                           </div>
                         ))}
                         {(!selectedOrder.items || selectedOrder.items.length === 0) && (
-                          <p className="text-center text-[#6B7280] text-sm py-6">No items found</p>
+                          <p className="text-center text-gray-400 text-sm py-6 font-semibold">No items found</p>
                         )}
                       </div>
                     </div>
@@ -607,19 +605,18 @@ export default function AdminDashboard() {
 
       {/* Product Modal */}
       {productModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-lg p-6 max-h-[90vh] overflow-y-auto"
-            style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto bg-white border border-gray-100 shadow-xl"
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-[#E7E9EA]">
+              <h3 className="font-black text-gray-950">
                 {productModal === 'create' ? 'Add New Product' : 'Edit Product'}
               </h3>
-              <button onClick={() => setProductModal(null)} className="p-2 rounded-lg hover:bg-white/5 transition-colors">
-                <X className="w-5 h-5 text-[#6B7280]" />
+              <button onClick={() => setProductModal(null)} className="p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
 
@@ -658,12 +655,11 @@ export default function AdminDashboard() {
                   { label: 'Upload Image',  mode: 'upload', icon: Upload },
                 ].map(opt => (
                   <button key={opt.mode} type="button" onClick={() => setImageMode(opt.mode)}
-                    className={`text-sm rounded-lg px-3 py-2 border transition-colors flex items-center justify-center gap-2 ${
+                    className={`text-sm rounded-xl px-3 py-2 border transition-colors flex items-center justify-center gap-2 ${
                       imageMode === opt.mode
-                        ? 'border-[#FF9900] text-[#FF9900]'
-                        : 'text-[#6B7280] hover:text-[#A0AEC0]'
+                        ? 'border-indigo-600 text-indigo-650 font-bold bg-indigo-50/30'
+                        : 'text-gray-400 border-gray-200 hover:text-gray-650'
                     }`}
-                    style={{ borderColor: imageMode === opt.mode ? undefined : 'rgba(255,255,255,0.12)' }}
                   >
                     {opt.icon && <opt.icon className="w-4 h-4" />}
                     {opt.label}
@@ -678,7 +674,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <input type="file" accept="image/png,image/jpeg,image/webp" className="input text-sm" onChange={handleProductImageSelect} />
                   {productImagePreview && (
-                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 rounded-lg object-cover border border-white/10" />
+                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-gray-150" />
                   )}
                 </div>
               )}
@@ -691,16 +687,16 @@ export default function AdminDashboard() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={!!productForm.is_featured}
                   onChange={e => setProductForm(f => ({ ...f, is_featured: e.target.checked }))}
-                  className="accent-[#FF9900] w-4 h-4" />
-                <span className="text-sm text-[#A0AEC0]">Featured product</span>
+                  className="accent-[#6366F1] w-4 h-4" />
+                <span className="text-sm text-gray-500 font-bold">Featured product</span>
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setProductModal(null)} className="flex-1 btn-amazon-secondary py-2.5 rounded-lg text-sm">
+                <button type="button" onClick={() => setProductModal(null)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold py-2.5 rounded-xl text-sm">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 btn-amazon-orange py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <button type="submit" disabled={saving} className="flex-1 bg-[#6366F1] hover:bg-[#4F46E5] text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Save className="w-4 h-4" />}
                   {saving ? 'Saving…' : 'Save Product'}
                 </button>
               </div>
@@ -723,33 +719,33 @@ function AdminProductList({ onEdit, onDelete }) {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="skeleton h-32 rounded-lg animate-pulse" />;
+  if (loading) return <div className="skeleton h-32 rounded-2xl animate-pulse" />;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {products.map(p => (
         <div key={p.id}
-          className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
+          className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
         >
-          <img src={p.image_url} alt={p.title} className="w-12 h-12 object-cover rounded flex-shrink-0"
+          <img src={p.image_url} alt={p.title} className="w-12 h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm text-[#E7E9EA] truncate">{p.title}</p>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-[#6B7280]">{p.category} · {formatPrice(p.price)}</p>
+            <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-gray-400 font-bold">{p.category} · {formatPrice(p.price)}</p>
               {Number(p.stock) > 0
-                ? <span className="text-[10px] text-green-400 font-semibold">In Stock ({p.stock})</span>
-                : <span className="text-[10px] text-red-400 font-semibold">Out of Stock</span>
+                ? <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full">In Stock ({p.stock})</span>
+                : <span className="text-[10px] text-rose-600 font-extrabold bg-rose-50 px-2 py-0.5 rounded-full">Out of Stock</span>
               }
             </div>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <button onClick={() => onEdit(p)}
-              className="p-2 rounded-lg text-[#007185] hover:bg-white/5 transition-colors" title="Edit">
+              className="p-2 rounded-xl text-indigo-650 hover:bg-gray-100 transition-colors" title="Edit">
               <Edit3 className="w-4 h-4" />
             </button>
             <button onClick={() => onDelete(p.id)}
-              className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+              className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors" title="Delete">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

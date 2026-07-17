@@ -84,7 +84,7 @@ export default function ProductListing() {
   const pageTitle = featured ? "Today's Deals" : category || (search ? `Results for "${search}"` : 'All Products');
 
   return (
-    <div style={{ backgroundColor: '#0F1111' }} className="min-h-screen">
+    <div className="min-h-screen bg-[#FAFBFD]">
       <div className="nexcart-container py-4">
 
         {/* Breadcrumb */}
@@ -92,11 +92,11 @@ export default function ProductListing() {
           <a href="/">NexCart</a>
           <span>/</span>
           {category ? (
-            <><span className="text-[#E7E9EA]">{category}</span></>
+            <><span className="text-gray-800 font-bold">{category}</span></>
           ) : search ? (
-            <><span className="text-[#E7E9EA]">Search: "{search}"</span></>
+            <><span className="text-gray-800 font-bold">Search: "{search}"</span></>
           ) : (
-            <><span className="text-[#E7E9EA]">All Products</span></>
+            <><span className="text-gray-800 font-bold">All Products</span></>
           )}
         </nav>
 
@@ -104,11 +104,11 @@ export default function ProductListing() {
 
           {/* ── Sidebar Filters — Desktop ─────────────────────────── */}
           <aside className="hidden lg:block w-60 flex-shrink-0">
-            <div className="sticky top-28 space-y-4">
+            <div className="sticky top-28 bg-white border border-gray-200 shadow-xs rounded-2xl p-4 space-y-4">
               {hasFilters && (
                 <button
                   onClick={clearFilters}
-                  className="text-xs text-[#007185] hover:text-[#FF9900] hover:underline transition-colors"
+                  className="text-xs text-indigo-650 font-bold hover:text-indigo-850 hover:underline transition-colors flex items-center gap-1"
                 >
                   ← Clear all filters
                 </button>
@@ -123,8 +123,8 @@ export default function ProductListing() {
                         onClick={() => setFilter('category', category === cat ? '' : cat)}
                         className={`w-full text-left text-sm py-1 px-2 rounded transition-colors ${
                           category === cat
-                            ? 'text-[#FF9900] font-semibold'
-                            : 'text-[#E7E9EA] hover:text-[#FF9900]'
+                            ? 'text-indigo-600 font-bold'
+                            : 'text-gray-650 hover:text-indigo-600 hover:font-bold'
                         }`}
                       >
                         {category === cat && '▸ '}{cat}
@@ -134,7 +134,7 @@ export default function ProductListing() {
                 </ul>
               </FilterSection>
 
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+              <div className="border-t border-gray-200" />
 
               {/* Price */}
               <FilterSection title="Price">
@@ -153,7 +153,7 @@ export default function ProductListing() {
                             }
                           }}
                           className={`w-full text-left text-sm py-1 px-2 rounded transition-colors ${
-                            active ? 'text-[#FF9900] font-semibold' : 'text-[#E7E9EA] hover:text-[#FF9900]'
+                            active ? 'text-indigo-600 font-bold' : 'text-gray-650 hover:text-indigo-600'
                           }`}
                         >
                           {active && '▸ '}{range.label}
@@ -164,7 +164,7 @@ export default function ProductListing() {
                 </ul>
               </FilterSection>
 
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+              <div className="border-t border-gray-200" />
 
               {/* Rating */}
               <FilterSection title="Avg. Customer Review">
@@ -174,15 +174,15 @@ export default function ProductListing() {
                       <button
                         onClick={() => setFilter('minRating', minRating === String(r) ? '' : r)}
                         className={`w-full text-left flex items-center gap-2 py-1 px-2 rounded transition-colors ${
-                          minRating === String(r) ? 'text-[#FF9900]' : 'text-[#E7E9EA] hover:text-[#FF9900]'
+                          minRating === String(r) ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600'
                         }`}
                       >
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className={`w-3.5 h-3.5 ${i < r ? 'fill-[#FF9900] text-[#FF9900]' : 'fill-[#374151] text-[#374151]'}`} />
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < r ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
                           ))}
                         </div>
-                        <span className="text-xs">& Up</span>
+                        <span className="text-xs font-bold">& Up</span>
                       </button>
                     </li>
                   ))}
@@ -195,13 +195,12 @@ export default function ProductListing() {
           <div className="flex-1 min-w-0">
             {/* Toolbar */}
             <div
-              className="flex items-center justify-between gap-4 mb-4 px-4 py-3 rounded-lg flex-wrap"
-              style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
+              className="flex items-center justify-between gap-4 mb-4 px-4 py-3 rounded-2xl flex-wrap bg-white border border-gray-200 shadow-sm"
             >
               <div>
-                <h1 className="font-display text-xl font-bold text-[#E7E9EA]">{pageTitle}</h1>
+                <h1 className="font-display text-lg font-black text-gray-900">{pageTitle}</h1>
                 {pagination && (
-                  <p className="text-xs text-[#6B7280] mt-0.5">
+                  <p className="text-xs text-gray-400 font-bold mt-0.5">
                     {pagination.total.toLocaleString()} results
                     {(minPrice || maxPrice) && ` · ₹${minPrice}–₹${maxPrice}`}
                     {minRating && ` · ${minRating}★ & up`}
@@ -213,29 +212,27 @@ export default function ProductListing() {
                 {/* Mobile Filter button */}
                 <button
                   onClick={() => setFiltersOpen(true)}
-                  className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#E7E9EA] border transition-colors"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}
+                  className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
                   {hasFilters && (
-                    <span className="bg-[#FF9900] text-dark-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full">On</span>
+                    <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">On</span>
                   )}
                 </button>
 
                 {/* Sort */}
-                <div className="flex items-center gap-2 text-sm text-[#6B7280]">
+                <div className="flex items-center gap-2 text-sm text-gray-400 font-bold">
                   <span className="hidden sm:block">Sort by:</span>
                   <div className="relative">
                     <select
                       value={sort}
                       onChange={e => setFilter('sort', e.target.value)}
-                      className="appearance-none text-sm font-medium text-[#E7E9EA] pr-7 pl-3 py-2 rounded-lg cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#FF9900]"
-                      style={{ backgroundColor: '#1B2533', border: '1px solid rgba(255,255,255,0.12)' }}
+                      className="appearance-none text-sm font-bold text-gray-700 pr-8 pl-4 py-2.5 rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white border border-gray-200"
                     >
                       {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6B7280] pointer-events-none" />
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -254,18 +251,17 @@ export default function ProductListing() {
             {/* Empty state */}
             {!loading && products.length === 0 && (
               <div
-                className="flex flex-col items-center justify-center py-24 text-center rounded-lg"
-                style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
+                className="flex flex-col items-center justify-center py-24 text-center rounded-3xl bg-white border border-gray-200 shadow-sm"
               >
-                <Search className="w-16 h-16 text-[#374151] mb-4" />
-                <h3 className="text-xl font-bold text-[#E7E9EA] mb-2">No results found</h3>
-                <p className="text-[#6B7280] text-sm mb-6">
+                <Search className="w-16 h-16 text-gray-300 mb-4" />
+                <h3 className="text-lg font-black text-gray-900 mb-2">No results found</h3>
+                <p className="text-gray-400 text-sm mb-6 font-medium">
                   {search
                     ? `No products match "${search}". Try different keywords.`
                     : 'No products match your current filters.'
                   }
                 </p>
-                <button onClick={clearFilters} className="btn-amazon-orange px-6 py-2.5 rounded-lg text-sm font-semibold">
+                <button onClick={clearFilters} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-6 py-2.5 rounded-xl font-bold shadow-sm transition-colors">
                   Clear All Filters
                 </button>
               </div>
@@ -280,7 +276,7 @@ export default function ProductListing() {
             {/* Infinite scroll sentinel */}
             <div ref={loaderRef} className="h-10 mt-4" />
             {pagination && page >= pagination.pages && products.length > 0 && (
-              <p className="text-center text-[#6B7280] text-sm py-6">
+              <p className="text-center text-gray-400 font-bold text-sm py-6">
                 — End of results —
               </p>
             )}
@@ -295,18 +291,17 @@ export default function ProductListing() {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setFiltersOpen(false)}
-              className="fixed inset-0 bg-black/70 z-50 lg:hidden"
+              className="fixed inset-0 bg-black/40 z-50 lg:hidden backdrop-blur-xs"
             />
             <motion.div
               initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-              className="fixed left-0 top-0 bottom-0 w-80 z-50 overflow-y-auto"
-              style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.1)' }}
+              className="fixed left-0 top-0 bottom-0 w-80 z-50 overflow-y-auto bg-white border-r border-gray-100 shadow-2xl"
             >
-              <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-                <h3 className="font-bold text-[#E7E9EA]">Filters</h3>
-                <button onClick={() => setFiltersOpen(false)} className="p-2 rounded-lg hover:bg-white/5">
-                  <X className="w-5 h-5 text-[#E7E9EA]" />
+              <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+                <h3 className="font-black text-gray-900">Filters</h3>
+                <button onClick={() => setFiltersOpen(false)} className="p-2 rounded-xl hover:bg-gray-50 text-gray-500">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -317,7 +312,7 @@ export default function ProductListing() {
                       <li key={cat}>
                         <button
                           onClick={() => { setFilter('category', cat); setFiltersOpen(false); }}
-                          className={`w-full text-left text-sm py-2 px-2 rounded transition-colors ${category === cat ? 'text-[#FF9900] font-semibold' : 'text-[#E7E9EA] hover:text-[#FF9900]'}`}
+                          className={`w-full text-left text-sm py-2 px-2 rounded transition-colors ${category === cat ? 'text-indigo-650 font-bold bg-indigo-50' : 'text-gray-650 hover:text-indigo-600'}`}
                         >
                           {cat}
                         </button>
@@ -326,7 +321,7 @@ export default function ProductListing() {
                   </ul>
                 </FilterSection>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+                <div className="border-t border-gray-100" />
 
                 <FilterSection title="Price Range">
                   <ul className="space-y-1">
@@ -336,7 +331,7 @@ export default function ProductListing() {
                         <li key={range.label}>
                           <button
                             onClick={() => { const p = Object.fromEntries(searchParams.entries()); p.minPrice=range.min; p.maxPrice=range.max; setSearchParams(p); setFiltersOpen(false); }}
-                            className={`w-full text-left text-sm py-2 px-2 rounded transition-colors ${active ? 'text-[#FF9900] font-semibold' : 'text-[#E7E9EA] hover:text-[#FF9900]'}`}
+                            className={`w-full text-left text-sm py-2 px-2 rounded transition-colors ${active ? 'text-indigo-650 font-bold bg-indigo-50' : 'text-gray-650 hover:text-indigo-600'}`}
                           >
                             {range.label}
                           </button>
@@ -349,7 +344,7 @@ export default function ProductListing() {
                 {hasFilters && (
                   <button
                     onClick={() => { clearFilters(); setFiltersOpen(false); }}
-                    className="w-full btn-outline text-sm py-2.5 rounded-lg"
+                    className="w-full border border-gray-200 text-gray-600 text-sm py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-colors"
                   >
                     Clear All Filters
                   </button>
@@ -368,8 +363,8 @@ function FilterSection({ title, children }) {
   return (
     <div>
       <button onClick={() => setOpen(!open)} className="flex items-center justify-between w-full mb-2 group">
-        <span className="text-sm font-bold text-[#E7E9EA] group-hover:text-[#FF9900] transition-colors">{title}</span>
-        <ChevronDown className={`w-4 h-4 text-[#6B7280] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <span className="text-xs font-black text-gray-800 group-hover:text-indigo-600 transition-colors uppercase tracking-wider">{title}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {open && (
@@ -387,10 +382,9 @@ function FilterSection({ title, children }) {
 
 function FilterPill({ label, onRemove }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-[#E7E9EA]"
-      style={{ backgroundColor: 'rgba(255,153,0,0.15)', border: '1px solid rgba(255,153,0,0.25)' }}>
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100">
       {label}
-      <button onClick={onRemove} className="text-[#A0AEC0] hover:text-red-400 transition-colors">
+      <button onClick={onRemove} className="text-indigo-400 hover:text-red-500 transition-colors">
         <X className="w-3 h-3" />
       </button>
     </span>
