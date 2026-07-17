@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { User, Package, Heart, Save, Loader2, ChevronRight, Mail, Shield, LayoutDashboard } from 'lucide-react';
+import { User, Package, Heart, Save, Loader2, ChevronRight, Mail, Shield, LayoutDashboard, MapPin, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useWishlist } from '../context/WishlistContext';
 import api from '../services/api';
 import { orderService } from '../services/productService';
@@ -23,6 +24,7 @@ const TABS = [
 
 export default function Profile() {
   const { user, updateUser, isAdmin } = useAuth();
+  const { language, setLanguage, languages, t } = useLanguage();
   const { wishlist } = useWishlist();
   const [tab, setTab]       = useState('account');
   const [orders, setOrders] = useState([]);
@@ -52,14 +54,13 @@ export default function Profile() {
   };
 
   return (
-    <div style={{ backgroundColor: '#0F1111' }} className="min-h-screen page-enter">
+    <div className="min-h-screen bg-[#FAFBFD] page-enter">
       <div className="nexcart-container py-6 max-w-5xl">
 
         {/* Account Overview Header */}
-        <div className="rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-          style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border border-gray-100 shadow-sm">
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-full bg-[#FF9900] flex items-center justify-center text-dark-900 text-2xl font-bold overflow-hidden shadow-md">
+            <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-650 text-2xl font-black overflow-hidden shadow-sm border border-indigo-100">
               {user?.avatar
                 ? <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 : user?.name?.[0]?.toUpperCase()
@@ -67,18 +68,18 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex-1">
-            <h1 className="font-display text-xl font-bold text-[#E7E9EA]">{user?.name}</h1>
-            <p className="text-sm text-[#6B7280] flex items-center gap-2 mt-0.5">
-              <Mail className="w-3.5 h-3.5" /> {user?.email}
+            <h1 className="font-display text-xl font-extrabold text-gray-900">{user?.name}</h1>
+            <p className="text-sm text-gray-500 flex items-center gap-2 mt-0.5 font-medium">
+              <Mail className="w-3.5 h-3.5 text-gray-400" /> {user?.email}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className={`badge ${user?.role === 'admin' ? 'badge-primary' : 'badge-success'}`}>
+              <span className={`badge ${user?.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
                 {user?.role === 'admin' ? '👑 Admin' : '✓ Verified'}
               </span>
             </div>
           </div>
           {isAdmin && (
-            <Link to="/admin" className="btn-amazon-orange text-sm px-4 py-2 rounded-lg flex items-center gap-2">
+            <Link to="/admin" className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white text-sm px-4 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-purple-100 flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" /> Admin Dashboard
             </Link>
           )}
@@ -89,20 +90,17 @@ export default function Profile() {
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             {ACCOUNT_SECTIONS.map(s => (
               <Link key={s.to} to={s.to}
-                className="flex items-center gap-4 p-4 rounded-lg transition-all group"
-                style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
+                className="flex items-center gap-4 p-4 rounded-xl transition-all group bg-white border border-gray-100 shadow-xs hover:border-gray-200"
               >
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${s.color}18` }}>
                   <s.icon className="w-6 h-6" style={{ color: s.color }} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-[#E7E9EA] text-sm">{s.title}</p>
-                  <p className="text-xs text-[#6B7280] mt-0.5">{s.desc}</p>
+                  <p className="font-bold text-gray-800 text-sm">{s.title}</p>
+                  <p className="text-xs text-gray-400 font-semibold mt-0.5">{s.desc}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#6B7280] group-hover:text-[#FF9900] transition-colors" />
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
               </Link>
             ))}
           </div>
@@ -113,12 +111,11 @@ export default function Profile() {
           <aside className="space-y-1">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
                   tab === t.id
-                    ? 'text-[#131921] font-bold'
-                    : 'text-[#A0AEC0] hover:text-[#E7E9EA] hover:bg-white/5'
+                    ? 'text-white bg-[#6366F1] shadow-md shadow-indigo-100'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'
                 }`}
-                style={{ backgroundColor: tab === t.id ? '#FF9900' : 'transparent' }}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
               </button>
@@ -131,46 +128,86 @@ export default function Profile() {
             {/* ── Account Tab ──────────────────────────────────── */}
             {tab === 'account' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <div className="rounded-lg p-5" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h2 className="font-bold text-[#E7E9EA] mb-4">Personal Information</h2>
+                <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
+                  <h2 className="font-black text-gray-950 mb-4 text-base">Personal Information</h2>
                   <form onSubmit={saveProfile} className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-[#A0AEC0] block mb-1.5">Full Name</label>
+                        <label className="text-sm font-bold text-gray-500 block mb-1.5">Full Name</label>
                         <input className="input text-sm py-2.5" value={form.name}
                           onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-[#A0AEC0] block mb-1.5">Phone</label>
+                        <label className="text-sm font-bold text-gray-500 block mb-1.5">Phone</label>
                         <input className="input text-sm py-2.5" placeholder="+91 9999999999"
                           value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-sm font-medium text-[#A0AEC0] block mb-1.5">Email (read-only)</label>
+                        <label className="text-sm font-bold text-gray-500 block mb-1.5">Email (read-only)</label>
                         <input className="input text-sm py-2.5 opacity-60 cursor-not-allowed" value={user?.email} readOnly />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-sm font-medium text-[#A0AEC0] block mb-1.5">Avatar URL (optional)</label>
+                        <label className="text-sm font-bold text-gray-500 block mb-1.5">Avatar URL (optional)</label>
                         <input className="input text-sm py-2.5" placeholder="https://…"
                           value={form.avatar} onChange={e => setForm(f => ({ ...f, avatar: e.target.value }))} />
                       </div>
                     </div>
-                    <button type="submit" disabled={saving} className="btn-amazon-orange px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    <button type="submit" disabled={saving} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Save className="w-4 h-4" />}
                       {saving ? 'Saving…' : 'Save Changes'}
                     </button>
                   </form>
                 </div>
 
                 {/* Security section */}
-                <div className="rounded-lg p-5 mt-4" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <Shield className="w-4 h-4 text-green-400" />
-                    <h2 className="font-bold text-[#E7E9EA]">Security</h2>
+                    <Shield className="w-4 h-4 text-emerald-500" />
+                    <h2 className="font-black text-gray-955 text-base">Security</h2>
                   </div>
-                  <div className="text-sm text-[#6B7280] space-y-2">
-                    <p>✓ Two-factor authentication: <span className="text-[#A0AEC0]">Not enabled</span></p>
-                    <p>✓ Password: <span className="text-[#A0AEC0]">Set</span></p>
+                  <div className="text-sm text-gray-500 font-bold space-y-2">
+                    <p>✓ Two-factor authentication: <span className="text-gray-805 font-medium ml-1">Not enabled</span></p>
+                    <p>✓ Password: <span className="text-gray-805 font-medium ml-1">Set</span></p>
+                  </div>
+                </div>
+
+                {/* Delivery Location section */}
+                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-150 shadow-xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-indigo-600" />
+                    <h2 className="font-black text-gray-955 text-base">Delivery Country/Region</h2>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-500 font-bold">
+                    <p>Current region set for deliveries:</p>
+                    <span className="bg-indigo-50 border border-indigo-150 text-indigo-700 px-3 py-1 rounded-full text-xs font-black">India</span>
+                  </div>
+                </div>
+
+                {/* Language section */}
+                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-150 shadow-xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Globe className="w-4 h-4 text-indigo-650" />
+                    <h2 className="font-black text-gray-955 text-base">{t('language', 'Language')}</h2>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-gray-500 font-bold">
+                    <p>Preferred display language:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {languages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => setLanguage(lang.code)}
+                          className={`px-4 py-2 rounded-full text-xs font-black border transition-all duration-150 ${
+                            language === lang.code
+                              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="mr-1.5">{lang.flag}</span>
+                          {lang.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -181,46 +218,45 @@ export default function Profile() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {loading ? (
                   <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg" />)}
+                    {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg animate-pulse" />)}
                   </div>
                 ) : orders.length === 0 ? (
-                  <div className="rounded-lg py-16 text-center" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <Package className="w-12 h-12 text-[#374151] mx-auto mb-4" />
-                    <h3 className="font-semibold text-[#E7E9EA] mb-2">No orders yet</h3>
-                    <p className="text-sm text-[#6B7280] mb-6">Start shopping to see your orders here</p>
-                    <Link to="/products" className="btn-amazon-orange text-sm px-6 py-2 rounded-lg">Shop Now</Link>
+                  <div className="rounded-2xl py-16 text-center bg-white border border-gray-100 shadow-sm">
+                    <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                    <h3 className="font-black text-gray-950 mb-2">No orders yet</h3>
+                    <p className="text-sm text-gray-400 mb-6 font-semibold">Start shopping to see your orders here</p>
+                    <Link to="/products" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-6 py-2.5 rounded-full font-bold shadow-md shadow-indigo-100">Shop Now</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {orders.map(order => {
                       const st = ORDER_STATUS[order.status];
                       return (
-                        <div key={order.id} className="rounded-lg overflow-hidden" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                          <div className="flex items-center justify-between px-4 py-3 text-xs" style={{ backgroundColor: '#1B2533', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div key={order.id} className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+                          <div className="flex items-center justify-between px-4 py-3 text-xs bg-gray-50 border-b border-gray-100 font-semibold text-gray-500">
                             <div className="flex gap-4">
-                              <span className="text-[#6B7280]">Order #{order.id}</span>
-                              <span className="text-[#6B7280]">{formatDate(order.created_at)}</span>
+                              <span>Order #{order.id}</span>
+                              <span>{formatDate(order.created_at)}</span>
                             </div>
                             <span className={`badge badge-${st?.color || 'info'}`}>{st?.icon} {st?.label}</span>
                           </div>
                           <div className="p-4 flex items-center gap-4">
                             <div className="flex gap-2 overflow-x-auto no-scrollbar">
                               {order.items?.slice(0, 3).map(item => (
-                                <img key={item.id} src={item.image_url} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0"
+                                <img key={item.id} src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
                                   onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
                               ))}
                               {order.items?.length > 3 && (
-                                <div className="w-12 h-12 rounded flex items-center justify-center text-xs text-[#6B7280] flex-shrink-0"
-                                  style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                                <div className="w-12 h-12 rounded flex items-center justify-center text-xs text-gray-500 font-bold bg-gray-150 flex-shrink-0">
                                   +{order.items.length - 3}
                                 </div>
                               )}
                             </div>
                             <div className="flex-1">
-                              <p className="font-bold text-[#E7E9EA] text-sm">{formatPrice(order.final_price)}</p>
-                              <p className="text-xs text-[#6B7280]">{order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</p>
+                              <p className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</p>
+                              <p className="text-xs text-gray-400 font-bold">{order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</p>
                             </div>
-                            <Link to="/orders" className="text-xs text-[#007185] hover:text-[#FF9900] hover:underline flex items-center gap-1 transition-colors">
+                            <Link to="/orders" className="text-xs text-indigo-650 hover:text-indigo-850 font-bold flex items-center gap-1 transition-colors">
                               View Details <ChevronRight className="w-3 h-3" />
                             </Link>
                           </div>
@@ -236,11 +272,11 @@ export default function Profile() {
             {tab === 'wishlist' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {wishlist.length === 0 ? (
-                  <div className="rounded-lg py-16 text-center" style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <Heart className="w-12 h-12 text-[#374151] mx-auto mb-4" />
-                    <h3 className="font-semibold text-[#E7E9EA] mb-2">Wishlist is empty</h3>
-                    <p className="text-sm text-[#6B7280] mb-6">Tap ♥ on products to save them</p>
-                    <Link to="/products" className="btn-amazon-orange text-sm px-6 py-2 rounded-lg">Explore Products</Link>
+                  <div className="rounded-2xl py-16 text-center bg-white border border-gray-100 shadow-sm">
+                    <Heart className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                    <h3 className="font-black text-gray-955 mb-2">Wishlist is empty</h3>
+                    <p className="text-sm text-gray-400 mb-6 font-semibold">Tap ♥ on products to save them</p>
+                    <Link to="/products" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-6 py-2.5 rounded-full font-bold shadow-md shadow-indigo-100">Explore Products</Link>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -256,7 +292,6 @@ export default function Profile() {
                 )}
               </motion.div>
             )}
-
           </div>
         </div>
       </div>

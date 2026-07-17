@@ -7,25 +7,25 @@
 /* ── Base Styles ─────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --amazon-bg:      #0F1111;
-    --amazon-surface: #131921;
-    --amazon-surface2:#1B2533;
-    --amazon-surface3:#232F3E;
-    --amazon-orange:  #FF9900;
-    --amazon-yellow:  #FEBD69;
-    --amazon-border:  rgba(255,255,255,0.08);
-    --amazon-border-bright: rgba(255,255,255,0.15);
-    --scrollbar-thumb: rgba(255,153,0,0.4);
-    --scrollbar-track: rgba(19,25,33,0.8);
+    --amazon-bg:      #F9FAFB;
+    --amazon-surface: #FFFFFF;
+    --amazon-surface2:#F3F4F6;
+    --amazon-surface3:#E5E7EB;
+    --amazon-orange:  #6366F1; /* Indigo/Purple */
+    --amazon-yellow:  #A5B4FC;
+    --amazon-border:  rgba(0,0,0,0.06);
+    --amazon-border-bright: rgba(0,0,0,0.12);
+    --scrollbar-thumb: rgba(99,102,241,0.4);
+    --scrollbar-track: rgba(243,244,246,0.8);
   }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
 
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased text-[#374151];
     background-color: var(--amazon-bg);
-    color: #E7E9EA;
+    color: #374151;
     transition: background-color 0.2s ease;
   }
 
@@ -33,12 +33,12 @@
   ::-webkit-scrollbar       { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
   ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,153,0,0.7); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.7); }
 
   /* Selection */
-  ::selection { background: rgba(255,153,0,0.25); color: white; }
+  ::selection { background: rgba(99,102,241,0.15); color: #4F46E5; }
 
-  h1, h2, h3, h4, h5, h6 { color: #E7E9EA; }
+  h1, h2, h3, h4, h5, h6 { color: #111827; }
 }
 
 /* ── Amazon Component Classes ─────────────────────────────────────── */
@@ -72,47 +72,47 @@
   .btn-amazon-secondary {
     @apply inline-flex items-center justify-center gap-2
            px-5 py-2.5 rounded-lg
-           bg-[#1B2533] font-medium text-sm text-[#E7E9EA]
-           border border-[rgba(255,255,255,0.15)]
-           hover:bg-[#232F3E] active:scale-[0.98]
+           bg-white font-medium text-sm text-gray-700
+           border border-gray-200
+           hover:bg-gray-55 active:scale-[0.98]
            transition-all duration-150;
   }
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-           bg-[#FF9900] text-dark-900
+           bg-[#6366F1] text-white
            font-semibold text-sm
-           hover:bg-[#e47911]
+           hover:bg-[#4F46E5]
            active:scale-95
            transition-all duration-200;
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
-           border border-[rgba(255,255,255,0.2)] text-[#E7E9EA] font-medium text-sm
-           hover:border-[rgba(255,255,255,0.4)] hover:bg-white/5 active:scale-95
+           border border-gray-300 text-gray-700 font-medium text-sm
+           hover:border-gray-400 hover:bg-gray-50 active:scale-95
            transition-all duration-200;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-           text-[#CCCCCC] font-medium text-sm
-           hover:bg-white/10 active:scale-95
+           text-gray-600 font-medium text-sm
+           hover:bg-gray-100 active:scale-95
            transition-all duration-200;
   }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-           bg-red-500/10 text-red-400 font-medium text-sm border border-red-500/20
-           hover:bg-red-500/20 active:scale-95
+           bg-red-50 text-red-500 font-medium text-sm border border-red-100
+           hover:bg-red-100/50 active:scale-95
            transition-all duration-200;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
-           bg-[#232F3E] text-[#E7E9EA] font-medium text-sm
-           border border-white/10
-           hover:bg-[#2d3a4a] active:scale-95
+           bg-gray-100 text-gray-800 font-medium text-sm
+           border border-gray-200
+           hover:bg-gray-200 active:scale-95
            transition-all duration-200;
   }
 
@@ -132,7 +132,7 @@
   }
   .card-hover:hover {
     border-color: var(--amazon-border-bright);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translateY(-1px);
   }
 
@@ -142,6 +142,12 @@
     @apply rounded-lg overflow-hidden;
   }
 
+  .hero-shell {
+    background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(255,255,255,0.8));
+    border: 1px solid rgba(99,102,241,0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  }
+
   .product-card {
     background-color: var(--amazon-surface);
     border: 1px solid var(--amazon-border);
@@ -149,26 +155,26 @@
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .product-card:hover {
-    border-color: var(--amazon-border-bright);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    border-color: #A5B4FC;
+    box-shadow: 0 10px 20px -5px rgba(99,102,241,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
   }
 
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-white/80 backdrop-blur-md border border-gray-200/50;
   }
 
   /* ── Inputs ───────────────────────────────────────────────────── */
   .input {
     @apply w-full px-4 py-3 rounded-lg
-           text-[#E7E9EA] placeholder-[#6B7280]
-           focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent
+           text-gray-800 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent
            transition-all duration-200;
-    background-color: var(--amazon-surface2);
+    background-color: var(--amazon-surface);
     border: 1px solid var(--amazon-border-bright);
   }
 
   .amazon-search-input {
-    @apply flex-1 h-10 px-4 text-dark-900 text-sm
+    @apply flex-1 h-10 px-4 text-gray-800 text-sm
            focus:outline-none bg-white;
   }
 
@@ -176,26 +182,26 @@
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold;
   }
-  .badge-primary  { @apply badge bg-primary-500/20 text-primary-300 border border-primary-500/30; }
-  .badge-success  { @apply badge bg-green-500/15 text-green-400 border border-green-500/20; }
-  .badge-warning  { @apply badge bg-[#FF9900]/15 text-[#FF9900] border border-[#FF9900]/20; }
-  .badge-danger   { @apply badge bg-red-500/15 text-red-400 border border-red-500/20; }
-  .badge-info     { @apply badge bg-blue-500/15 text-blue-400 border border-blue-500/20; }
-  .badge-prime    { @apply badge bg-[#00A8E1]/15 text-[#00A8E1] border border-[#00A8E1]/20; }
+  .badge-primary  { @apply badge bg-indigo-50 text-indigo-600 border border-indigo-100; }
+  .badge-success  { @apply badge bg-emerald-50 text-emerald-600 border border-emerald-100; }
+  .badge-warning  { @apply badge bg-amber-50 text-amber-600 border border-amber-100; }
+  .badge-danger   { @apply badge bg-rose-50 text-rose-500 border border-rose-100; }
+  .badge-info     { @apply badge bg-sky-50 text-sky-600 border border-sky-100; }
+  .badge-prime    { @apply badge bg-blue-50 text-blue-600 border border-blue-100; }
 
   .discount-badge {
     @apply absolute top-2 left-2 z-10
-           bg-[#B12704] text-white text-xs font-bold
-           px-2 py-1 rounded shadow-md;
+           bg-pink-100 text-pink-600 text-xs font-bold
+           px-2 py-1 rounded shadow-sm;
   }
 
   .prime-badge {
-    @apply inline-flex items-center gap-1 text-[#00A8E1] text-xs font-bold;
+    @apply inline-flex items-center gap-1 text-[#6366F1] text-xs font-bold;
   }
 
   /* ── Skeleton ─────────────────────────────────────────────────── */
   .skeleton {
-    background: linear-gradient(90deg, #1B2533 25%, #232F3E 50%, #1B2533 75%);
+    background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
     background-size: 200% 100%;
     animation: shimmer 1.8s linear infinite;
     @apply rounded;
@@ -203,10 +209,10 @@
 
   /* ── Section ──────────────────────────────────────────────────── */
   .section-title {
-    @apply font-display text-xl font-bold text-[#E7E9EA];
+    @apply font-display text-xl font-bold text-gray-900;
   }
   .section-subtitle {
-    @apply text-sm text-[#A0AEC0] mt-1;
+    @apply text-sm text-gray-500 mt-1;
   }
 
   .amazon-section {
@@ -218,7 +224,7 @@
 
   /* ── Gradient Text ────────────────────────────────────────────── */
   .gradient-text {
-    @apply bg-gradient-to-r from-[#FF9900] to-[#FEBD69] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#6366F1] to-[#EC4899] bg-clip-text text-transparent;
   }
 
   .gradient-text-purple {

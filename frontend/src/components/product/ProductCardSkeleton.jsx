@@ -1,9 +1,6 @@
 export default function ProductCardSkeleton() {
   return (
-    <div
-      className="rounded-lg overflow-hidden"
-      style={{ backgroundColor: '#131921', border: '1px solid rgba(255,255,255,0.06)' }}
-    >
+    <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-xs animate-pulse">
       {/* Image */}
       <div className="skeleton aspect-square w-full" />
 

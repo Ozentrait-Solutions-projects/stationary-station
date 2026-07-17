@@ -33,30 +33,29 @@ export default function CartSidebar() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 flex flex-col"
-            style={{ backgroundColor: '#131921', borderLeft: '1px solid rgba(255,255,255,0.1)' }}
+            className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 flex flex-col shadow-2xl bg-white border-l border-gray-100"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-[#FF9900]" />
-                <h2 className="font-bold text-[#E7E9EA]">
+                <ShoppingCart className="w-5 h-5 text-indigo-600" />
+                <h2 className="font-bold text-gray-900">
                   Your Cart
                   {totalItems > 0 && (
-                    <span className="ml-2 text-sm text-[#6B7280] font-normal">({totalItems} items)</span>
+                    <span className="ml-2 text-sm text-gray-400 font-normal">({totalItems} items)</span>
                   )}
                 </h2>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <X className="w-5 h-5 text-[#A0AEC0]" />
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-gray-50">
               {cartLoading ? (
                 <div className="p-4 space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -72,15 +71,14 @@ export default function CartSidebar() {
                 </div>
               ) : cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                    <Package className="w-10 h-10 text-[#374151]" />
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-gray-100">
+                    <Package className="w-10 h-10 text-gray-400" />
                   </div>
-                  <h3 className="font-semibold text-[#E7E9EA] mb-2">Your cart is empty</h3>
-                  <p className="text-sm text-[#6B7280] mb-6">Add items to get started</p>
+                  <h3 className="font-semibold text-gray-800 mb-2">Your cart is empty</h3>
+                  <p className="text-sm text-gray-400 mb-6">Add items to get started</p>
                   <button
                     onClick={() => { setSidebarOpen(false); navigate('/products'); }}
-                    className="btn-amazon-orange text-sm px-6 py-2 rounded-lg"
+                    className="w-full bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm py-2.5 rounded-xl font-bold shadow-sm transition-colors"
                   >
                     Continue Shopping
                   </button>
@@ -90,12 +88,11 @@ export default function CartSidebar() {
                   {cart.map(item => (
                     <div
                       key={item.id}
-                      className="flex gap-3 pb-3"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                      className="flex gap-3 pb-3 border-b border-gray-100 bg-white p-3 rounded-2xl shadow-sm"
                     >
                       {/* Image */}
                       <Link to={`/products/${item.product_id}`} onClick={() => setSidebarOpen(false)} className="flex-shrink-0">
-                        <div className="w-16 h-16 rounded overflow-hidden" style={{ backgroundColor: '#1B2533' }}>
+                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50">
                           <img
                             src={item.image_url}
                             alt={item.title}
@@ -110,30 +107,29 @@ export default function CartSidebar() {
                         <Link
                           to={`/products/${item.product_id}`}
                           onClick={() => setSidebarOpen(false)}
-                          className="text-xs font-medium text-[#E7E9EA] hover:text-[#FF9900] transition-colors line-clamp-2 leading-snug"
+                          className="text-xs font-semibold text-gray-800 hover:text-indigo-600 transition-colors line-clamp-2 leading-snug"
                         >
                           {item.title}
                         </Link>
-                        <p className="text-sm font-bold text-[#E7E9EA] mt-1">{formatPrice(item.price)}</p>
-                        <p className="text-xs text-green-400 mt-0.5">FREE delivery</p>
+                        <p className="text-sm font-black text-gray-900 mt-1">{formatPrice(item.price)}</p>
+                        <p className="text-[10px] text-emerald-600 font-bold mt-0.5">FREE delivery</p>
 
                         <div className="flex items-center gap-2 mt-2">
                           {/* Qty */}
-                          <div className="flex items-center rounded overflow-hidden"
-                            style={{ border: '1px solid rgba(255,255,255,0.12)', backgroundColor: '#1B2533' }}>
+                          <div className="flex items-center rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                             <button
                               onClick={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}
-                              className="px-2 py-1 hover:bg-white/5 transition-colors text-[#E7E9EA]"
+                              className="px-2.5 py-1 hover:bg-gray-100 transition-colors text-gray-600"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="px-2 py-1 text-xs font-bold text-[#E7E9EA] border-x" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                            <span className="px-2.5 py-1 text-xs font-bold text-gray-850 border-x border-gray-200 bg-white">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               disabled={item.quantity >= item.stock}
-                              className="px-2 py-1 hover:bg-white/5 transition-colors text-[#E7E9EA] disabled:opacity-40"
+                              className="px-2.5 py-1 hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-40"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
@@ -141,7 +137,7 @@ export default function CartSidebar() {
 
                           <button
                             onClick={() => removeFromCart(item.id)}
-                            className="p-1.5 rounded hover:bg-red-500/10 text-[#6B7280] hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -155,24 +151,22 @@ export default function CartSidebar() {
 
             {/* Footer */}
             {cart.length > 0 && (
-              <div className="p-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="p-4 space-y-3 border-t border-gray-100 bg-white shadow-lg">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#A0AEC0]">Subtotal ({totalItems} items)</span>
-                  <span className="font-bold text-[#E7E9EA]">{formatPrice(cartTotal)}</span>
+                  <span className="text-sm text-gray-500 font-medium">Subtotal ({totalItems} items)</span>
+                  <span className="font-black text-gray-900 text-base">{formatPrice(cartTotal)}</span>
                 </div>
 
                 <button
                   onClick={() => { setSidebarOpen(false); navigate('/checkout'); }}
-                  className="w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                  style={{ background: 'linear-gradient(to bottom, #f0c14b, #e47911)', color: '#131921' }}
+                  className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100"
                 >
                   Proceed to Checkout <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <button
                   onClick={() => { setSidebarOpen(false); navigate('/cart'); }}
-                  className="w-full py-2.5 rounded-lg text-sm font-medium text-[#A0AEC0] hover:text-[#E7E9EA] transition-colors text-center"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:text-indigo-650 transition-colors text-center border border-gray-200 hover:bg-gray-50"
                 >
                   View Full Cart
                 </button>
