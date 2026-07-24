@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeftRight, Trash2, ShoppingCart, Package, Heart, Star, Truck, X, Search, ChevronRight } from 'lucide-react';
+import { ArrowLeftRight, Trash2, ShoppingCart, Heart, Star, X, Search } from 'lucide-react';
 import { useCompare } from '../context/CompareContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';

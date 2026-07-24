@@ -45,7 +45,13 @@ app.use('/api/orders',   require('./routes/orders'));
 app.use('/api/coupons',  require('./routes/coupons'));
 app.use('/api/admin',    require('./routes/admin'));
 
-// ─── Health Check ────────────────────────────────────────────────
+// ─── Root & Health Check ──────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'NexCart API is running' });
+});
+
+app.get(['/favicon.ico', '/favicon.png'], (req, res) => res.status(204).end());
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), app: 'NexCart API v1.0' });
 });
