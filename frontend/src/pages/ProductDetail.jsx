@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star, Heart, ShoppingCart, Truck, Shield, RotateCcw,
   ChevronLeft, ChevronRight, Minus, Plus, Package,
-  CheckCircle, AlertTriangle, ChevronDown, Share2, MapPin
+  CheckCircle, AlertTriangle, ChevronDown, Share2, MapPin, ArrowLeftRight
 } from 'lucide-react';
 import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useCompare } from '../context/CompareContext';
 import { formatPrice, discountPercent, formatDate } from '../utils/formatters';
 import ProductCard from '../components/product/ProductCard';
 import { normalizeStock } from '../utils/stock';
@@ -22,6 +23,8 @@ export default function ProductDetail() {
   const { t } = useLanguage();
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
+
 
   const [product, setProduct]       = useState(null);
   const [reviews, setReviews]       = useState([]);
@@ -439,6 +442,25 @@ export default function ProductDetail() {
               >
                 <Heart className={`w-4 h-4 ${wishlisted ? 'fill-red-500 text-red-500' : ''}`} />
                 {wishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
+              </button>
+
+              {/* Compare */}
+              <button
+                onClick={() => {
+                  if (isInCompare(product.id)) {
+                    removeFromCompare(product.id);
+                  } else {
+                    addToCompare(product);
+                  }
+                }}
+                className={`w-full py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all border ${
+                  isInCompare(product.id)
+                    ? 'text-indigo-600 border-indigo-200 bg-indigo-50'
+                    : 'text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-indigo-600'
+                }`}
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                {isInCompare(product.id) ? 'Added to Compare' : 'Compare Product'}
               </button>
 
               {/* Trust badges */}

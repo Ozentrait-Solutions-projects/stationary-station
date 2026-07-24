@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS cart CASCADE;
 DROP TABLE IF EXISTS coupons CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS verification_otps CASCADE;
 
 -- ============================================================
 -- USERS
@@ -24,6 +25,16 @@ CREATE TABLE users (
   role        VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
   avatar      TEXT,
   phone       VARCHAR(20),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- VERIFICATION OTPS
+-- ============================================================
+CREATE TABLE verification_otps (
+  email       VARCHAR(150) PRIMARY KEY,
+  otp         VARCHAR(6) NOT NULL,
+  expires_at  TIMESTAMPTZ NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

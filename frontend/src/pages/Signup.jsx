@@ -14,49 +14,57 @@ export default function Signup() {
   // Step verification state
   const [step, setStep]                       = useState(1);
   const [verificationCode, setVerificationCode] = useState('');
-  const [sentCode, setSentCode]               = useState('');
+  const [sendingOtp, setSendingOtp]           = useState(false);
 
-  const { register } = useAuth();
+  const { register, sendOTP } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (form.password !== form.confirm) return setError('Passwords do not match');
     if (form.password.length < 6) return setError('Password must be at least 6 characters');
     
-    // Generate a 6-digit mock OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentCode(code);
-    setVerificationCode('');
-    setStep(2);
-    
-    toast.success(`Verification code sent to email! (Mock OTP: ${code})`, { duration: 10000 });
+    setSendingOtp(true);
+    try {
+      await sendOTP(form.email);
+      setVerificationCode('');
+      setStep(2);
+      toast.success('Verification code sent to your email!');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send verification code. Please check your email.');
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   const handleVerifyAndRegister = async (e) => {
     e.preventDefault();
     setError('');
-    if (verificationCode !== sentCode) {
-      return setError('Invalid verification code. Please check the code and try again.');
-    }
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password);
+      await register(form.name, form.email, form.password, verificationCode);
       toast.success('Registration successful! Welcome to NexCart.');
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Registration failed. Please check the code.');
     } finally {
       setLoading(false);
     }
   };
 
-  const resendVerificationCode = () => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentCode(code);
-    setVerificationCode('');
-    toast.success(`New verification code sent! (Mock OTP: ${code})`, { duration: 10000 });
+  const resendVerificationCode = async () => {
+    setError('');
+    setSendingOtp(true);
+    try {
+      await sendOTP(form.email);
+      setVerificationCode('');
+      toast.success('New verification code sent to your email!');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend code');
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   const strength = form.password.length >= 8 ? 'strong' : form.password.length >= 6 ? 'medium' : 'weak';
@@ -188,9 +196,10 @@ export default function Signup() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="submit"
+                disabled={sendingOtp}
                 className="w-full py-2.5 rounded-xl text-sm font-bold transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
               >
-                Continue
+                {sendingOtp ? <><Loader2 className="w-4 h-4 animate-spin text-white" /> Sending Code…</> : 'Continue'}
               </motion.button>
             </form>
 
@@ -205,7 +214,7 @@ export default function Signup() {
           <div className="rounded-2xl p-6 bg-white border border-gray-100 shadow-sm">
             <h1 className="font-display text-xl font-black text-gray-950 mb-1">Verify email</h1>
             <p className="text-sm text-gray-400 font-semibold mb-5">
-              Enter the verification code shown in the website popup
+              Enter the 6-digit verification code sent to your email address
             </p>
 
             {error && (
@@ -232,14 +241,14 @@ export default function Signup() {
                   autoFocus
                 />
                 <p className="text-center text-xs text-gray-450 font-bold mt-2.5 bg-gray-50 border border-gray-100 rounded-xl py-2">
-                  Temporary verification code: <span className="text-indigo-650 font-black">{sentCode}</span>
+                  Code sent to <span className="text-indigo-650 font-black">{form.email}</span>
                 </p>
               </div>
 
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={loading}
+                disabled={loading || sendingOtp}
                 className="w-full py-2.5 rounded-xl text-sm font-bold transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
               >
                 {loading ? <><Loader2 className="w-4 h-4 animate-spin text-white" /> Verifying…</> : 'Verify & Register'}
@@ -248,10 +257,11 @@ export default function Signup() {
               <div className="flex items-center justify-between text-xs font-bold mt-4">
                 <button
                   type="button"
+                  disabled={sendingOtp}
                   onClick={resendVerificationCode}
-                  className="text-indigo-650 hover:underline"
+                  className="text-indigo-650 hover:underline disabled:opacity-50"
                 >
-                  Resend Code
+                  {sendingOtp ? 'Sending…' : 'Resend Code'}
                 </button>
                 <button
                   type="button"

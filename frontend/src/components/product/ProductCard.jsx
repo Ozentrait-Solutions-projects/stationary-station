@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, Star, Truck } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Truck, ArrowLeftRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -8,16 +8,19 @@ import { useNavigate } from 'react-router-dom';
 import { formatPrice, discountPercent } from '../../utils/formatters';
 import { useLanguage } from '../../context/LanguageContext';
 import { normalizeStock } from '../../utils/stock';
+import { useCompare } from '../../context/CompareContext';
 
 export default function ProductCard({ product, index = 0, compact = false }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const navigate  = useNavigate();
 
   const stock = normalizeStock(product.stock, 1);
   const wishlisted = isWishlisted(product.id);
+  const compared   = isInCompare(product.id);
   const discount   = discountPercent(product.original_price, product.price);
   const rating     = Number(product.rating) || 0;
   const fullStars  = Math.floor(rating);
@@ -36,6 +39,17 @@ export default function ProductCard({ product, index = 0, compact = false }) {
     if (!user) { navigate('/login'); return; }
     toggleWishlist(product.id);
   };
+
+  const handleCompare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (compared) {
+      removeFromCompare(product.id);
+    } else {
+      addToCompare(product);
+    }
+  };
+
 
   return (
     <motion.div
@@ -74,6 +88,19 @@ export default function ProductCard({ product, index = 0, compact = false }) {
               }`}
           >
             <Heart className={`w-3.5 h-3.5 ${wishlisted ? 'fill-current' : ''}`} />
+          </button>
+
+          {/* Compare button */}
+          <button
+            onClick={handleCompare}
+            className={`absolute top-10 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-200
+              ${compared
+                ? 'bg-indigo-650 opacity-100 text-white'
+                : 'bg-white text-gray-500 hover:text-indigo-605 opacity-0 group-hover:opacity-100'
+              }`}
+            title="Compare product"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" />
           </button>
 
           {/* Product Image */}
