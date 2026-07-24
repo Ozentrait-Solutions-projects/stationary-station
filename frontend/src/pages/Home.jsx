@@ -94,12 +94,12 @@ export default function Home() {
 
   // Quick categories metadata
   const QUICK_FILTERS = [
-    { title: "Top Rated", desc: "Best of the best", icon: Star, iconColor: "#F59E0B", bgColor: "#FEF3C7" },
-    { title: "Budget Finds", desc: "Under ₹299", icon: Tag, iconColor: "#EF4444", bgColor: "#FEE2E2" },
-    { title: "Combo Offers", desc: "More savings", icon: Gift, iconColor: "#EC4899", bgColor: "#FCE7F3" },
-    { title: "New Arrivals", desc: "Fresh & trendy", icon: Sparkles, iconColor: "#8B5CF6", bgColor: "#EDE9FE" },
-    { title: "Smart Picks", desc: "AI recommended", icon: Lightbulb, iconColor: "#3B82F6", bgColor: "#DBEAFE" },
-    { title: "Gift Store", desc: "For every occasion", icon: Gift, iconColor: "#10B981", bgColor: "#D1FAE5" },
+    { title: "Top Rated", desc: "Best of the best", icon: Star, iconColor: "#F59E0B", bgColor: "#FEF3C7", link: "/products?minRating=4" },
+    { title: "Budget Finds", desc: "Under ₹299", icon: Tag, iconColor: "#EF4444", bgColor: "#FEE2E2", link: "/products?maxPrice=299" },
+    { title: "Combo Offers", desc: "More savings", icon: Gift, iconColor: "#EC4899", bgColor: "#FCE7F3", link: "/products?search=set" },
+    { title: "New Arrivals", desc: "Fresh & trendy", icon: Sparkles, iconColor: "#8B5CF6", bgColor: "#EDE9FE", link: "/products?sort=created_at_desc" },
+    { title: "Smart Picks", desc: "AI recommended", icon: Lightbulb, iconColor: "#3B82F6", bgColor: "#DBEAFE", link: "/products?featured=true" },
+    { title: "Gift Store", desc: "For every occasion", icon: Gift, iconColor: "#10B981", bgColor: "#D1FAE5", link: "/products?category=Home+%26+Kitchen" },
   ];
 
   // Category Grid images & paths
@@ -226,8 +226,9 @@ export default function Home() {
           {QUICK_FILTERS.map((item, idx) => {
             const IconComp = item.icon;
             return (
-              <div
+              <Link
                 key={idx}
+                to={item.link}
                 className="flex items-center gap-3.5 bg-white border border-gray-200 p-4 rounded-2xl shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.bgColor }}>
@@ -237,7 +238,7 @@ export default function Home() {
                   <h4 className="text-xs font-black text-gray-800 leading-tight">{item.title}</h4>
                   <p className="text-[10px] text-gray-400 font-bold mt-0.5">{item.desc}</p>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

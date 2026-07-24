@@ -32,8 +32,13 @@ export const AuthProvider = ({ children }) => {
     return user;
   }, []);
 
-  const register = useCallback(async (name, email, password) => {
-    const res = await api.post('/auth/register', { name, email, password });
+  const sendOTP = useCallback(async (email) => {
+    const res = await api.post('/auth/send-otp', { email });
+    return res.data;
+  }, []);
+
+  const register = useCallback(async (name, email, password, otp) => {
+    const res = await api.post('/auth/register', { name, email, password, otp });
     const { token, user } = res.data;
     localStorage.setItem('nexcart_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -54,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, sendOTP, isAdmin: user?.role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   );

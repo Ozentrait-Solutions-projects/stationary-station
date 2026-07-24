@@ -6,10 +6,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { CompareProvider } from './context/CompareContext';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
+import CompareBar from './components/product/CompareBar';
 
 // Lazy-load pages for code splitting
 const Home           = lazy(() => import('./pages/Home'));
@@ -24,6 +26,7 @@ const Profile        = lazy(() => import('./pages/Profile'));
 const Wishlist       = lazy(() => import('./pages/Wishlist'));
 const Orders         = lazy(() => import('./pages/Orders'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Compare        = lazy(() => import('./pages/Compare'));
 
 // Page loader — NexCart light theme
 const PageLoader = () => (
@@ -69,6 +72,7 @@ function AppLayout() {
             <Route path="/"                    element={<Home />} />
             <Route path="/products"            element={<ProductListing />} />
             <Route path="/products/:id"        element={<ProductDetail />} />
+            <Route path="/compare"             element={<Compare />} />
             <Route path="/login"               element={<Login />} />
             <Route path="/signup"              element={<Signup />} />
 
@@ -87,6 +91,7 @@ function AppLayout() {
       </main>
       <Footer />
       <CartSidebar />
+      <CompareBar />
     </div>
   );
 }
@@ -111,37 +116,39 @@ export default function App() {
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <AppLayout />
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    borderRadius: '8px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '14px',
-                    background: '#232F3E',
-                    color: '#E7E9EA',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  },
-                  success: {
+              <CompareProvider>
+                <AppLayout />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 3000,
                     style: {
-                      background: '#1a2e1a',
-                      color: '#86efac',
-                      border: '1px solid rgba(134,239,172,0.2)',
+                      borderRadius: '8px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      background: '#232F3E',
+                      color: '#E7E9EA',
+                      border: '1px solid rgba(255,255,255,0.1)',
                     },
-                    iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
-                  },
-                  error: {
-                    style: {
-                      background: '#2d1a1a',
-                      color: '#fca5a5',
-                      border: '1px solid rgba(252,165,165,0.2)',
+                    success: {
+                      style: {
+                        background: '#1a2e1a',
+                        color: '#86efac',
+                        border: '1px solid rgba(134,239,172,0.2)',
+                      },
+                      iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
                     },
-                    iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
-                  },
-                }}
-              />
+                    error: {
+                      style: {
+                        background: '#2d1a1a',
+                        color: '#fca5a5',
+                        border: '1px solid rgba(252,165,165,0.2)',
+                      },
+                      iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
+                    },
+                  }}
+                />
+              </CompareProvider>
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
