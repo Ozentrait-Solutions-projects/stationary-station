@@ -25,6 +25,23 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// Auto-ensure critical tables exist
+const initDbTables = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS verification_otps (
+        email       VARCHAR(150) PRIMARY KEY,
+        otp         VARCHAR(6) NOT NULL,
+        expires_at  TIMESTAMPTZ NOT NULL,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+  } catch (err) {
+    console.error('⚠️ DB table auto-init warning:', err.message);
+  }
+};
+initDbTables();
+
 /**
  * Execute a query with optional parameters
  */
