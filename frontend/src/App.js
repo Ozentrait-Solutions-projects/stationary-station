@@ -22,6 +22,7 @@ const Checkout       = lazy(() => import('./pages/Checkout'));
 const OrderSuccess   = lazy(() => import('./pages/OrderSuccess'));
 const Login          = lazy(() => import('./pages/Login'));
 const Signup         = lazy(() => import('./pages/Signup'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Profile        = lazy(() => import('./pages/Profile'));
 const Wishlist       = lazy(() => import('./pages/Wishlist'));
 const Orders         = lazy(() => import('./pages/Orders'));
@@ -75,6 +76,7 @@ function AppLayout() {
             <Route path="/compare"             element={<Compare />} />
             <Route path="/login"               element={<Login />} />
             <Route path="/signup"              element={<Signup />} />
+            <Route path="/forgot-password"     element={<ForgotPassword />} />
 
             <Route path="/cart"            element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/wishlist"        element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
