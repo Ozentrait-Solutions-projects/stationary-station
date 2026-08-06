@@ -151,7 +151,22 @@ const trackView = async (req, res, next) => {
   }
 };
 
-// ─── ADD REVIEW ──────────────────────────────────────────────────
+// ─── CHECK PURCHASED ─────────────────────────────────────────────
+const checkPurchased = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(
+      `SELECT 1 FROM orders o
+       JOIN order_items oi ON oi.order_id = o.id
+       WHERE o.user_id = $1 AND oi.product_id = $2 AND o.status = 'delivered'
+       LIMIT 1`,
+      [req.user.id, id]
+    );
+    res.json({ purchased: rows.length > 0 });
+  } catch (err) { next(err); }
+};
+
+// ─── ADD REVIEW (verified purchase only) ──────────────────────────
 const addReview = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -159,6 +174,20 @@ const addReview = async (req, res, next) => {
 
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // ── Verified purchase check ───────────────────────────────────
+    const purchaseCheck = await db.query(
+      `SELECT 1 FROM orders o
+       JOIN order_items oi ON oi.order_id = o.id
+       WHERE o.user_id = $1 AND oi.product_id = $2 AND o.status = 'delivered'
+       LIMIT 1`,
+      [req.user.id, id]
+    );
+    if (!purchaseCheck.rows.length) {
+      return res.status(403).json({
+        message: 'Only verified purchasers who have received this product can submit a review.',
+      });
     }
 
     const { rows } = await db.query(
@@ -209,5 +238,5 @@ const searchSuggestions = async (req, res, next) => {
 
 module.exports = {
   getProducts, getProduct, getCategories, getFeatured,
-  getRecentlyViewed, trackView, addReview, searchSuggestions,
+  getRecentlyViewed, trackView, addReview, searchSuggestions, checkPurchased,
 };

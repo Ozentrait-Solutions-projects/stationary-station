@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Package, ShoppingBag, Users, TrendingUp,
+  LayoutDashboard, Package, ShoppingBag, TrendingUp,
   Plus, Edit3, Trash2, Loader2, BarChart2, ArrowUpRight,
   X, Save, Upload, Eye, MapPin, CreditCard, Phone, Mail,
-  User as UserIcon, CheckCircle2,
+  User as UserIcon, CheckCircle2, RotateCcw, BadgePercent,
 } from 'lucide-react';
 import { adminService } from '../services/productService';
 import api from '../services/api';
@@ -18,10 +18,11 @@ import {
 import toast from 'react-hot-toast';
 
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'orders',    label: 'Orders',    icon: ShoppingBag },
-  { id: 'products',  label: 'Products',  icon: Package },
-  { id: 'users',     label: 'Users',     icon: Users },
+  { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
+  { id: 'orders',     label: 'Orders',     icon: ShoppingBag },
+  { id: 'products',   label: 'Products',   icon: Package },
+  { id: 'returns',    label: 'Returns',    icon: RotateCcw },
+  { id: 'promotions', label: 'Promotions', icon: BadgePercent },
 ];
 
 export default function AdminDashboard() {
@@ -30,7 +31,8 @@ export default function AdminDashboard() {
   const [tab, setTab]           = useState('dashboard');
   const [data, setData]         = useState(null);
   const [orders, setOrders]     = useState([]);
-  const [users, setUsers]       = useState([]);
+  const [returns, setReturns]   = useState([]);
+  const [products, setProducts] = useState([]);
   const [saving, setSaving]     = useState(false);
   const [imageMode, setImageMode]     = useState('url');
   const [productImageFile, setProductImageFile] = useState(null);
@@ -38,6 +40,11 @@ export default function AdminDashboard() {
   const [productModal, setProductModal] = useState(null);
   const [productForm, setProductForm]   = useState({});
   const [loading, setLoading]           = useState(true);
+  const [returnDetailId, setReturnDetailId] = useState(null);
+  const [updatingReturnId, setUpdatingReturnId] = useState(null);
+  const [promoProductId, setPromoProductId] = useState('');
+  const [promoSalePrice, setPromoSalePrice] = useState('');
+  const [savingPromo, setSavingPromo] = useState(false);
 
   // Order detail modal
   const [selectedOrder, setSelectedOrder]     = useState(null);
@@ -51,16 +58,19 @@ export default function AdminDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [dash, ord, usr] = await Promise.all([
+      const [dash, ord] = await Promise.all([
         adminService.getDashboard(),
         adminService.getAllOrders(),
-        adminService.getAllUsers(),
       ]);
       setData(dash.data);
       setOrders(ord.data.orders || []);
-      setUsers(usr.data.users || []);
+      // Load products for promotions tab
+      const prodRes = await api.get('/products?limit=100');
+      setProducts(prodRes.data.products || []);
     } catch { toast.error('Failed to load dashboard'); }
     finally { setLoading(false); }
+    // Load returns in background
+    adminService.getAllReturns().then(res => setReturns(res.data.requests || [])).catch(() => {});
   };
 
   const updateStatus = async (orderId, status) => {
@@ -90,13 +100,13 @@ export default function AdminDashboard() {
 
   const openProductModal = (product = null) => {
     if (product) {
-      setProductForm({ ...product, images: product.images?.join(', ') || '', tags: product.tags?.join(', ') || '' });
+      setProductForm({ ...product, images: product.images?.join(', ') || '', tags: product.tags?.join(', ') || '', sale_price: product.sale_price || '', return_exchange_available: product.return_exchange_available !== false });
       setProductModal('edit');
       setImageMode('url');
       setProductImageFile(null);
       setProductImagePreview(product.image_url || '');
     } else {
-      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false });
+      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false, sale_price:'', return_exchange_available:true });
       setProductModal('create');
       setImageMode('url');
       setProductImageFile(null);
@@ -131,6 +141,8 @@ export default function AdminDashboard() {
           price: String(Number(productForm.price)), original_price: productForm.original_price ? String(Number(productForm.original_price)) : '',
           category: productForm.category, brand: productForm.brand, stock: String(stockNum),
           images: JSON.stringify(imagesArray), tags: JSON.stringify(tagsArray), is_featured: String(!!productForm.is_featured),
+          sale_price: productForm.sale_price ? String(Number(productForm.sale_price)) : '',
+          return_exchange_available: String(productForm.return_exchange_available !== false),
         }).forEach(([k, v]) => formData.append(k, v));
         formData.append('image', productImageFile);
         productModal === 'create' ? await adminService.createProduct(formData) : await adminService.updateProduct(productForm.id, formData);
@@ -138,7 +150,10 @@ export default function AdminDashboard() {
         setProductModal(null); loadData(); return;
       }
 
-      const payload = { ...productForm, price: Number(productForm.price), original_price: Number(productForm.original_price)||null, stock: stockNum, images: imagesArray, tags: tagsArray };
+      const payload = { ...productForm, price: Number(productForm.price), original_price: Number(productForm.original_price)||null, stock: stockNum, images: imagesArray, tags: tagsArray,
+        sale_price: productForm.sale_price ? Number(productForm.sale_price) : null,
+        return_exchange_available: productForm.return_exchange_available !== false,
+      };
       productModal === 'create' ? await adminService.createProduct(payload) : await adminService.updateProduct(productForm.id, payload);
       toast.success(productModal === 'create' ? 'Product created!' : 'Product updated!');
       setProductModal(null); loadData();
@@ -155,7 +170,7 @@ export default function AdminDashboard() {
   const STAT_CARDS = data ? [
     { label: 'Total Revenue', value: formatPrice(data.stats.totalRevenue), icon: TrendingUp,  gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)', change: '+12.5%' },
     { label: 'Total Orders',  value: data.stats.totalOrders.toLocaleString(), icon: ShoppingBag, gradient: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', change: '+8.2%' },
-    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: Users,       gradient: 'linear-gradient(135deg, #10B981, #059669)', change: '+5.1%' },
+    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: UserIcon,    gradient: 'linear-gradient(135deg, #10B981, #059669)', change: '+5.1%' },
     { label: 'Products',      value: data.stats.totalProducts.toLocaleString(), icon: Package,  gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)', change: '+2 new' },
   ] : [];
 
@@ -377,45 +392,226 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* ── Users Tab ─────────────────────────────────────── */}
-            {tab === 'users' && (
+            {/* ── Returns Tab ────────────────────────────────────── */}
+            {tab === 'returns' && (
               <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="font-black text-gray-950">All Users ({users.length})</h3>
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-black text-gray-950">Return & Exchange Requests ({returns.length})</h3>
+                  <button onClick={() => adminService.getAllReturns().then(r => setReturns(r.data.requests || []))} className="text-xs text-indigo-600 font-bold hover:text-indigo-800">Refresh</button>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="amazon-table">
-                    <thead>
-                      <tr>{['User', 'Email', 'Role', 'Joined'].map(h => <th key={h}>{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {users.map(u => (
-                        <tr key={u.id}>
-                          <td>
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black flex-shrink-0">
-                                {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : u.name?.[0]?.toUpperCase()}
+                {returns.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <RotateCcw className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-400 font-semibold text-sm">No return requests yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {returns.map(req => {
+                      const statusColors = { pending: 'bg-amber-50 text-amber-700 border-amber-200', evidence_submitted: 'bg-blue-50 text-blue-700 border-blue-200', approved: 'bg-emerald-50 text-emerald-700 border-emerald-200', rejected: 'bg-rose-50 text-rose-700 border-rose-200' };
+                      const isOpen = returnDetailId === req.id;
+                      return (
+                        <div key={req.id} className="p-4">
+                          <div className="flex items-center gap-3">
+                            <img src={req.product_image} alt={req.product_title} className="w-12 h-12 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-gray-800 truncate">{req.product_title}</p>
+                              <p className="text-xs text-gray-400 font-semibold">{req.user_name} · {req.user_email}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border capitalize ${statusColors[req.status] || 'bg-gray-100 text-gray-600'}`}>{req.status.replace('_', ' ')}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${req.type === 'return' ? 'bg-rose-50 text-rose-600' : 'bg-violet-50 text-violet-600'}`}>{req.type}</span>
                               </div>
-                              <span className="font-bold text-gray-800">{u.name}</span>
                             </div>
-                          </td>
-                          <td className="text-gray-500 font-semibold">{u.email}</td>
-                          <td>
-                            <span className={`badge ${u.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="text-gray-500 font-semibold whitespace-nowrap">{formatDate(u.created_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            <button onClick={() => setReturnDetailId(isOpen ? null : req.id)} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex-shrink-0">
+                              {isOpen ? 'Collapse' : 'View Details'}
+                            </button>
+                          </div>
+                          {isOpen && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                              <div>
+                                <p className="text-xs font-bold text-gray-500 mb-1">Customer's Reason</p>
+                                <p className="text-sm text-gray-700 font-medium">{req.reason || 'No reason provided'}</p>
+                              </div>
+                              {req.photo_urls?.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos</p>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {req.photo_urls.map((url, i) => (
+                                      <a key={i} href={url} target="_blank" rel="noreferrer">
+                                        <img src={url} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {req.video_url && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Video</p>
+                                  <video src={req.video_url} controls className="w-full max-h-40 rounded-xl" />
+                                </div>
+                              )}
+                              {req.admin_notes && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-1">Admin Notes</p>
+                                  <p className="text-sm text-gray-700">{req.admin_notes}</p>
+                                </div>
+                              )}
+                              {req.status !== 'approved' && req.status !== 'rejected' && (
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    disabled={updatingReturnId === req.id}
+                                    onClick={async () => {
+                                      setUpdatingReturnId(req.id);
+                                      await adminService.updateReturnStatus(req.id, 'approved', '');
+                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
+                                      setUpdatingReturnId(null);
+                                      toast.success('Return approved');
+                                    }}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button
+                                    disabled={updatingReturnId === req.id}
+                                    onClick={async () => {
+                                      const notes = window.prompt('Reason for rejection (optional):') || '';
+                                      setUpdatingReturnId(req.id);
+                                      await adminService.updateReturnStatus(req.id, 'rejected', notes);
+                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected', admin_notes: notes } : r));
+                                      setUpdatingReturnId(null);
+                                      toast.success('Return rejected');
+                                    }}
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                  >
+                                    ✗ Reject
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Promotions Tab ─────────────────────────────────── */}
+            {tab === 'promotions' && (
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+                  <h3 className="font-black text-gray-950 mb-1">Set Sale Price</h3>
+                  <p className="text-xs text-gray-400 font-semibold mb-5">Create a promotional sale price for any product. This will appear as a discounted price on the storefront.</p>
+                  <div className="grid sm:grid-cols-3 gap-3 items-end">
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-bold text-gray-500 block mb-1.5">Select Product</label>
+                      <select
+                        value={promoProductId}
+                        onChange={e => {
+                          setPromoProductId(e.target.value);
+                          const p = products.find(x => String(x.id) === e.target.value);
+                          setPromoSalePrice(p?.sale_price ? String(p.sale_price) : '');
+                        }}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50"
+                      >
+                        <option value="">— Choose a product —</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.title} (₹{p.price}{p.sale_price ? ` → Sale: ₹${p.sale_price}` : ''})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 block mb-1.5">Sale Price (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 599"
+                        value={promoSalePrice}
+                        onChange={e => setPromoSalePrice(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50"
+                      />
+                    </div>
+                  </div>
+                  {promoProductId && (() => {
+                    const p = products.find(x => String(x.id) === promoProductId);
+                    if (!p) return null;
+                    const discount = promoSalePrice ? Math.round((1 - Number(promoSalePrice) / p.price) * 100) : 0;
+                    return (
+                      <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-indigo-800">{p.title}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-lg font-black text-indigo-900">₹{promoSalePrice || p.price}</span>
+                            {promoSalePrice && <span className="text-sm text-gray-400 line-through">₹{p.price}</span>}
+                            {discount > 0 && <span className="text-xs font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">{discount}% OFF</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              if (!promoProductId) return;
+                              setSavingPromo(true);
+                              try {
+                                await adminService.updateProduct(promoProductId, { sale_price: promoSalePrice ? Number(promoSalePrice) : null });
+                                setProducts(prev => prev.map(x => String(x.id) === promoProductId ? { ...x, sale_price: promoSalePrice ? Number(promoSalePrice) : null } : x));
+                                toast.success(promoSalePrice ? `Sale price set to ₹${promoSalePrice}` : 'Sale price removed');
+                              } catch { toast.error('Failed to update sale price'); }
+                              finally { setSavingPromo(false); }
+                            }}
+                            disabled={savingPromo}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors disabled:opacity-60 flex items-center gap-2"
+                          >
+                            {savingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            {promoSalePrice ? 'Apply Sale' : 'Remove Sale'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Products with active sale prices */}
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100">
+                    <h4 className="font-black text-gray-950 text-sm">Active Promotions</h4>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {products.filter(p => p.sale_price).length === 0 ? (
+                      <p className="text-center text-gray-400 text-sm py-8 font-semibold">No active promotions</p>
+                    ) : products.filter(p => p.sale_price).map(p => {
+                      const discount = Math.round((1 - p.sale_price / p.price) * 100);
+                      return (
+                        <div key={p.id} className="flex items-center gap-3 p-4">
+                          <img src={p.image_url} alt={p.title} className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-sm font-black text-gray-900">₹{p.sale_price}</span>
+                              <span className="text-xs text-gray-400 line-through">₹{p.price}</span>
+                              <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{discount}% OFF</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              await adminService.updateProduct(p.id, { sale_price: null });
+                              setProducts(prev => prev.map(x => x.id === p.id ? { ...x, sale_price: null } : x));
+                              toast.success('Sale price removed');
+                            }}
+                            className="text-xs text-rose-600 font-bold hover:text-rose-800 flex-shrink-0"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
 
       {/* ── Order Detail Modal ─────────────────────────────────────── */}
       <AnimatePresence>
@@ -690,6 +886,22 @@ export default function AdminDashboard() {
                   className="accent-[#6366F1] w-4 h-4" />
                 <span className="text-sm text-gray-500 font-bold">Featured product</span>
               </label>
+
+              {/* Return & Exchange toggle */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={productForm.return_exchange_available !== false}
+                  onChange={e => setProductForm(f => ({ ...f, return_exchange_available: e.target.checked }))}
+                  className="accent-emerald-500 w-4 h-4" />
+                <span className="text-sm text-gray-500 font-bold">Return &amp; Exchange Available</span>
+              </label>
+
+              {/* Sale Price */}
+              <div>
+                <input className="input text-sm" type="number" min="0" placeholder="Sale Price (leave empty for no sale)"
+                  value={productForm.sale_price || ''}
+                  onChange={e => setProductForm(f => ({ ...f, sale_price: e.target.value }))} />
+                <p className="text-[10px] text-gray-400 font-semibold mt-1">💡 Setting a sale price will show it as a discounted price on the storefront</p>
+              </div>
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setProductModal(null)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold py-2.5 rounded-xl text-sm">

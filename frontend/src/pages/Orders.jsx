@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, ChevronRight, Truck, Clock, XCircle, Loader2, AlertTriangle } from 'lucide-react';
-import { orderService } from '../services/productService';
+import {
+  Package, ChevronRight, Truck, Clock, XCircle, Loader2, AlertTriangle,
+  RotateCcw, ArrowLeftRight, Upload, X, CheckCircle, Camera, Video,
+} from 'lucide-react';
+import { orderService, returnService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
@@ -16,11 +19,239 @@ const STATUS_PROGRESS = {
 
 const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
 
+// ── Return/Exchange Modal ─────────────────────────────────────────────────────
+function ReturnModal({ order, item, onClose, onSuccess }) {
+  const [type, setType] = useState('return');
+  const [reason, setReason] = useState('');
+  const [photos, setPhotos] = useState([]);
+  const [video, setVideo] = useState(null);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [step, setStep] = useState(1); // 1: details, 2: evidence
+  const [requestId, setRequestId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotoSelect = (e) => {
+    const files = Array.from(e.target.files).slice(0, 3 - photos.length);
+    if (!files.length) return;
+    setPhotos(prev => [...prev, ...files].slice(0, 3));
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => setPhotoPreviews(prev => [...prev, reader.result].slice(0, 3));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removePhoto = (idx) => {
+    setPhotos(prev => prev.filter((_, i) => i !== idx));
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleVideoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideo(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmitDetails = async (e) => {
+    e.preventDefault();
+    if (!reason.trim()) return toast.error('Please describe the issue');
+    setSubmitting(true);
+    try {
+      const res = await returnService.createRequest({
+        order_id: order.id,
+        order_item_id: item.id,
+        product_id: item.product_id,
+        type,
+        reason,
+      });
+      setRequestId(res.data.request.id);
+      setStep(2);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUploadEvidence = async () => {
+    if (photos.length === 0) return toast.error('Please upload at least one photo as evidence');
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      photos.forEach(p => formData.append('photos', p));
+      if (video) formData.append('video', video);
+      await returnService.uploadEvidence(requestId, formData);
+      toast.success('Return request submitted with evidence! Our team will review it shortly.');
+      onSuccess();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload evidence');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div>
+            <h3 className="font-display font-black text-gray-900 text-lg">
+              {type === 'return' ? 'Request Return' : 'Request Exchange'}
+            </h3>
+            <p className="text-xs text-gray-400 font-semibold mt-0.5">Step {step} of 2</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Product info */}
+        <div className="flex items-center gap-3 p-4 mx-4 mt-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <img src={item.image_url} alt={item.title} className="w-12 h-12 rounded-xl object-cover border border-gray-100" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-800 truncate">{item.title}</p>
+            <p className="text-xs text-gray-400 font-semibold">{formatPrice(item.price_at_purchase)} × {item.quantity}</p>
+          </div>
+        </div>
+
+        {step === 1 ? (
+          <form onSubmit={handleSubmitDetails} className="p-6 space-y-5">
+            {/* Type */}
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-2">Request Type</label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { val: 'return', icon: RotateCcw, label: 'Return', desc: 'Get a refund' },
+                  { val: 'exchange', icon: ArrowLeftRight, label: 'Exchange', desc: 'Get a replacement' },
+                ].map(opt => (
+                  <button
+                    key={opt.val}
+                    type="button"
+                    onClick={() => setType(opt.val)}
+                    className={`p-3.5 rounded-2xl border-2 text-left transition-all ${type === opt.val ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-gray-200'}`}
+                  >
+                    <opt.icon className={`w-5 h-5 mb-1.5 ${type === opt.val ? 'text-indigo-600' : 'text-gray-400'}`} />
+                    <p className={`text-sm font-black ${type === opt.val ? 'text-indigo-700' : 'text-gray-700'}`}>{opt.label}</p>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-2">Reason *</label>
+              <textarea
+                rows={3}
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                placeholder="Describe the issue with your product in detail…"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 resize-none transition-all"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                Cancel
+              </button>
+              <button type="submit" disabled={submitting} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors text-sm disabled:opacity-60">
+                {submitting ? 'Creating…' : 'Next →'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="p-6 space-y-5">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100">
+              <Camera className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">Evidence Required</p>
+                <p className="text-xs text-amber-700 font-medium mt-0.5">Upload clear photos (required) and optionally a video showing the issue with the product.</p>
+              </div>
+            </div>
+
+            {/* Photos */}
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-2">Photos * (up to 3)</label>
+              <div className="flex gap-2 flex-wrap">
+                {photoPreviews.map((src, i) => (
+                  <div key={i} className="relative w-20 h-20">
+                    <img src={src} alt={`Evidence ${i + 1}`} className="w-full h-full rounded-xl object-cover border border-gray-100" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < 3 && (
+                  <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all">
+                    <Camera className="w-5 h-5 text-gray-300" />
+                    <span className="text-[10px] text-gray-400 font-bold mt-1">Add Photo</span>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoSelect} />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Video */}
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-2">Video (optional)</label>
+              {videoPreview ? (
+                <div className="relative">
+                  <video src={videoPreview} controls className="w-full rounded-xl max-h-32 object-cover" />
+                  <button type="button" onClick={() => { setVideo(null); setVideoPreview(null); }} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-3 p-3 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all">
+                  <Video className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-500 font-medium">Upload video (MP4, MOV) — max 50MB</span>
+                  <input type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+                </label>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                ← Back
+              </button>
+              <button
+                type="button"
+                onClick={handleUploadEvidence}
+                disabled={uploading || photos.length === 0}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" />Uploading…</> : <><Upload className="w-4 h-4" />Submit Request</>}
+              </button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Main Orders Page ──────────────────────────────────────────────────────────
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const [confirmCancelId, setConfirmCancelId] = useState(null);
+  const [returnModal, setReturnModal] = useState(null); // { order, item }
 
   useEffect(() => {
     orderService.getMyOrders()
@@ -96,6 +327,7 @@ export default function Orders() {
               const st       = ORDER_STATUS[order.status];
               const progress = STATUS_PROGRESS[order.status] || 1;
               const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+              const isDelivered = order.status === 'delivered';
               const isCancelling = cancellingId === order.id;
               const isConfirming = confirmCancelId === order.id;
 
@@ -199,13 +431,13 @@ export default function Orders() {
                       <div className="relative mb-4">
                         <div className="h-1.5 rounded-full bg-gray-100">
                           <div
-                            className="h-full rounded-full transition-all duration-700 bg-[#6366F1]"
+                            className={`h-full rounded-full transition-all duration-700 ${isDelivered ? 'bg-emerald-500' : 'bg-[#6366F1]'}`}
                             style={{ width: `${(progress / 5) * 100}%` }}
                           />
                         </div>
                         <div className="flex justify-between mt-1">
                           {['Placed', 'Confirmed', 'Processing', 'Shipped', 'Delivered'].map((label, idx) => (
-                            <span key={label} className={`text-[9px] font-bold ${idx < progress ? 'text-[#6366F1]' : 'text-gray-300'}`}>
+                            <span key={label} className={`text-[9px] font-bold ${idx < progress ? (isDelivered ? 'text-emerald-500' : 'text-[#6366F1]') : 'text-gray-300'}`}>
                               {label}
                             </span>
                           ))}
@@ -233,7 +465,7 @@ export default function Orders() {
                           <p className="text-xs text-gray-400 font-bold mt-0.5">
                             Qty: {item.quantity} · {formatPrice(item.price_at_purchase)} each
                           </p>
-                          <div className="flex items-center gap-3 mt-2">
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
                             <Link to={`/products/${item.product_id}`}
                               className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
                               Buy it again
@@ -243,6 +475,19 @@ export default function Orders() {
                               className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
                               View item
                             </Link>
+                            {/* Return/Exchange button for delivered orders */}
+                            {isDelivered && (
+                              <>
+                                <span className="text-gray-200">|</span>
+                                <button
+                                  onClick={() => setReturnModal({ order, item })}
+                                  className="text-xs text-rose-600 font-bold hover:text-rose-800 transition-colors flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  Return / Exchange
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
@@ -260,6 +505,14 @@ export default function Orders() {
                         </span>
                       </div>
                     )}
+
+                    {/* Delivered badge */}
+                    {isDelivered && (
+                      <div className="flex items-center gap-2 p-3 rounded-xl text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 font-bold">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        Order delivered. You can request a return or exchange for up to 7 days.
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -267,6 +520,18 @@ export default function Orders() {
           </div>
         )}
       </div>
+
+      {/* Return/Exchange Modal */}
+      <AnimatePresence>
+        {returnModal && (
+          <ReturnModal
+            order={returnModal.order}
+            item={returnModal.item}
+            onClose={() => setReturnModal(null)}
+            onSuccess={() => setReturnModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

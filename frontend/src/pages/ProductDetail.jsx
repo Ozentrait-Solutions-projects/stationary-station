@@ -15,6 +15,7 @@ import { useCompare } from '../context/CompareContext';
 import { formatPrice, discountPercent, formatDate } from '../utils/formatters';
 import ProductCard from '../components/product/ProductCard';
 import { normalizeStock } from '../utils/stock';
+import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -37,6 +38,8 @@ export default function ProductDetail() {
   const [addingCart, setAddingCart] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userLocation, setUserLocation] = useState('Detecting location...');
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchaseChecked, setPurchaseChecked] = useState(false);
 
   useEffect(() => {
     fetch('https://ipapi.co/json/')
@@ -66,6 +69,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     setLoading(true); setActiveImg(0); setQty(1);
+    setHasPurchased(false); setPurchaseChecked(false);
     productService.getProduct(id)
       .then(res => {
         setProduct(res.data.product);
@@ -76,7 +80,14 @@ export default function ProductDetail() {
       .catch(() => navigate('/products'))
       .finally(() => setLoading(false));
 
-    if (user) productService.trackView(id).catch(() => {});
+    if (user) {
+      productService.trackView(id).catch(() => {});
+      productService.checkPurchased(id)
+        .then(res => { setHasPurchased(res.data.purchased); setPurchaseChecked(true); })
+        .catch(() => setPurchaseChecked(true));
+    } else {
+      setPurchaseChecked(true);
+    }
   }, [id, user, navigate]);
 
   const images    = product?.images?.length ? product.images : [product?.image_url].filter(Boolean);
@@ -109,8 +120,9 @@ export default function ProductDetail() {
       setReviews(prev => [res.data.review, ...prev.filter(r => r.user_id !== user.id)]);
       setReviewForm({ rating: 5, title: '', body: '' });
       setShowReviewForm(false);
+      toast.success('Review submitted successfully!');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit review');
+      toast.error(err.response?.data?.message || 'Failed to submit review');
     } finally { setSubmitting(false); }
   };
 
@@ -548,56 +560,81 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Review Form Toggle */}
-            {user && (
-              <div className="mb-6">
-                <button
-                  onClick={() => setShowReviewForm(!showReviewForm)}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-all shadow-xs"
-                >
-                  ✍️ Write a Customer Review
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showReviewForm ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {showReviewForm && (
-                    <motion.form
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      onSubmit={submitReview}
-                      className="overflow-hidden"
+            {/* Review Form Toggle - purchase gated */}
+            <div className="mb-6">
+              {!purchaseChecked ? (
+                <div className="h-10 w-48 bg-gray-100 rounded-xl animate-pulse" />
+              ) : user ? (
+                hasPurchased ? (
+                  <>
+                    <button
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-all shadow-xs"
                     >
-                      <div className="mt-4 space-y-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                        <div>
-                          <label className="text-sm text-gray-500 font-bold mb-1.5 block">Overall rating</label>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <button key={star} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: star }))}>
-                                <Star className={`w-6 h-6 transition-colors ${star <= reviewForm.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
+                      ✍️ Write a Customer Review
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showReviewForm ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showReviewForm && (
+                        <motion.form
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          onSubmit={submitReview}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-4 space-y-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                            <div>
+                              <label className="text-sm text-gray-500 font-bold mb-1.5 block">Overall rating</label>
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <button key={star} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: star }))}>
+                                    <Star className={`w-6 h-6 transition-colors ${star <= reviewForm.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <input className="input text-sm" placeholder="Review title (optional)"
+                              value={reviewForm.title} onChange={e => setReviewForm(f => ({ ...f, title: e.target.value }))} />
+                            <textarea className="input resize-none text-sm" rows={3}
+                              placeholder="Share your experience with this product…"
+                              value={reviewForm.body} onChange={e => setReviewForm(f => ({ ...f, body: e.target.value }))} />
+                            <div className="flex gap-3">
+                              <button type="submit" disabled={submitting} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors">
+                                {submitting ? 'Submitting…' : 'Submit Review'}
                               </button>
-                            ))}
+                              <button type="button" onClick={() => setShowReviewForm(false)} className="btn-ghost text-sm">
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <input className="input text-sm" placeholder="Review title (optional)"
-                          value={reviewForm.title} onChange={e => setReviewForm(f => ({ ...f, title: e.target.value }))} />
-                        <textarea className="input resize-none text-sm" rows={3}
-                          placeholder="Share your experience with this product…"
-                          value={reviewForm.body} onChange={e => setReviewForm(f => ({ ...f, body: e.target.value }))} />
-                        <div className="flex gap-3">
-                          <button type="submit" disabled={submitting} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors">
-                            {submitting ? 'Submitting…' : 'Submit Review'}
-                          </button>
-                          <button type="button" onClick={() => setShowReviewForm(false)} className="btn-ghost text-sm">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100">
+                    <CheckCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-amber-800">Verified Purchase Required</p>
+                      <p className="text-xs text-amber-700 font-medium mt-0.5">
+                        Only customers who have purchased and received this product can leave a review.
+                        <Link to="/orders" className="underline ml-1 hover:text-amber-900">View your orders</Link>
+                      </p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+                  <Star className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                  <p className="text-sm font-medium text-indigo-700">
+                    <Link to="/login" className="font-bold underline hover:text-indigo-900">Log in</Link>
+                    {' '}to write a review (verified purchase required)
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Reviews List */}
             {reviews.length === 0 ? (

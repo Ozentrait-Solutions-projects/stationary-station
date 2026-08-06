@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, Search, Menu, X, User,
   LogOut, Package, LayoutDashboard, ChevronDown,
-  ChevronRight, ShoppingBag, Crown,
+  ChevronRight, ShoppingBag, Crown, Mic, MicOff,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -39,6 +39,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported] = useState(() => !!(window.SpeechRecognition || window.webkitSpeechRecognition));
   const searchRef = useRef(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const wishlistCount = wishlist.length || 0;
@@ -85,6 +87,33 @@ export default function Navbar() {
     setSearchQuery('');
     setSuggestions([]);
     setSearchFocus(false);
+  };
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    setIsListening(true);
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+      // Auto-search after voice input
+      const params = new URLSearchParams({ search: transcript.trim() });
+      navigate(`/products?${params.toString()}`);
+      setSuggestions([]);
+      setSearchFocus(false);
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
   };
 
   return (
@@ -139,10 +168,26 @@ export default function Navbar() {
                   className="flex-1 h-full px-4 bg-transparent text-gray-800 text-sm focus:outline-none placeholder-gray-400 font-medium"
                 />
                 
+                {/* Mic button */}
+                {voiceSupported && (
+                  <button
+                    type="button"
+                    onClick={handleVoiceSearch}
+                    title={isListening ? 'Listening…' : 'Search by voice'}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 mr-1 flex-shrink-0 ${
+                      isListening
+                        ? 'bg-red-100 text-red-500 animate-pulse'
+                        : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                    }`}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                )}
+
                 {/* Search button */}
                 <button
                   type="submit"
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm"
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm flex-shrink-0"
                 >
                   <Search className="w-4 h-4" />
                 </button>
