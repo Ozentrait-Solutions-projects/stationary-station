@@ -398,7 +398,6 @@ export default function Home() {
                   const wishlisted = isWishlisted(product.id);
                   const salePrice = product.sale_price ? Number(product.sale_price) : null;
                   const displayPrice = salePrice || product.price;
-                  const originalPrice = product.original_price || product.price;
                   const discountPct = salePrice
                     ? Math.round((1 - salePrice / product.price) * 100)
                     : product.original_price
