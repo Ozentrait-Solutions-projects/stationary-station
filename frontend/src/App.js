@@ -12,6 +12,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 import CompareBar from './components/product/CompareBar';
+import InstallPrompt from './components/layout/InstallPrompt';
 
 // Lazy-load pages for code splitting
 const Home           = lazy(() => import('./pages/Home'));
@@ -94,6 +95,7 @@ function AppLayout() {
       <Footer />
       <CartSidebar />
       <CompareBar />
+      <InstallPrompt />
     </div>
   );
 }
