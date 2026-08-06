@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { sendOrderSuccessEmail } = require('../utils/mailer');
 
 // ─── CREATE ORDER ────────────────────────────────────────────────
 const createOrder = async (req, res, next) => {
@@ -76,7 +77,14 @@ const createOrder = async (req, res, next) => {
       [order.id]
     );
 
-    res.status(201).json({ order: { ...order, items: items.rows } });
+    const fullOrder = { ...order, items: items.rows };
+
+    // Send order confirmation email asynchronously
+    sendOrderSuccessEmail(req.user.email, fullOrder).catch(err => {
+      console.error(`Failed to send order success email: ${err.message}`);
+    });
+
+    res.status(201).json({ order: fullOrder });
   } catch (err) {
     await client.query('ROLLBACK');
     next(err);

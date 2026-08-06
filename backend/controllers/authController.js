@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const { sendOTPEmail } = require('../utils/mailer');
+const { sendOTPEmail, sendResetPasswordEmail } = require('../utils/mailer');
 
 /** Generate JWT */
 const generateToken = (id) =>
@@ -171,4 +171,75 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, getMe, updateProfile, changePassword, sendOTP };
+// ─── FORGOT PASSWORD ─────────────────────────────────────────────
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: 'No user registered with this email address' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await db.query(
+      `INSERT INTO verification_otps (email, otp, expires_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (email)
+       DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = NOW()`,
+      [email.toLowerCase(), otp, expiresAt]
+    );
+
+    await sendResetPasswordEmail(email.toLowerCase(), otp);
+    res.json({ message: 'Password reset code sent successfully!' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── RESET PASSWORD ──────────────────────────────────────────────
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: 'Email, code, and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    // Verify OTP
+    const otpRes = await db.query(
+      'SELECT otp, expires_at FROM verification_otps WHERE email = $1',
+      [email.toLowerCase()]
+    );
+    if (!otpRes.rows.length) {
+      return res.status(400).json({ message: 'No verification code found for this email. Please request a new one.' });
+    }
+    const record = otpRes.rows[0];
+    if (record.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+    if (new Date(record.expires_at) < new Date()) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
+    // Clean up OTP
+    await db.query('DELETE FROM verification_otps WHERE email = $1', [email.toLowerCase()]);
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email.toLowerCase()]);
+
+    res.json({ message: 'Password reset successfully. You can now login with your new password.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, login, getMe, updateProfile, changePassword, sendOTP, forgotPassword, resetPassword };
