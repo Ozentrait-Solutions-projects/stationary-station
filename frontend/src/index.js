@@ -10,16 +10,18 @@ root.render(
   </React.StrictMode>
 );
 
-// Register service worker for Progressive Web App (PWA)
+// Unregister service worker & clear cache so fresh Vercel deployments show instantly
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((reg) => {
-        console.log('Service Worker registered successfully:', reg.scope);
-      })
-      .catch((err) => {
-        console.warn('Service Worker registration failed:', err);
-      });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
   });
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      for (let name of names) {
+        caches.delete(name);
+      }
+    });
+  }
 }
