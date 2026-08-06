@@ -117,14 +117,12 @@ export default function Home() {
       
       {/* ── Hero section ─────────────────────────────────────────── */}
       <section className="nexcart-container py-6">
-        <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-r from-[#EEF2FF] via-[#FDF2F8] to-[#FFFBEB] p-8 lg:p-14 border border-indigo-100/70 shadow-md min-h-[460px] flex items-center">
+        <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-r from-[#EEF2FF] via-[#FDF2F8] to-[#FFFBEB] p-5 sm:p-8 lg:p-14 border border-indigo-100/70 shadow-md min-h-[400px] lg:min-h-[460px] flex items-center">
           
           {/* Background pastel decorative circles */}
           <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-indigo-200/20 blur-3xl pointer-events-none" />
           <div className="absolute top-12 right-1/4 w-[280px] h-[280px] rounded-full bg-pink-200/25 blur-3xl pointer-events-none" />
           
-
-
           <AnimatePresence mode="wait">
             <motion.div
               key={slide}
@@ -132,35 +130,35 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.35, ease: "easeInOut" }}
-              className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-center w-full relative z-10"
+              className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-12 items-center w-full relative z-10"
             >
               
               {/* Left Content Column */}
-              <div className="space-y-6">
-                <span className="inline-block text-[#6366F1] font-bold text-sm tracking-wider uppercase bg-white/60 px-4 py-1.5 rounded-full backdrop-blur-sm border border-indigo-100/50">
+              <div className="space-y-4 sm:space-y-6">
+                <span className="inline-block text-[#6366F1] font-bold text-xs sm:text-sm tracking-wider uppercase bg-white/60 px-4 py-1.5 rounded-full backdrop-blur-sm border border-indigo-100/50">
                   {SLIDES[slide].tag}
                 </span>
                 
-                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
+                <h1 className="font-display text-2xl sm:text-4xl lg:text-6xl font-black text-gray-900 leading-tight">
                   {SLIDES[slide].title.split(',')[0]},<br />
                   <span className="text-[#6366F1] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                     {SLIDES[slide].title.split(',')[1] || "Thoughtfully Chosen"}
                   </span>
                 </h1>
                 
-                <p className="text-gray-500 text-base max-w-xl font-medium leading-relaxed">
+                <p className="text-gray-500 text-sm sm:text-base max-w-xl font-medium leading-relaxed">
                   {SLIDES[slide].desc}
                 </p>
                 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-4 pt-2">
-                  <Link to="/products" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold px-8 py-3.5 rounded-full shadow-lg shadow-indigo-200 transition-all duration-200 flex items-center gap-2 transform hover:-translate-y-0.5">
+                  <Link to="/products" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5 rounded-full shadow-lg shadow-indigo-200 transition-all duration-200 flex items-center gap-2 transform hover:-translate-y-0.5">
                     Shop Now <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
 
                 {/* Badges icons strip */}
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-indigo-100/40 max-w-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-indigo-100/40 max-w-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-sm text-indigo-600 border border-indigo-50/55 flex-shrink-0">
                       <Truck className="w-5 h-5" />
@@ -193,11 +191,11 @@ export default function Home() {
 
               {/* Right Product Collage Column */}
               <div className="relative flex justify-center lg:justify-end items-center">
-                <div className="relative w-full max-w-[400px] h-[360px] flex items-center justify-center">
+                <div className="relative w-full max-w-[320px] lg:max-w-[400px] h-[240px] sm:h-[360px] flex items-center justify-center">
                   <img
                     src={SLIDES[slide].image}
                     alt="NexCart Collection"
-                    className="rounded-3xl w-full h-[320px] object-cover shadow-lg border border-white"
+                    className="rounded-3xl w-full h-[200px] sm:h-[320px] object-cover shadow-lg border border-white"
                     onError={e => { e.target.src = "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=600"; }}
                   />
                 </div>
