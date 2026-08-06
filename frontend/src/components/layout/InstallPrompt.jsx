@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Share, PlusSquare, MoreVertical } from 'lucide-react';
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if the user is on an iOS device
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
     setIsIOS(isIOSDevice);
+    setIsMobile(isMobileDevice);
 
     const handleBeforeInstallPrompt = (e) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Show the install prompt if not dismissed this session
+      
       const dismissed = sessionStorage.getItem('pwa_prompt_dismissed');
       if (!dismissed) {
         setIsVisible(true);
@@ -27,12 +28,13 @@ export default function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // If it's iOS and not already standalone, show custom guide
+    // If it's a mobile device and not already running as a standalone app,
+    // show the popup after a short delay even if beforeinstallprompt didn't fire.
+    // This handles HTTP connections on mobile and browsers with restricted PWA prompts.
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isIOSDevice && !isStandalone) {
+    if (isMobileDevice && !isStandalone) {
       const dismissed = sessionStorage.getItem('pwa_prompt_dismissed');
       if (!dismissed) {
-        // We can show it after a small delay
         const timer = setTimeout(() => {
           setIsVisible(true);
         }, 3000);
@@ -48,14 +50,10 @@ export default function InstallPrompt() {
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     
-    // Show the install prompt
     deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User response to install prompt: ${outcome}`);
     
-    // We no longer need the prompt
     setDeferredPrompt(null);
     setIsVisible(false);
   };
@@ -98,7 +96,35 @@ export default function InstallPrompt() {
           </div>
 
           {/* Body Context */}
-          {!isIOS ? (
+          {isIOS ? (
+            // iOS Devices
+            <div>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3.5 font-medium">
+                Install NexCart on your iOS device to access it anytime from your Home Screen:
+              </p>
+              <div className="bg-slate-50 rounded-xl p-3.5 text-xs text-gray-700 flex flex-col gap-2.5 border border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
+                  <span className="flex items-center gap-1 font-medium">
+                    Tap the share icon <Share className="w-3.5 h-3.5 inline text-blue-500 mx-0.5" /> in Safari.
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
+                  <span className="flex items-center gap-1 font-medium">
+                    Scroll down and select <span className="font-bold">Add to Home Screen</span> <PlusSquare className="w-3.5 h-3.5 inline text-gray-700 mx-0.5" />.
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleDismiss}
+                className="mt-4 w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-semibold"
+              >
+                Close Guide
+              </button>
+            </div>
+          ) : deferredPrompt ? (
+            // Chrome / Edge / Supported Browser (Native prompt available)
             <div>
               <p className="text-sm text-gray-600 leading-relaxed font-medium">
                 Install our app on your device for quick access, full-screen view, and smoother performance.
@@ -119,22 +145,23 @@ export default function InstallPrompt() {
                 </button>
               </div>
             </div>
-          ) : (
+          ) : isMobile ? (
+            // Android / Mobile without native support (e.g. HTTP, or other mobile browsers)
             <div>
               <p className="text-sm text-gray-600 leading-relaxed mb-3.5 font-medium">
-                Install NexCart on your iOS device to access it anytime from your Home Screen:
+                Add NexCart to your home screen for quick access and full-screen view:
               </p>
               <div className="bg-slate-50 rounded-xl p-3.5 text-xs text-gray-700 flex flex-col gap-2.5 border border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
                   <span className="flex items-center gap-1 font-medium">
-                    Tap the share icon <Share className="w-3.5 h-3.5 inline text-blue-500" /> in Safari.
+                    Tap the menu icon <MoreVertical className="w-3.5 h-3.5 inline text-gray-750 mx-0.5" /> in your browser.
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
                   <span className="flex items-center gap-1 font-medium">
-                    Scroll down and select <span className="font-bold">Add to Home Screen</span> <PlusSquare className="w-3.5 h-3.5 inline text-gray-700" />.
+                    Tap <span className="font-bold">Install app</span> or <span className="font-bold">Add to Home Screen</span>.
                   </span>
                 </div>
               </div>
@@ -143,6 +170,22 @@ export default function InstallPrompt() {
                 className="mt-4 w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-semibold"
               >
                 Close Guide
+              </button>
+            </div>
+          ) : (
+            // Desktop without native support (Already installed or HTTP)
+            <div>
+              <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                Install our app on your device for quick access, full-screen view, and smoother performance.
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                If the install option is not available, click the installation icon in your browser's address bar.
+              </p>
+              <button
+                onClick={handleDismiss}
+                className="mt-4 w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-semibold"
+              >
+                Close
               </button>
             </div>
           )}
