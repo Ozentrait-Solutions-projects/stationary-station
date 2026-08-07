@@ -644,31 +644,43 @@ export default function ProductDetail() {
             ) : (
               <div className="space-y-5 sm:space-y-6">
                 {reviews.map(r => (
-                  <div key={r.id} className="pb-5 sm:pb-6 border-b border-gray-100 last:border-b-0 last:pb-0 min-w-0">
-                    <div className="flex items-start gap-3 min-w-0">
-                      {/* Avatar */}
+                  <div key={r.id} className="pb-5 sm:pb-6 border-b border-gray-100 last:border-b-0 last:pb-0 w-full min-w-0">
+                    <div className="flex items-start gap-3 w-full min-w-0">
+                      {/* Avatar — fixed size, no flex shrink needed */}
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0 border border-indigo-100 overflow-hidden">
                         {r.user_avatar
                           ? <img src={r.user_avatar} alt="" className="w-full h-full rounded-full object-cover" />
                           : r.user_name?.[0]?.toUpperCase()
                         }
                       </div>
-                      {/* Content — min-w-0 is CRITICAL: without it the flex child
-                           ignores the parent width and text overflows the card */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-gray-800 truncate">{r.user_name}</p>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <div className="flex flex-shrink-0">
+                      {/* Content Container — min-w-0 CRITICAL: prevents flex overflow */}
+                      <div className="flex-1 min-w-0 w-full">
+                        {/* User Name — always truncate */}
+                        <p className="font-bold text-sm text-gray-800 truncate w-full">{r.user_name || 'Anonymous'}</p>
+                        
+                        {/* Rating + Title Row */}
+                        <div className="flex flex-wrap items-center gap-2 mt-1 w-full min-w-0">
+                          {/* Star Rating — flex-shrink-0 to preserve icon size */}
+                          <div className="flex gap-0.5 flex-shrink-0">
                             {[1,2,3,4,5].map(s => (
-                              <Star key={s} className={`w-3.5 h-3.5 ${s <= r.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
+                              <Star key={s} className={`w-3.5 h-3.5 flex-shrink-0 ${s <= r.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
                             ))}
                           </div>
-                          {r.title && <span className="text-sm font-bold text-gray-800 break-words min-w-0">{r.title}</span>}
+                          {/* Review Title — wrap naturally, min-w-0 allows text breaking */}
+                          {r.title && (
+                            <span className="text-sm font-bold text-gray-800 min-w-0 break-words" style={{ wordBreak: 'break-word' }}>
+                              {r.title}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-400 font-bold mt-1">Reviewed on {formatDate(r.created_at)}</p>
+                        
+                        {/* Review Date */}
+                        <p className="text-xs text-gray-400 font-bold mt-1.5">Reviewed on {formatDate(r.created_at)}</p>
+                        
+                        {/* Review Body Text — min-w-0 for proper text wrapping */}
                         {r.body && (
-                          <p className="text-sm text-gray-600 mt-2 leading-relaxed font-medium break-words"
-                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                          <p className="text-sm text-gray-600 mt-2.5 leading-relaxed font-medium w-full min-w-0 break-words"
+                            style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                             {r.body}
                           </p>
                         )}

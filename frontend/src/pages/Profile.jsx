@@ -279,15 +279,31 @@ export default function Profile() {
                               {detectingLocation ? 'Detecting…' : 'Use My Location'}
                             </button>
                           </div>
-                          <div className="grid sm:grid-cols-2 gap-3">
-                            <input className="input text-sm" placeholder="Label (e.g. Home, Office)" value={addressForm.label} onChange={e => setAddressForm(f => ({...f, label: e.target.value}))} />
-                            <input className="input text-sm" placeholder="Your full name" value={addressForm.full_name} onChange={e => setAddressForm(f => ({...f, full_name: e.target.value}))} />
-                            <input className="input text-sm sm:col-span-2" placeholder="Address line * (street, landmark)" required value={addressForm.address_line1} onChange={e => setAddressForm(f => ({...f, address_line1: e.target.value}))} />
-                            <input className="input text-sm" placeholder="City *" required value={addressForm.city} onChange={e => setAddressForm(f => ({...f, city: e.target.value}))} />
-                            <input className="input text-sm" placeholder="State" value={addressForm.state} onChange={e => setAddressForm(f => ({...f, state: e.target.value}))} />
-                            <input className="input text-sm" placeholder="PIN Code" value={addressForm.pin_code} onChange={e => setAddressForm(f => ({...f, pin_code: e.target.value}))} />
-                            <input className="input text-sm" placeholder="Country" value={addressForm.country} onChange={e => setAddressForm(f => ({...f, country: e.target.value}))} />
-                            <input className="input text-sm" placeholder="Phone" value={addressForm.phone} onChange={e => setAddressForm(f => ({...f, phone: e.target.value}))} />
+                          <div className="grid sm:grid-cols-2 gap-3 w-full">
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="Label (e.g. Home, Office)" value={addressForm.label} onChange={e => setAddressForm(f => ({...f, label: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="Your full name" value={addressForm.full_name} onChange={e => setAddressForm(f => ({...f, full_name: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full sm:col-span-2">
+                              <input className="input text-sm w-full" placeholder="Address line * (street, landmark)" required value={addressForm.address_line1} onChange={e => setAddressForm(f => ({...f, address_line1: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="City *" required value={addressForm.city} onChange={e => setAddressForm(f => ({...f, city: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="State" value={addressForm.state} onChange={e => setAddressForm(f => ({...f, state: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="PIN Code" value={addressForm.pin_code} onChange={e => setAddressForm(f => ({...f, pin_code: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="Country" value={addressForm.country} onChange={e => setAddressForm(f => ({...f, country: e.target.value}))} />
+                            </div>
+                            <div className="min-w-0 w-full">
+                              <input className="input text-sm w-full" placeholder="Phone" value={addressForm.phone} onChange={e => setAddressForm(f => ({...f, phone: e.target.value}))} />
+                            </div>
                           </div>
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={!!addressForm.is_default} onChange={e => setAddressForm(f => ({...f, is_default: e.target.checked}))} className="accent-indigo-600 w-4 h-4" />

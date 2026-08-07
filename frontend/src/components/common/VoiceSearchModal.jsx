@@ -167,12 +167,7 @@ export default function VoiceSearchModal({ isOpen, onClose, onSearch }) {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Title / Brand Header */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <span className="font-display font-bold text-sm text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Volume2 className="w-4 h-4 text-indigo-500" /> Amazon-Style Voice Search
-              </span>
-            </div>
+
 
             {/* ── Visual Animated Indicator ───────────────────────────── */}
             <div className="relative my-6 flex items-center justify-center h-32">
@@ -235,22 +230,25 @@ export default function VoiceSearchModal({ isOpen, onClose, onSearch }) {
             <div className="min-h-[60px] flex flex-col items-center justify-center mb-4">
               {status === 'listening' && (
                 <>
-                  <p className="text-xs font-bold text-indigo-600 tracking-wider uppercase mb-1">
-                    Listening… Speak now
+                  <p className="text-xs font-bold text-indigo-600 tracking-wider uppercase mb-2">
+                    🎤 Listening…
                   </p>
                   <p className="text-base sm:text-lg font-bold text-gray-800 line-clamp-2 px-2">
-                    {transcript ? `"${transcript}"` : 'Say something like "Wireless Earbuds" or "Gel Pens"'}
+                    {transcript ? `"${transcript}"` : 'Waiting for input...'}
                   </p>
                 </>
               )}
 
               {status === 'processing' && (
-                <p className="text-sm font-bold text-indigo-600">Processing speech...</p>
+                <div>
+                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">🔍 Processing</p>
+                  <p className="text-sm font-medium text-gray-600">Analyzing your search...</p>
+                </div>
               )}
 
               {status === 'success' && (
                 <div>
-                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Found Result!</p>
+                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">✓ Search Complete</p>
                   <p className="text-base font-black text-gray-900">"{transcript}"</p>
                 </div>
               )}

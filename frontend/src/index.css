@@ -337,6 +337,46 @@
 
 /* ── Utilities ─────────────────────────────────────────────────── */
 @layer utilities {
+  /* ── Responsive Layout Utilities ──────────────────────────────── */
+  /* CRITICAL: These utilities fix overflow and layout shift issues */
+  
+  /* Prevent flex/grid overflow by constraining children */
+  .min-w-0 { min-width: 0; }
+  .min-h-0 { min-height: 0; }
+  
+  /* Full-width wrapper with consistent sizing */
+  .responsive-grid-wrapper {
+    @apply w-full grid grid-cols-1 sm:grid-cols-2 gap-3;
+  }
+  
+  /* Grid cell with proper constraints */
+  .responsive-grid-cell {
+    @apply min-w-0 w-full;
+  }
+  
+  /* Full-span grid cell (e.g., address field spanning 2 columns) */
+  .responsive-grid-cell-full {
+    @apply min-w-0 w-full sm:col-span-2;
+  }
+  
+  /* Flex container that respects content width */
+  .responsive-flex-container {
+    @apply flex items-start gap-3 w-full min-w-0;
+  }
+  
+  /* Flex child that can shrink and wrap text */
+  .responsive-flex-content {
+    @apply flex-1 min-w-0 w-full;
+  }
+  
+  /* Text that wraps properly in constrained containers */
+  .responsive-text-wrap {
+    @apply break-words;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Color utilities */
   .text-balance { text-wrap: balance; }
   .bg-amazon-surface  { background-color: var(--amazon-surface); }
   .bg-amazon-surface2 { background-color: var(--amazon-surface2); }
@@ -349,4 +389,12 @@
   .hover\:bg-white\/5:hover  { background-color: rgba(255,255,255,0.05); }
   .hover\:bg-white\/10:hover { background-color: rgba(255,255,255,0.10); }
   .hover\:bg-white\/15:hover { background-color: rgba(255,255,255,0.15); }
+  
+  /* Input field height standardization — CRITICAL for consistent layout */
+  .input-standard-height { min-height: 2.75rem; height: 2.75rem; }
+  
+  /* Consistent form field wrapper */
+  .form-field-wrapper {
+    @apply min-w-0 w-full;
+  }
 }

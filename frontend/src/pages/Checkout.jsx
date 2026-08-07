@@ -240,30 +240,35 @@ export default function Checkout() {
                       </div>
 
                       {/*
-                        ── Root cause fix ────────────────────────────────────────
-                        Using a PURE CSS grid (no flex fallback) with consistent
-                        column tracks. Every input is wrapped in a <div> so that
-                        col-span-2 applies to the WRAPPER, not the input itself
-                        (applying col-span directly to <input> in a .map() is
-                        unreliable because grid-placement applies to block-level
-                        children, not form elements in some browsers).
-                        min-w-0 on all cells prevents grid blowout.
-                        ────────────────────────────────────────────────────────
+                        ── Responsive Address Form Grid ────────────────────────────
+                        Pure CSS Grid with:
+                        1. Consistent 1-column on mobile, 2-column on sm+
+                        2. Every field wrapped in div for col-span reliability
+                        3. min-w-0 on all wrappers to prevent grid overflow
+                        4. w-full on inputs to fill parent width
+                        5. Standardized gap ensures visual rhythm
+                        6. No dynamic rendering = no layout shifts
+                        ──────────────────────────────────────────────────────────
                       */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                         {[
-                          { key: 'full_name',    placeholder: `${t('fullName')} *`,                       span2: false },
-                          { key: 'phone',        placeholder: `${t('phone')} *`,                           span2: false },
-                          { key: 'address_line', placeholder: `${t('address')} (House No, Street, Area) *`, span2: true  },
-                          { key: 'city',         placeholder: `${t('cityDistrict')} *`,                    span2: false },
-                          { key: 'state',        placeholder: `${t('state')} *`,                           span2: false },
-                          { key: 'pincode',      placeholder: `${t('pinCode')} *`,                         span2: false },
-                          { key: 'country',      placeholder: `${t('country')}`,                            span2: false },
+                          { key: 'full_name',    label: t('fullName'),                                     span2: false },
+                          { key: 'phone',        label: t('phone'),                                         span2: false },
+                          { key: 'address_line', label: t('address') + ' (House No, Street, Area)',       span2: true  },
+                          { key: 'city',         label: t('cityDistrict'),                                 span2: false },
+                          { key: 'state',        label: t('state'),                                        span2: false },
+                          { key: 'pincode',      label: t('pinCode'),                                      span2: false },
+                          { key: 'country',      label: t('country'),                                      span2: false },
                         ].map(field => (
-                          <div key={field.key} className={`min-w-0 ${field.span2 ? 'sm:col-span-2' : ''}`}>
+                          <div
+                            key={field.key}
+                            className={`min-w-0 w-full ${
+                              field.span2 ? 'sm:col-span-2' : 'sm:col-span-1'
+                            }`}
+                          >
                             <input
-                              className="input text-sm w-full"
-                              placeholder={field.placeholder}
+                              className="input text-sm w-full h-[2.75rem]"
+                              placeholder={`${field.label} ${field.key !== 'country' ? '*' : ''}`}
                               value={address[field.key]}
                               onChange={e => setAddress(a => ({ ...a, [field.key]: e.target.value }))}
                               autoComplete={field.key === 'full_name' ? 'name' : field.key === 'phone' ? 'tel' : field.key === 'pincode' ? 'postal-code' : field.key === 'country' ? 'country-name' : field.key === 'city' ? 'address-level2' : field.key === 'state' ? 'address-level1' : 'street-address'}
