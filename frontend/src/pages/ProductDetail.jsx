@@ -540,7 +540,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Reviews */}
-          <div id="reviews" className="rounded-2xl p-4 sm:p-6 bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div id="reviews" className="rounded-2xl p-4 sm:p-6 bg-white border border-gray-100 shadow-sm" style={{ contain: 'layout' }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 w-full min-w-0">
               <h2 className="font-display text-lg font-black text-gray-950 min-w-0 break-words">
                 Customer Reviews
@@ -645,42 +645,50 @@ export default function ProductDetail() {
               <div className="space-y-5 sm:space-y-6">
                 {reviews.map(r => (
                   <div key={r.id} className="pb-5 sm:pb-6 border-b border-gray-100 last:border-b-0 last:pb-0 w-full min-w-0">
-                    <div className="flex flex-col sm:flex-row items-start gap-3 w-full min-w-0">
-                      {/* Avatar — fixed size, no flex shrink needed */}
+                    {/*
+                      review-card-row  → flex-col on mobile, flex-row on sm+,
+                                         always w-full min-w-0 (prevents overflow)
+                      review-content   → flex:1 min-w-0 overflow:hidden
+                                         (CRITICAL: flex child MUST have min-w-0)
+                      review-text-safe → overflow-wrap:anywhere break-word
+                                         pre-wrap (single consistent rule)
+                    */}
+                    <div className="review-card-row">
+                      {/* Avatar — fixed size, flex-shrink-0 prevents squeezing */}
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0 border border-indigo-100 overflow-hidden">
                         {r.user_avatar
                           ? <img src={r.user_avatar} alt="" className="w-full h-full rounded-full object-cover" />
                           : r.user_name?.[0]?.toUpperCase()
                         }
                       </div>
-                      {/* Content Container — min-w-0 CRITICAL: prevents flex overflow */}
-                      <div className="flex-1 min-w-0 w-full">
-                        {/* User Name — always truncate */}
-                        <p className="font-bold text-sm text-gray-800 truncate w-full">{r.user_name || 'Anonymous'}</p>
-                        
+
+                      {/* Content block — review-content guarantees no overflow */}
+                      <div className="review-content">
+                        {/* Username */}
+                        <p className="font-bold text-sm text-gray-800 truncate">{r.user_name || 'Anonymous'}</p>
+
                         {/* Rating + Title Row */}
-                        <div className="flex flex-wrap items-center gap-2 mt-1 w-full min-w-0">
-                          {/* Star Rating — flex-shrink-0 to preserve icon size */}
+                        <div className="flex flex-wrap items-center gap-2 mt-1 min-w-0">
+                          {/* Stars — flex-shrink-0 preserves icon size */}
                           <div className="flex gap-0.5 flex-shrink-0">
                             {[1,2,3,4,5].map(s => (
                               <Star key={s} className={`w-3.5 h-3.5 flex-shrink-0 ${s <= r.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
                             ))}
                           </div>
-                          {/* Review Title — wrap naturally, min-w-0 allows text breaking */}
+                          {/* Review title — wraps naturally inside min-w-0 parent */}
                           {r.title && (
-                            <span className="text-sm font-bold text-gray-800 min-w-0 break-words w-full sm:w-auto" style={{ wordBreak: 'break-word' }}>
+                            <span className="review-text-safe text-sm font-bold text-gray-800">
                               {r.title}
                             </span>
                           )}
                         </div>
-                        
-                        {/* Review Date */}
+
+                        {/* Date */}
                         <p className="text-xs text-gray-400 font-bold mt-1.5">Reviewed on {formatDate(r.created_at)}</p>
-                        
-                        {/* Review Body Text — min-w-0 for proper text wrapping */}
+
+                        {/* Review body — review-text-safe prevents all overflow */}
                         {r.body && (
-                          <p className="text-sm text-gray-600 mt-2.5 leading-relaxed font-medium w-full min-w-0 break-words whitespace-pre-wrap"
-                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                          <p className="review-text-safe text-sm text-gray-600 mt-2.5 leading-relaxed font-medium">
                             {r.body}
                           </p>
                         )}

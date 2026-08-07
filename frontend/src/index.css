@@ -179,21 +179,39 @@
 
   /* ── Inputs ───────────────────────────────────────────────────── */
   .input {
-    @apply w-full px-3.5 py-3 rounded-lg
-           text-gray-800 placeholder-gray-400
-           focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent
-           transition-all duration-200;
+    /* Layout — always fill parent width; never overflow grid/flex container */
+    display: block;
+    width: 100%;
+    min-width: 0;          /* Allows shrink inside flex/grid */
+    box-sizing: border-box; /* Padding/border never add to width */
+
+    /* Spacing — vertical padding defines height; no fixed height so */
+    /* the field never jumps when validation messages appear           */
+    padding: 0.6875rem 0.875rem; /* ≈ 11px 14px → ~44px total height */
+    min-height: 2.75rem;   /* 44px minimum touch target */
+
+    /* Typography */
+    font-size: 1rem;       /* 16px — CRITICAL: prevents iOS auto-zoom on focus */
+    line-height: 1.25rem;
+    color: #1F2937;
+
+    /* Visual */
+    border-radius: 0.5rem;
     background-color: var(--amazon-surface);
     border: 1px solid var(--amazon-border-bright);
-    /* Prevent flex/grid blowout — inputs don't respect min-width by default */
-    min-width: 0;
-    /* Guarantee box-sizing so padding never adds to declared width */
-    box-sizing: border-box;
-    /* Consistent touch target height on all mobile devices */
-    min-height: 44px;
-    /* Prevent iOS default appearance overriding our styles */
+
+    /* Interaction */
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    /* iOS — remove default system appearance */
     -webkit-appearance: none;
     appearance: none;
+  }
+  .input::placeholder { color: #9CA3AF; }
+  .input:focus {
+    border-color: #6366F1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
   }
 
   .amazon-search-input {
@@ -338,63 +356,123 @@
 /* ── Utilities ─────────────────────────────────────────────────── */
 @layer utilities {
   /* ── Responsive Layout Utilities ──────────────────────────────── */
-  /* CRITICAL: These utilities fix overflow and layout shift issues */
-  
+  /* CRITICAL: These utilities fix overflow and layout shift issues  */
+
   /* Prevent flex/grid overflow by constraining children */
   .min-w-0 { min-width: 0; }
   .min-h-0 { min-height: 0; }
-  
-  /* Full-width wrapper with consistent sizing */
+
+  /* ── Address Form — stable 2-column grid ──────────────────────── */
+  /*
+   * Root cause of address form layout shifts:
+   *   1. Fixed height on inputs conflicted with validation / autofill
+   *   2. Grid cells without min-w-0 could overflow on narrow viewports
+   *   3. gap was sometimes overridden by utility conflicts
+   * Solution: Declare the grid entirely here so it is immune to
+   * Tailwind JIT purge and dynamic-class ordering issues.
+   */
+  .address-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;            /* 12px — consistent across all devices */
+    width: 100%;
+    box-sizing: border-box;
+  }
+  @media (min-width: 640px) {
+    .address-form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Form field wrapper — every cell in the address grid */
+  .form-field-wrapper {
+    min-width: 0;     /* Prevents grid blowout */
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Full-width cell (e.g. address line) */
+  @media (min-width: 640px) {
+    .form-field-wrapper.field-full {
+      grid-column: span 2;
+    }
+  }
+
+  /* Full-width wrapper with consistent sizing (legacy alias) */
   .responsive-grid-wrapper {
     @apply w-full grid grid-cols-1 sm:grid-cols-2 gap-3;
   }
-  
-  /* Grid cell with proper constraints */
-  .responsive-grid-cell {
-    @apply min-w-0 w-full;
+  .responsive-grid-cell      { min-width: 0; width: 100%; }
+  .responsive-grid-cell-full { min-width: 0; width: 100%; }
+  @media (min-width: 640px) {
+    .responsive-grid-cell-full { grid-column: span 2; }
   }
-  
-  /* Full-span grid cell (e.g., address field spanning 2 columns) */
-  .responsive-grid-cell-full {
-    @apply min-w-0 w-full sm:col-span-2;
-  }
-  
+
   /* Flex container that respects content width */
-  .responsive-flex-container {
-    @apply flex items-start gap-3 w-full min-w-0;
+  .responsive-flex-container { display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; min-width: 0; }
+  .responsive-flex-content   { flex: 1 1 0%; min-width: 0; width: 100%; }
+
+  /* ── Review Card Text — overflow-proof ───────────────────────── */
+  /*
+   * Root cause of review overflow:
+   *   1. Long unbreakable strings (URLs, run-on words) escaped container
+   *   2. flex children without min-w-0 pushed siblings out of bounds
+   *   3. whitespace-pre-wrap without overflow-wrap caused horizontal scroll
+   * Solution: enforce safe word-break on all review text nodes.
+   */
+  .review-text-safe {
+    /* Allow break at any character as last resort (URLs, long strings) */
+    overflow-wrap: anywhere;
+    word-break:    break-word;
+    /* Preserve intentional newlines but still wrap */
+    white-space: pre-wrap;
+    /* Prevent the block from ever exceeding its parent */
+    max-width: 100%;
+    min-width: 0;
   }
-  
-  /* Flex child that can shrink and wrap text */
-  .responsive-flex-content {
-    @apply flex-1 min-w-0 w-full;
+
+  /* Review card row — prevent flex overflow at all widths */
+  .review-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
-  
-  /* Text that wraps properly in constrained containers */
-  .responsive-text-wrap {
-    @apply break-words;
-    word-break: break-word;
-    overflow-wrap: break-word;
+  @media (min-width: 640px) {
+    .review-card-row {
+      flex-direction: row;
+      align-items: flex-start;
+    }
   }
-  
+
+  /* Review content block — fills available space, never overflows */
+  .review-content {
+    flex: 1 1 0%;
+    min-width: 0;    /* CRITICAL: flex child must declare this */
+    width: 100%;
+    overflow: hidden; /* Belt-and-suspenders: clip any residual overflow */
+  }
+
+  /* ── Input height — use min-height only, never fixed height ──── */
+  /* Using fixed height: 2.75rem caused layout shifts because:       */
+  /*  - border-box + padding can exceed 2.75rem on some browsers     */
+  /*  - iOS zoom repaint changed computed height                     */
+  .input-standard-height { min-height: 2.75rem; }
+
   /* Color utilities */
   .text-balance { text-wrap: balance; }
   .bg-amazon-surface  { background-color: var(--amazon-surface); }
   .bg-amazon-surface2 { background-color: var(--amazon-surface2); }
   .bg-amazon-surface3 { background-color: var(--amazon-surface3); }
   .bg-amazon-bg       { background-color: var(--amazon-bg); }
-  .border-amazon      { border-color: var(--amazon-border); }
+  .border-amazon        { border-color: var(--amazon-border); }
   .border-amazon-bright { border-color: var(--amazon-border-bright); }
 
   /* Hover bg opacity variants */
   .hover\:bg-white\/5:hover  { background-color: rgba(255,255,255,0.05); }
   .hover\:bg-white\/10:hover { background-color: rgba(255,255,255,0.10); }
   .hover\:bg-white\/15:hover { background-color: rgba(255,255,255,0.15); }
-  
-  /* Input field height standardization — CRITICAL for consistent layout */
-  .input-standard-height { min-height: 2.75rem; height: 2.75rem; }
-  
-  /* Consistent form field wrapper */
-  .form-field-wrapper {
-    @apply min-w-0 w-full;
-  }
 }
