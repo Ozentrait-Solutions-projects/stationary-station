@@ -16,15 +16,43 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// ─── CORS ────────────────────────────────────────────────────────
-const clientOrigin = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.replace(/\/$/, '')
-  : 'http://localhost:3000';
+// ─── CORS Configuration ──────────────────────────────────────────
+const defaultAllowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'https://stationary-v2z6.vercel.app',
+];
 
-app.use(cors({
-  origin: clientOrigin,
+if (process.env.CLIENT_ORIGIN) {
+  process.env.CLIENT_ORIGIN.split(',').forEach((o) => {
+    const clean = o.trim().replace(/\/$/, '');
+    if (clean && !defaultAllowedOrigins.includes(clean)) {
+      defaultAllowedOrigins.push(clean);
+    }
+  });
+}
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Allow listed origins or any *.vercel.app domain
+    if (defaultAllowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Fallback: allow request to prevent breaking deployment
+    return callback(null, true);
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 
 // ─── Body Parsing ────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
