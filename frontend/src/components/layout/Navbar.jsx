@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, Search, Menu, X, User,
   LogOut, Package, LayoutDashboard, ChevronDown,
-  ChevronRight, ShoppingBag, Crown, Mic, MicOff,
+  ChevronRight, ShoppingBag, Crown, Mic,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -12,6 +12,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import VoiceSearchModal from '../common/VoiceSearchModal';
 
 
 
@@ -39,8 +40,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported] = useState(() => !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const searchRef = useRef(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const wishlistCount = wishlist.length || 0;
@@ -87,33 +87,6 @@ export default function Navbar() {
     setSearchQuery('');
     setSuggestions([]);
     setSearchFocus(false);
-  };
-
-  const handleVoiceSearch = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    setIsListening(true);
-    recognition.start();
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      setIsListening(false);
-      // Auto-search after voice input
-      const params = new URLSearchParams({ search: transcript.trim() });
-      navigate(`/products?${params.toString()}`);
-      setSuggestions([]);
-      setSearchFocus(false);
-    };
-
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
   };
 
   return (
@@ -169,20 +142,14 @@ export default function Navbar() {
                 />
                 
                 {/* Mic button */}
-                {voiceSupported && (
-                  <button
-                    type="button"
-                    onClick={handleVoiceSearch}
-                    title={isListening ? 'Listening…' : 'Search by voice'}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 mr-1 flex-shrink-0 ${
-                      isListening
-                        ? 'bg-red-100 text-red-500 animate-pulse'
-                        : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
-                    }`}
-                  >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setVoiceModalOpen(true)}
+                  title="Search by voice"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 mr-1 flex-shrink-0"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
 
                 {/* Search button */}
                 <button
@@ -418,8 +385,16 @@ export default function Navbar() {
                   className="flex-1 h-full px-3 bg-transparent text-gray-800 text-xs focus:outline-none placeholder-gray-400 font-medium"
                 />
                 <button
+                  type="button"
+                  onClick={() => setVoiceModalOpen(true)}
+                  title="Search by voice"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 mr-1 flex-shrink-0"
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                </button>
+                <button
                   type="submit"
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm"
+                  className="w-8 h-8 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm flex-shrink-0"
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
@@ -616,6 +591,20 @@ export default function Navbar() {
       </header>
 
       <div className="h-[92px] lg:h-[136px]" />
+
+      {/* Voice Search Modal */}
+      <VoiceSearchModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        onSearch={(query) => {
+          if (!query || !query.trim()) return;
+          const params = new URLSearchParams({ search: query.trim() });
+          navigate(`/products?${params.toString()}`);
+          setSearchQuery('');
+          setSuggestions([]);
+          setSearchFocus(false);
+        }}
+      />
     </>
   );
 }
