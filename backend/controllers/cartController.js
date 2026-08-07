@@ -1,18 +1,38 @@
 const db = require('../config/db');
 
+const formatCartItem = (item) => {
+  if (!item) return item;
+  const priceNum = Number(item.price);
+  const salePriceNum = item.sale_price !== null && item.sale_price !== undefined ? Number(item.sale_price) : null;
+  
+  if (salePriceNum !== null) {
+    return {
+      ...item,
+      price: salePriceNum,
+      original_price: item.original_price ? Math.max(Number(item.original_price), priceNum) : priceNum,
+      sale_price: salePriceNum
+    };
+  }
+  return {
+    ...item,
+    price: priceNum,
+    original_price: item.original_price ? Number(item.original_price) : null
+  };
+};
+
 // ─── GET CART ────────────────────────────────────────────────────
 const getCart = async (req, res, next) => {
   try {
     const { rows } = await db.query(
       `SELECT c.id, c.quantity, c.created_at,
-              p.id as product_id, p.title, p.price, p.original_price,
+              p.id as product_id, p.title, p.price, p.original_price, p.sale_price,
               p.image_url, p.stock, p.category, p.brand
        FROM cart c JOIN products p ON c.product_id = p.id
        WHERE c.user_id = $1
        ORDER BY c.created_at DESC`,
       [req.user.id]
     );
-    res.json({ cart: rows });
+    res.json({ cart: rows.map(formatCartItem) });
   } catch (err) { next(err); }
 };
 
@@ -35,11 +55,11 @@ const addToCart = async (req, res, next) => {
 
     // Return updated cart
     const { rows } = await db.query(
-      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.image_url, p.stock
+      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.sale_price, p.image_url, p.stock
        FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1 ORDER BY c.created_at DESC`,
       [req.user.id]
     );
-    res.json({ cart: rows, message: 'Added to cart' });
+    res.json({ cart: rows.map(formatCartItem), message: 'Added to cart' });
   } catch (err) { next(err); }
 };
 
@@ -57,11 +77,11 @@ const updateCartItem = async (req, res, next) => {
 
     await db.query('UPDATE cart SET quantity = $1 WHERE id = $2 AND user_id = $3', [quantity, id, req.user.id]);
     const { rows } = await db.query(
-      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.image_url, p.stock
+      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.sale_price, p.image_url, p.stock
        FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1 ORDER BY c.created_at DESC`,
       [req.user.id]
     );
-    res.json({ cart: rows });
+    res.json({ cart: rows.map(formatCartItem) });
   } catch (err) { next(err); }
 };
 
@@ -71,11 +91,11 @@ const removeFromCart = async (req, res, next) => {
     const { id } = req.params;
     await db.query('DELETE FROM cart WHERE id = $1 AND user_id = $2', [id, req.user.id]);
     const { rows } = await db.query(
-      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.image_url, p.stock
+      `SELECT c.id, c.quantity, p.id as product_id, p.title, p.price, p.original_price, p.sale_price, p.image_url, p.stock
        FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1 ORDER BY c.created_at DESC`,
       [req.user.id]
     );
-    res.json({ cart: rows, message: 'Removed from cart' });
+    res.json({ cart: rows.map(formatCartItem), message: 'Removed from cart' });
   } catch (err) { next(err); }
 };
 

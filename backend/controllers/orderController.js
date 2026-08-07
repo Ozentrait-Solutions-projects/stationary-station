@@ -16,29 +16,34 @@ const createOrder = async (req, res, next) => {
       isBuyNowFlow = true;
       for (const ci of customItems) {
         const pResult = await client.query(
-          'SELECT id as product_id, price, stock, title FROM products WHERE id = $1',
+          'SELECT id as product_id, price, sale_price, stock, title FROM products WHERE id = $1',
           [ci.product_id]
         );
         if (pResult.rows.length) {
+          const product = pResult.rows[0];
+          const activePrice = product.sale_price !== null && product.sale_price !== undefined ? Number(product.sale_price) : Number(product.price);
           itemsToProcess.push({
             quantity: Number(ci.quantity) || 1,
-            ...pResult.rows[0],
-            price: Number(pResult.rows[0].price),
-            stock: Number(pResult.rows[0].stock)
+            ...product,
+            price: activePrice,
+            stock: Number(product.stock)
           });
         }
       }
     } else {
       const cartResult = await client.query(
-        `SELECT c.quantity, p.id as product_id, p.price, p.stock, p.title
+        `SELECT c.quantity, p.id as product_id, p.price, p.sale_price, p.stock, p.title
          FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1`,
         [req.user.id]
       );
-      itemsToProcess = cartResult.rows.map(r => ({
-        ...r,
-        price: Number(r.price),
-        stock: Number(r.stock)
-      }));
+      itemsToProcess = cartResult.rows.map(r => {
+        const activePrice = r.sale_price !== null && r.sale_price !== undefined ? Number(r.sale_price) : Number(r.price);
+        return {
+          ...r,
+          price: activePrice,
+          stock: Number(r.stock)
+        };
+      });
     }
 
     if (!itemsToProcess.length) {

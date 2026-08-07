@@ -1,5 +1,25 @@
 const db = require('../config/db');
 
+const formatProductPrice = (product) => {
+  if (!product) return product;
+  const priceNum = Number(product.price);
+  const salePriceNum = product.sale_price !== null && product.sale_price !== undefined ? Number(product.sale_price) : null;
+  
+  if (salePriceNum !== null) {
+    return {
+      ...product,
+      price: salePriceNum,
+      original_price: product.original_price ? Math.max(Number(product.original_price), priceNum) : priceNum,
+      sale_price: salePriceNum
+    };
+  }
+  return {
+    ...product,
+    price: priceNum,
+    original_price: product.original_price ? Number(product.original_price) : null
+  };
+};
+
 // ─── GET ALL PRODUCTS (with filtering, sorting, pagination) ──────
 const getProducts = async (req, res, next) => {
   try {
@@ -56,12 +76,12 @@ const getProducts = async (req, res, next) => {
     params.push(parseInt(limit));
     params.push(offset);
     const { rows } = await db.query(
-      `SELECT * FROM products ${where} ORDER BY ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT * FROM products ${where} ORDER BY (sale_price IS NOT NULL) DESC, ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 
     res.json({
-      products: rows,
+      products: rows.map(formatProductPrice),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -89,7 +109,7 @@ const getProduct = async (req, res, next) => {
       [id]
     );
 
-    res.json({ product: rows[0], reviews: reviews.rows });
+    res.json({ product: formatProductPrice(rows[0]), reviews: reviews.rows });
   } catch (err) {
     next(err);
   }
@@ -111,9 +131,9 @@ const getCategories = async (req, res, next) => {
 const getFeatured = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      'SELECT * FROM products WHERE is_featured = TRUE ORDER BY rating DESC LIMIT 8'
+      'SELECT * FROM products WHERE is_featured = TRUE ORDER BY (sale_price IS NOT NULL) DESC, rating DESC LIMIT 8'
     );
-    res.json({ products: rows });
+    res.json({ products: rows.map(formatProductPrice) });
   } catch (err) {
     next(err);
   }
@@ -129,7 +149,7 @@ const getRecentlyViewed = async (req, res, next) => {
        ORDER BY rv.viewed_at DESC LIMIT 8`,
       [req.user.id]
     );
-    res.json({ products: rows });
+    res.json({ products: rows.map(formatProductPrice) });
   } catch (err) {
     next(err);
   }

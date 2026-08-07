@@ -1,7 +1,7 @@
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../middleware/upload');
 const db = require('../config/db');
-const { sendOrderStatusEmail } = require('../utils/mailer');
+const { sendOrderStatusEmail, sendProductOutOfStockEmail } = require('../utils/mailer');
 
 const parseArrayField = (value) => {
   if (Array.isArray(value)) return value;
@@ -189,6 +189,13 @@ const createProduct = async (req, res, next) => {
         finalReturnExchange !== null ? finalReturnExchange : true,
       ]
     );
+    
+    if (rows[0] && Number(rows[0].stock) === 0) {
+      sendProductOutOfStockEmail(req.user.email, rows[0]).catch(err => {
+        console.error(`Failed to send out of stock email to admin: ${err.message}`);
+      });
+    }
+
     res.status(201).json({ product: rows[0] });
   } catch (err) { next(err); }
 };
@@ -237,6 +244,13 @@ const updateProduct = async (req, res, next) => {
       ]
     );
     if (!rows.length) return res.status(404).json({ message: 'Product not found' });
+
+    if (Number(rows[0].stock) === 0) {
+      sendProductOutOfStockEmail(req.user.email, rows[0]).catch(err => {
+        console.error(`Failed to send out of stock email to admin: ${err.message}`);
+      });
+    }
+
     res.json({ product: rows[0] });
   } catch (err) { next(err); }
 };

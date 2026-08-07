@@ -192,7 +192,14 @@ const sendOrderStatusEmail = async (email, order) => {
     </tr>
   `).join('');
 
-  const shipping = typeof order.shipping_address === 'string' ? JSON.parse(order.shipping_address) : order.shipping_address;
+  let shipping = null;
+  if (order.shipping_address) {
+    try {
+      shipping = typeof order.shipping_address === 'string' ? JSON.parse(order.shipping_address) : order.shipping_address;
+    } catch (e) {
+      console.warn('Failed to parse shipping address:', e.message);
+    }
+  }
 
   const mailOptions = {
     from: `"NexCart Store" <${process.env.SMTP_USER || 'orders@nexcart.com'}>`,
@@ -212,7 +219,7 @@ const sendOrderStatusEmail = async (email, order) => {
             <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Order ID: <strong style="color: #111827;">#${order.id}</strong></p>
             <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Status: <strong style="color: ${info.color};">${currentStatus.toUpperCase()}</strong></p>
             <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Payment Method: <strong style="color: #111827;">${order.payment_method || 'Card/UPI'}</strong></p>
-            ${shipping ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Delivery Address: <strong style="color: #111827;">${shipping.address}, ${shipping.city}, ${shipping.postal_code || shipping.zip}</strong></p>` : ''}
+            ${shipping ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Delivery Address: <strong style="color: #111827;">${shipping.address || ''}, ${shipping.city || ''}, ${shipping.postal_code || shipping.zip || ''}</strong></p>` : ''}
           </div>
         </div>
 
@@ -269,4 +276,42 @@ const sendOrderStatusEmail = async (email, order) => {
   return transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOTPEmail, sendResetPasswordEmail, sendOrderSuccessEmail, sendOrderStatusEmail };
+const sendProductOutOfStockEmail = async (adminEmail, product) => {
+  const mailOptions = {
+    from: `"NexCart Inventory" <${process.env.SMTP_USER || 'inventory@nexcart.com'}>`,
+    to: adminEmail,
+    subject: `Alert: Product Added/Updated Out of Stock - ${product.title}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <div style="text-align: center; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 20px;">
+          <h2 style="color: #ef4444; margin: 0; font-size: 28px; font-weight: 800;">NexCart</h2>
+          <p style="color: #ef4444; font-size: 16px; margin: 5px 0 0 0; font-weight: 750;">Product Out of Stock Warning</p>
+        </div>
+        <p style="font-size: 15px; color: #4b5563; line-height: 1.5;">Hi Admin,</p>
+        <p style="font-size: 15px; color: #4b5563; line-height: 1.5;">The product you have added or updated is currently out of stock:</p>
+        <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Product ID: <strong style="color: #111827;">#${product.id}</strong></p>
+          <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Title: <strong style="color: #111827;">${product.title}</strong></p>
+          <p style="margin: 0 0 5px 0; font-size: 14px; color: #6b7280;">Category: <strong style="color: #111827;">${product.category}</strong></p>
+          <p style="margin: 0; font-size: 14px; color: #6b7280;">Stock Status: <strong style="color: #ef4444;">OUT OF STOCK (0)</strong></p>
+        </div>
+        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 30px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
+          NexCart Inventory Management System
+        </p>
+      </div>
+    `
+  };
+
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('\n----------------------------------------');
+    console.log(`[MOCK EMAIL SERVICE] To Admin: ${adminEmail}`);
+    console.log(`[MOCK EMAIL SERVICE] Alert: Product "${product.title}" (#${product.id}) is out of stock.`);
+    console.log('To send real emails, set SMTP_USER and SMTP_PASS in backend/.env');
+    console.log('----------------------------------------\n');
+    return true;
+  }
+
+  return transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendOTPEmail, sendResetPasswordEmail, sendOrderSuccessEmail, sendOrderStatusEmail, sendProductOutOfStockEmail };
