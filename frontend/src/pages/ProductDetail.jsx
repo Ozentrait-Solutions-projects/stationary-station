@@ -107,8 +107,7 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     if (!user) return navigate('/login');
-    addToCart(product.id, qty);
-    navigate('/checkout');
+    navigate('/checkout', { state: { buyNowItem: { product, quantity: qty } } });
   };
 
   const submitReview = async (e) => {
