@@ -1,7 +1,6 @@
 const { Pool } = require('pg');
 
-const DEFAULT_SHARED_DATABASE_URL = 'postgresql://neondb_owner:npg_wDOmkaZ4Up8K@ep-polished-frog-aoicqyq2-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-const databaseUrl = process.env.DATABASE_URL || DEFAULT_SHARED_DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: databaseUrl,
