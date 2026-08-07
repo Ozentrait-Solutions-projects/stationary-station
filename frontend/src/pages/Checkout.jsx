@@ -130,25 +130,25 @@ export default function Checkout() {
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-6 sm:mb-8">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1 last:flex-none">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 flex-shrink-0"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-300 flex-shrink-0"
                   style={{
                     backgroundColor: step > i + 1 ? '#10B981' : step === i + 1 ? '#6366F1' : '#F3F4F6',
                     color: step > i + 1 || step === i + 1 ? '#FFFFFF' : '#9CA3AF',
                   }}
                 >
-                  {step > i + 1 ? <CheckCircle2 className="w-4 h-4 text-white" /> : i + 1}
+                  {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /> : i + 1}
                 </div>
-                <span className={`text-sm font-bold hidden sm:block ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-bold ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
                   {s}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-3" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
+                <div className="flex-1 h-0.5 mx-2 sm:mx-3" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
               )}
             </div>
           ))}

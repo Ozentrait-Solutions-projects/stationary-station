@@ -691,6 +691,28 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Mobile Sticky CTA Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 flex gap-2 lg:hidden shadow-lg">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleAddToCart}
+          disabled={stock === 0 || addingCart}
+          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 bg-[#6366F1] text-white shadow-sm"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          {addingCart ? 'Adding…' : t('addToCart')}
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleBuyNow}
+          disabled={stock === 0}
+          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 bg-[#8B5CF6] text-white shadow-sm"
+        >
+          <Package className="w-4 h-4" />
+          {t('buyNow')}
+        </motion.button>
+      </div>
     </div>
   );
 }

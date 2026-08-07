@@ -13,6 +13,7 @@ import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 import CompareBar from './components/product/CompareBar';
 import InstallPrompt from './components/layout/InstallPrompt';
+import { useAutoUpdate } from './hooks/useAutoUpdate';
 
 // Lazy-load pages for code splitting
 const Home           = lazy(() => import('./pages/Home'));
@@ -74,6 +75,7 @@ function AdminRoute({ children }) {
 }
 
 function AppLayout() {
+  useAutoUpdate();
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F9FAFB', color: '#374151' }}>
       <ScrollToTop />

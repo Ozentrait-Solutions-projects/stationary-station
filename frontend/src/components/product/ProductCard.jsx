@@ -84,7 +84,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             className={`absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-200
               ${wishlisted
                 ? 'bg-red-500 opacity-100 text-white'
-                : 'bg-white text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100'
+                : 'bg-white text-gray-500 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100'
               }`}
           >
             <Heart className={`w-3.5 h-3.5 ${wishlisted ? 'fill-current' : ''}`} />
@@ -96,7 +96,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             className={`absolute top-10 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-200
               ${compared
                 ? 'bg-indigo-650 opacity-100 text-white'
-                : 'bg-white text-gray-500 hover:text-indigo-605 opacity-0 group-hover:opacity-100'
+                : 'bg-white text-gray-500 hover:text-indigo-605 opacity-100 lg:opacity-0 lg:group-hover:opacity-100'
               }`}
             title="Compare product"
           >

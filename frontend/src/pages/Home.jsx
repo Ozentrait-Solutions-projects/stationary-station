@@ -219,19 +219,19 @@ export default function Home() {
                 </div>
 
                 {/* Trust badges */}
-                <div className="flex gap-6 pt-3 border-t border-white/20">
+                <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-6 pt-3 border-t border-white/20">
                   {[
                     { icon: Truck, label: "Free Delivery", sub: "Above ₹499" },
                     { icon: RotateCcw, label: "Easy Returns", sub: "Within 7 days" },
                     { icon: Shield, label: "Secure Pay", sub: "100% protected" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-4 h-4 text-white" />
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-white text-[11px] font-bold leading-none">{item.label}</p>
-                        <p className="text-white/60 text-[10px] font-semibold mt-0.5">{item.sub}</p>
+                        <p className="text-white text-[10px] sm:text-[11px] font-bold leading-none">{item.label}</p>
+                        <p className="text-white/60 text-[9px] sm:text-[10px] font-semibold mt-0.5">{item.sub}</p>
                       </div>
                     </div>
                   ))}
@@ -265,8 +265,8 @@ export default function Home() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Slide indicators */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {/* Slide dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {SLIDES.map((_, i) => (
               <button
                 key={i}
@@ -279,13 +279,13 @@ export default function Home() {
           {/* Prev/Next arrows */}
           <button
             onClick={() => setSlide(p => (p - 1 + SLIDES.length) % SLIDES.length)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all"
+            className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => setSlide(p => (p + 1) % SLIDES.length)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all"
+            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -294,21 +294,21 @@ export default function Home() {
 
       {/* ── Quick Filter Pills ────────────────────────────────────── */}
       <section className="nexcart-container py-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
           {QUICK_FILTERS.map((item, idx) => {
             const IconComp = item.icon;
             return (
               <Link
                 key={idx}
                 to={item.link}
-                className="group flex items-center gap-3 bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transition-all duration-200"
+                className="group flex items-center gap-2.5 sm:gap-3 bg-white border border-gray-100 p-2.5 sm:p-3.5 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.bg }}>
-                  <IconComp className="w-4.5 h-4.5" style={{ color: item.color }} />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.bg }}>
+                  <IconComp className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: item.color }} />
                 </div>
-                <div>
-                  <h4 className="text-xs font-black text-gray-800 leading-tight group-hover:text-indigo-600 transition-colors">{item.title}</h4>
-                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{item.desc}</p>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-black text-gray-800 leading-tight group-hover:text-indigo-600 transition-colors truncate">{item.title}</h4>
+                  <p className="text-[9px] sm:text-[10px] text-gray-400 font-semibold mt-0.5 truncate">{item.desc}</p>
                 </div>
               </Link>
             );
@@ -317,13 +317,13 @@ export default function Home() {
       </section>
 
       {/* ── Shop by Category ──────────────────────────────────────── */}
-      <section className="nexcart-container py-6">
+      <section className="nexcart-container py-4 sm:py-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-display text-xl font-black text-gray-900">Shop by Category</h2>
-            <p className="text-sm text-gray-400 font-semibold mt-0.5">Find exactly what you're looking for</p>
+            <h2 className="font-display text-lg sm:text-xl font-black text-gray-900">Shop by Category</h2>
+            <p className="text-xs sm:text-sm text-gray-400 font-semibold mt-0.5">Find exactly what you're looking for</p>
           </div>
-          <Link to="/products" className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors">
+          <Link to="/products" className="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors">
             All Products <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

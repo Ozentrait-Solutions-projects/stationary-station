@@ -513,31 +513,44 @@ export default function Navbar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileOpen(false)}
-                className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-                style={{ top: '80px' }}
+                className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs"
               />
               <motion.div
                 initial={{ x: '-100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed left-0 top-20 bottom-0 w-80 bg-white z-50 overflow-y-auto lg:hidden border-r border-gray-100 shadow-2xl"
+                className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 overflow-y-auto lg:hidden border-r border-gray-100 shadow-2xl flex flex-col"
               >
-                <div className="p-6 border-b border-gray-100 bg-[#F9FAFB]">
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
+                  <div className="flex items-center gap-2">
+                    <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 6H13.5L22.5 30H15L6 6Z" fill="url(#nexLogoG1)" />
+                      <path d="M22.5 30H30V6H22.5V30Z" fill="url(#nexLogoG2)" />
+                      <path d="M6 6V18L13.5 30L22.5 30L6 6Z" fill="url(#nexLogoG3)" />
+                    </svg>
+                    <span className="font-display font-extrabold text-gray-900 text-base">NexCart</span>
+                  </div>
+                  <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-5 border-b border-gray-100 bg-[#F9FAFB]">
                   {user ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                      <div className="w-11 h-11 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
                         {user.name?.[0]?.toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">Hello, {user.name}</p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-800 text-sm truncate">Hello, {user.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <p className="text-gray-800 font-semibold text-sm mb-1">Welcome to NexCart</p>
-                      <Link to="/login" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-center py-2.5 rounded-xl text-xs font-bold transition-colors">
+                      <p className="text-gray-800 font-semibold text-sm mb-0.5">Welcome to NexCart</p>
+                      <Link to="/login" onClick={() => setMobileOpen(false)} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-center py-2.5 rounded-xl text-xs font-bold transition-colors">
                         Sign In
                       </Link>
                     </div>
@@ -602,7 +615,7 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      <div className="h-32 lg:h-[136px]" />
+      <div className="h-[105px] lg:h-[136px]" />
     </>
   );
 }

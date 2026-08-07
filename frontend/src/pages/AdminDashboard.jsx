@@ -176,21 +176,37 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAFBFD]">
-      <div className="nexcart-container py-6">
+      <div className="nexcart-container py-4 sm:py-6 px-3 sm:px-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h1 className="font-display text-2xl font-black text-gray-900">Admin Panel</h1>
-            <p className="text-sm text-gray-400 font-bold mt-0.5">Welcome back, {user?.name}</p>
+            <h1 className="font-display text-xl sm:text-2xl font-black text-gray-900">Admin Panel</h1>
+            <p className="text-xs sm:text-sm text-gray-400 font-bold mt-0.5">Welcome back, {user?.name}</p>
           </div>
-          <Link to="/" className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm">
+          <Link to="/" className="inline-flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl transition-all shadow-xs text-xs sm:text-sm self-start sm:self-auto">
             ← Back to Store
           </Link>
         </div>
 
+        {/* Mobile Tabs Bar */}
+        <div className="lg:hidden flex gap-1.5 overflow-x-auto no-scrollbar mb-5 p-1 bg-gray-100/80 rounded-2xl border border-gray-200/50">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                tab === t.id
+                  ? 'text-white bg-[#6366F1] shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 bg-transparent'
+              }`}
+            >
+              <t.icon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="whitespace-nowrap">{t.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="flex gap-6">
-          {/* Sidebar */}
+          {/* Sidebar - Desktop */}
           <aside className="hidden lg:block w-52 flex-shrink-0 space-y-1">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
@@ -205,45 +221,32 @@ export default function AdminDashboard() {
             ))}
           </aside>
 
-          {/* Mobile tabs */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto no-scrollbar mb-4 w-full">
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  tab === t.id ? 'text-white bg-[#6366F1] shadow-sm' : 'text-gray-500 bg-white border border-gray-100 shadow-xs'
-                }`}
-              >
-                <t.icon className="w-3.5 h-3.5" /> {t.label}
-              </button>
-            ))}
-          </div>
-
           <div className="flex-1 min-w-0">
 
             {/* ── Dashboard Tab ─────────────────────────────────── */}
             {tab === 'dashboard' && (
               <div className="space-y-5">
                 {/* Stat Cards */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                   {loading
-                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg animate-pulse" />)
+                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-2xl animate-pulse" />)
                     : STAT_CARDS.map((card, i) => (
                         <motion.div key={card.label}
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="rounded-2xl p-5 text-white overflow-hidden relative shadow-sm"
+                          className="rounded-2xl p-4 sm:p-5 text-white overflow-hidden relative shadow-sm"
                           style={{ background: card.gradient }}
                         >
                           <div className="flex items-start justify-between mb-3">
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                              <card.icon className="w-5 h-5" />
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                              <card.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
-                            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="text-[10px] sm:text-xs font-bold bg-white/20 px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1">
                               <ArrowUpRight className="w-3 h-3" /> {card.change}
                             </span>
                           </div>
-                          <p className="font-display text-2xl font-black">{card.value}</p>
+                          <p className="font-display text-xl sm:text-2xl font-black truncate">{card.value}</p>
                           <p className="text-white/80 text-xs mt-1 font-semibold">{card.label}</p>
                         </motion.div>
                       ))
@@ -252,8 +255,8 @@ export default function AdminDashboard() {
 
                 {/* Revenue Chart */}
                 {!loading && data?.revenueByDay?.length > 0 && (
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-950 mb-4 flex items-center gap-2">
+                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-950 mb-4 text-sm sm:text-base flex items-center gap-2">
                       <BarChart2 className="w-5 h-5 text-indigo-600" /> Revenue (Last 30 Days)
                     </h3>
                     <ResponsiveContainer width="100%" height={220}>
@@ -272,45 +275,45 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Recent Orders + Top Products */}
-                <div className="grid lg:grid-cols-2 gap-5">
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-950 mb-4">Recent Orders</h3>
+                <div className="grid lg:grid-cols-2 gap-4 sm:gap-5">
+                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-950 mb-4 text-sm sm:text-base">Recent Orders</h3>
                     <div className="space-y-3">
                       {(data?.recentOrders || []).slice(0, 5).map(order => (
                         <div key={order.id} className="flex items-center justify-between gap-2 text-sm py-2 border-b border-gray-50 last:border-b-0 cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors"
                           onClick={() => openOrderDetails(order)}>
                           <div className="min-w-0">
-                            <p className="font-bold text-gray-800 truncate">{order.user_name}</p>
-                            <p className="text-xs text-gray-400 font-semibold">#{order.id} · {formatDate(order.created_at)}</p>
+                            <p className="font-bold text-gray-800 truncate text-xs sm:text-sm">{order.user_name}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-semibold">#{order.id} · {formatDate(order.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[10px]`}>
+                            <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[9px] sm:text-[10px]`}>
                               {ORDER_STATUS[order.status]?.label}
                             </span>
-                            <span className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</span>
+                            <span className="font-black text-gray-900 text-xs sm:text-sm">{formatPrice(order.final_price)}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-955 mb-4">Top Selling Products</h3>
+                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-955 mb-4 text-sm sm:text-base">Top Selling Products</h3>
                     <div className="space-y-3">
                       {(data?.topProducts || []).map((p, i) => (
                         <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-b-0">
-                          <span className="font-bold text-gray-400 text-sm w-5">#{i + 1}</span>
-                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
+                          <span className="font-bold text-gray-400 text-xs sm:text-sm w-4 sm:w-5">#{i + 1}</span>
+                          <img src={p.image_url} alt={p.title} className="w-9 h-9 sm:w-10 sm:h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-805 truncate">{p.title}</p>
-                            <p className="text-xs text-gray-400 font-semibold">{Number(p.total_sold).toLocaleString()} sold</p>
+                            <p className="text-xs sm:text-sm font-bold text-gray-805 truncate">{p.title}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-semibold">{Number(p.total_sold).toLocaleString()} sold</p>
                           </div>
-                          <p className="text-sm font-black text-indigo-650 flex-shrink-0">{formatPrice(p.revenue)}</p>
+                          <p className="text-xs sm:text-sm font-black text-indigo-650 flex-shrink-0">{formatPrice(p.revenue)}</p>
                         </div>
                       ))}
                       {(!data?.topProducts || data.topProducts.length === 0) && (
-                        <p className="text-gray-400 text-sm text-center py-6 font-semibold">No sales data yet</p>
+                        <p className="text-gray-400 text-xs sm:text-sm text-center py-6 font-semibold">No sales data yet</p>
                       )}
                     </div>
                   </div>
@@ -318,14 +321,64 @@ export default function AdminDashboard() {
               </div>
             )}
 
-             {/* ── Orders Tab ────────────────────────────────────── */}
+            {/* ── Orders Tab ────────────────────────────────────── */}
             {tab === 'orders' && (
               <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="font-black text-gray-950">All Orders ({orders.length})</h3>
-                  <p className="text-xs text-gray-400 font-bold mt-1">Click any row to view full order details</p>
+                <div className="px-4 sm:px-5 py-4 border-b border-gray-100">
+                  <h3 className="font-black text-gray-950 text-base sm:text-lg">All Orders ({orders.length})</h3>
+                  <p className="text-xs text-gray-400 font-semibold mt-0.5">Click any order to view details</p>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden divide-y divide-gray-100">
+                  {orders.map(order => (
+                    <div key={order.id} className="p-4 space-y-3 bg-white hover:bg-gray-50/80 transition-colors cursor-pointer" onClick={() => openOrderDetails(order)}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="font-mono text-indigo-650 font-black text-xs">#{order.id}</span>
+                          <h4 className="font-bold text-sm text-gray-900 truncate">{order.user_name}</h4>
+                          <p className="text-xs text-gray-400 truncate">{order.user_email}</p>
+                        </div>
+                        <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[10px] flex-shrink-0`}>
+                          {ORDER_STATUS[order.status]?.label}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
+                        <div>
+                          <span className="text-gray-400 block text-[10px]">Date</span>
+                          <span className="font-semibold text-gray-700">{formatDate(order.created_at)}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-gray-400 block text-[10px]">Total</span>
+                          <span className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                        <select
+                          value={order.status}
+                          onChange={e => { e.stopPropagation(); updateStatus(order.id, e.target.value); }}
+                          className="flex-1 text-xs bg-gray-50 border border-gray-200 text-gray-750 font-bold rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          {Object.keys(ORDER_STATUS).map(s => <option key={s} value={s}>{ORDER_STATUS[s].label}</option>)}
+                        </select>
+                        <button
+                          onClick={() => openOrderDetails(order)}
+                          className="bg-indigo-50 text-indigo-650 hover:bg-indigo-100 font-bold text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {orders.length === 0 && (
+                    <p className="text-center text-gray-400 py-8 font-semibold text-sm">No orders found</p>
+                  )}
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="amazon-table">
                     <thead>
                       <tr>
@@ -616,34 +669,34 @@ export default function AdminDashboard() {
       {/* ── Order Detail Modal ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedOrder && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setSelectedOrder(null)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[90vh] flex flex-col bg-white border border-gray-200 shadow-2xl"
+              className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col bg-white border border-gray-200 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b border-gray-150 bg-[#F9FAFB]">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 flex-shrink-0 border-b border-gray-150 bg-[#F9FAFB]">
                 <div>
-                  <h3 className="font-black text-lg text-gray-900">Order Details</h3>
-                  <p className="text-sm text-indigo-650 font-bold font-mono mt-0.5">#{selectedOrder.id}</p>
+                  <h3 className="font-black text-base sm:text-lg text-gray-900">Order Details</h3>
+                  <p className="text-xs sm:text-sm text-indigo-650 font-bold font-mono mt-0.5">#{selectedOrder.id}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-sm`}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-xs`}>
                     {ORDER_STATUS[selectedOrder.status]?.icon} {ORDER_STATUS[selectedOrder.status]?.label}
                   </span>
                   <button onClick={() => setSelectedOrder(null)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Modal Body */}
-              <div className="overflow-y-auto flex-1 p-6 space-y-5 bg-[#FAFBFD]">
+              <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#FAFBFD]">
                 {orderDetailLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-650" />
@@ -651,7 +704,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     {/* Info Grid */}
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Customer Info */}
                       <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
                         <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
@@ -801,17 +854,17 @@ export default function AdminDashboard() {
 
       {/* Product Modal */}
       {productModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto bg-white border border-gray-100 shadow-xl"
+            className="w-full max-w-lg rounded-2xl p-4 sm:p-6 max-h-[92vh] overflow-y-auto bg-white border border-gray-100 shadow-xl"
           >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-gray-950">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h3 className="font-black text-base sm:text-lg text-gray-950">
                 {productModal === 'create' ? 'Add New Product' : 'Edit Product'}
               </h3>
-              <button onClick={() => setProductModal(null)} className="p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <button onClick={() => setProductModal(null)} className="p-1.5 rounded-lg hover:bg-gray-50 transition-colors">
                 <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
@@ -822,7 +875,7 @@ export default function AdminDashboard() {
               <textarea className="input resize-none text-sm" rows={3} placeholder="Description"
                 value={productForm.description || ''} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input className="input text-sm" type="number" placeholder="Price *" required value={productForm.price || ''}
                   onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} />
                 <input className="input text-sm" type="number" placeholder="Original Price" value={productForm.original_price || ''}

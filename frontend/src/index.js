@@ -10,18 +10,3 @@ root.render(
   </React.StrictMode>
 );
 
-// Unregister service worker & clear cache so fresh Vercel deployments show instantly
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (let registration of registrations) {
-      registration.unregister();
-    }
-  });
-  if ('caches' in window) {
-    caches.keys().then((names) => {
-      for (let name of names) {
-        caches.delete(name);
-      }
-    });
-  }
-}
