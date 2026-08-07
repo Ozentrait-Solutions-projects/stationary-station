@@ -14,15 +14,29 @@ const SORT_OPTIONS = [
   { value: 'rating_desc',     label: 'Avg. Customer Review' },
 ];
 
-const CATEGORIES = ['Electronics','Fashion','Home & Kitchen','Books','Sports','Beauty','Gaming','Furniture'];
+const CATEGORIES = [
+  'Writing',
+  'Notebooks',
+  'Diaries',
+  'Markers & Highlighters',
+  'Colors & Paints',
+  'Art & Craft',
+  'Office Supplies',
+  'School Supplies',
+  'Files & Folders',
+  'Desk Accessories',
+  'Calculators',
+  'Backpacks',
+];
 const RATINGS    = [4, 3, 2, 1];
 const PRICE_RANGES = [
-  { label: 'Under ₹1,000',     min: 0,     max: 1000   },
-  { label: '₹1,000 – ₹5,000',  min: 1000,  max: 5000   },
-  { label: '₹5,000 – ₹20,000', min: 5000,  max: 20000  },
-  { label: '₹20,000 – ₹50,000',min: 20000, max: 50000  },
-  { label: 'Above ₹50,000',    min: 50000, max: 999999 },
+  { label: 'Under ₹299',       min: 0,    max: 299   },
+  { label: '₹299 – ₹999',      min: 299,  max: 999   },
+  { label: '₹999 – ₹2,999',    min: 999,  max: 2999  },
+  { label: '₹2,999 – ₹7,999',  min: 2999, max: 7999  },
+  { label: 'Above ₹7,999',     min: 7999, max: 999999 },
 ];
+
 
 export default function ProductListing() {
   const [searchParams, setSearchParams] = useSearchParams();

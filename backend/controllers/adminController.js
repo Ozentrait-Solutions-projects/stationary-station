@@ -1,7 +1,9 @@
-const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
-const { s3 } = require('../middleware/upload');
+const fs = require('fs');
+const path = require('path');
 const db = require('../config/db');
+const { getLocalFileUrl } = require('../middleware/upload');
 const { sendOrderStatusEmail, sendProductOutOfStockEmail } = require('../utils/mailer');
+
 
 const parseArrayField = (value) => {
   if (Array.isArray(value)) return value;
@@ -161,8 +163,9 @@ const createProduct = async (req, res, next) => {
       return res.status(400).json({ message: 'stock must be a valid non-negative number' });
     }
 
-    // req.file.location is the full S3 HTTPS URL provided by multer-s3
-    const uploadedImageUrl = req.file ? req.file.location : null;
+    // req.file is the locally stored file; getLocalFileUrl converts it to a /uploads/... path
+    const uploadedImageUrl = getLocalFileUrl(req);
+
     const finalImageUrl = uploadedImageUrl || image_url || null;
     const finalImages = parseArrayField(images);
     const finalTags = parseArrayField(tags);
@@ -206,8 +209,9 @@ const updateProduct = async (req, res, next) => {
     const { id } = req.params;
     const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available } = req.body;
 
-    // req.file.location is the full S3 HTTPS URL provided by multer-s3
-    const uploadedImageUrl = req.file ? req.file.location : null;
+    // req.file is the locally stored file; getLocalFileUrl converts it to a /uploads/... path
+    const uploadedImageUrl = getLocalFileUrl(req);
+
     const finalImageUrl = uploadedImageUrl || image_url;
     const finalImages = images === undefined ? null : parseArrayField(images);
     const finalTags = tags === undefined ? null : parseArrayField(tags);
@@ -267,17 +271,17 @@ const deleteProduct = async (req, res, next) => {
     const { rows } = await db.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
     if (!rows.length) return res.status(404).json({ message: 'Product not found' });
 
-    // Delete the image from S3 (fire-and-forget, non-blocking)
+    // Delete local file if stored in uploads/ (fire-and-forget)
     const imageUrl = existing.rows[0].image_url;
-    if (imageUrl && imageUrl.includes('.amazonaws.com/')) {
-      const key = imageUrl.split('.amazonaws.com/')[1];
-      s3.send(new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: key,
-      })).catch((err) => console.warn('⚠️ Could not delete S3 image:', err.message));
+    if (imageUrl && imageUrl.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '..', imageUrl);
+      fs.unlink(filePath, (err) => {
+        if (err) console.warn('⚠️ Could not delete local image:', err.message);
+      });
     }
 
     res.json({ message: 'Product deleted', id: rows[0].id });
+
   } catch (err) { next(err); }
 };
 

@@ -1,8 +1,7 @@
 -- ============================================================
--- NexCart Database Schema
+-- NexCart — 100% Stationery Marketplace Database Schema
 -- ============================================================
 
--- Drop existing tables (for re-run safety)
 DROP TABLE IF EXISTS recently_viewed CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
@@ -164,187 +163,197 @@ CREATE INDEX idx_reviews_product ON reviews(product_id);
 -- ============================================================
 -- SEED DATA — USERS
 -- ============================================================
--- password: Admin@123
 INSERT INTO users (name, email, password_hash, role) VALUES
 ('Admin User', 'admin@nexcart.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'admin'),
 ('John Doe', 'john@example.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'user'),
 ('Jane Smith', 'jane@example.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'user');
 
 -- ============================================================
--- SEED DATA — PRODUCTS
+-- SEED DATA — 100% STATIONERY PRODUCTS
 -- ============================================================
 INSERT INTO products (title, description, price, original_price, category, brand, stock, image_url, images, rating, review_count, tags, is_featured) VALUES
--- Electronics
-('Sony WH-1000XM5 Headphones',
- 'Industry-leading noise canceling with Speak-to-Chat technology. Up to 30-hour battery life with quick charging.',
- 24999, 34999, 'Electronics', 'Sony', 50,
- 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600',
- ARRAY['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600','https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600'],
- 4.8, 2341, ARRAY['headphones','wireless','noise-canceling'], TRUE),
 
-('Apple iPhone 15 Pro',
- '48MP main camera, A17 Pro chip, titanium design, Action Button, USB-C. The most advanced iPhone ever.',
- 134900, 154900, 'Electronics', 'Apple', 30,
- 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600',
- ARRAY['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600'],
- 4.9, 5821, ARRAY['iphone','smartphone','apple'], TRUE),
+-- ── WRITING INSTRUMENTS ──────────────────────────────────────
+('Parker Sonnet Gold Trim Fountain Pen',
+ 'Hand-crafted 18K solid gold nib fountain pen with deep black lacquer finish and 23K gold plated trim. Engineered for flawless precision and luxury writing.',
+ 4999.00, 6500.00, 'Writing', 'Parker', 25,
+ 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600&q=85','https://images.unsplash.com/photo-1569683795645-b62e50fbf103?w=600&q=85'],
+ 4.9, 142, ARRAY['fountain-pen','luxury','parker','writing'], TRUE),
 
-('Samsung Galaxy S24 Ultra',
- '200MP camera, Snapdragon 8 Gen 3, built-in S Pen, 5000mAh battery, AI-powered features.',
- 124999, 144999, 'Electronics', 'Samsung', 25,
- 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600',
- ARRAY['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600'],
- 4.7, 3412, ARRAY['samsung','smartphone','android'], TRUE),
+('Faber-Castell Grip 2011 Gel Pen Set (Pack of 5)',
+ 'Ergonomic triangular barrel with raised dot grip zone for effortless writing. Fast-drying, smudge-proof gel ink in rich black and blue shades.',
+ 499.00, 699.00, 'Writing', 'Faber-Castell', 120,
+ 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=85'],
+ 4.7, 512, ARRAY['gel-pen','faber-castell','pens','office'], TRUE),
 
-('MacBook Pro 14" M3',
- 'M3 chip, 16GB RAM, 512GB SSD, Liquid Retina XDR display, 22-hour battery life.',
- 199900, 229900, 'Electronics', 'Apple', 15,
- 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600',
- ARRAY['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600','https://images.unsplash.com/photo-1611186871525-3b15c2e6f6c5?w=600'],
- 4.9, 1823, ARRAY['macbook','laptop','apple'], TRUE),
+('Pilot G2 Premium Retractable Gel Pens 0.7mm (Pack of 10)',
+ 'America''s #1 selling gel ink pen. Dynamic Gel Ink Formula for ultra-smooth skip-free writing with contoured rubber grip.',
+ 899.00, 1200.00, 'Writing', 'Pilot', 90,
+ 'https://images.unsplash.com/photo-1569683795645-b62e50fbf103?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1569683795645-b62e50fbf103?w=600&q=85'],
+ 4.8, 890, ARRAY['pilot','gel-pens','writing','school'], TRUE),
 
-('LG 27" 4K IPS Monitor',
- 'Ultra HD 4K IPS display, 99% sRGB, HDR400, USB-C power delivery, ergonomic stand.',
- 32999, 42999, 'Electronics', 'LG', 40,
- 'https://images.unsplash.com/photo-1527443224154-c4a573d5f5f2?w=600',
- ARRAY['https://images.unsplash.com/photo-1527443224154-c4a573d5f5f2?w=600'],
- 4.6, 987, ARRAY['monitor','4k','display'], FALSE),
+('Rotring 800 Mechanical Pencil 0.5mm Full Metal Body',
+ 'Iconic precision mechanical pencil with brass mechanism and retractable lead guide pipe. Hexagonal matte black metal body.',
+ 3499.00, 4500.00, 'Writing', 'Rotring', 35,
+ 'https://images.unsplash.com/photo-1603513492128-ba7bc9b3e143?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1603513492128-ba7bc9b3e143?w=600&q=85'],
+ 4.9, 210, ARRAY['mechanical-pencil','rotring','drafting','architecture'], TRUE),
 
--- Fashion
-('Nike Air Max 270',
- 'Nike''s tallest Air unit yet gives you a super-soft ride that feels as impossible as it looks.',
- 12999, 16999, 'Fashion', 'Nike', 100,
- 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600',
- ARRAY['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600','https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600'],
- 4.5, 4521, ARRAY['shoes','nike','running'], TRUE),
+('Staedtler Mars Lumograph Pencil Set (12 Degrees)',
+ 'Premium quality drawing pencils ranging from 6H to 8B. Super-bonded lead resists breaking, ideal for technical drawing and shading.',
+ 1250.00, 1600.00, 'Writing', 'Staedtler', 75,
+ 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&q=85'],
+ 4.8, 340, ARRAY['pencils','drawing','staedtler','art'], FALSE),
 
-('Levi''s 511 Slim Fit Jeans',
- 'The slim fit jean that started it all. Sits below waist, slim through hip and thigh, straight leg.',
- 3999, 5499, 'Fashion', 'Levi''s', 200,
- 'https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a?w=600',
- ARRAY['https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a?w=600'],
- 4.3, 2100, ARRAY['jeans','denim','fashion'], FALSE),
+('STABILO BOSS ORIGINAL Pastel Highlighters (Pack of 6)',
+ 'The classic highlighter in soft pastel colors. Anti-Dry-Out technology allows 4 hours cap-off time without drying.',
+ 699.00, 899.00, 'Markers & Highlighters', 'Stabilo', 200,
+ 'https://images.unsplash.com/photo-1588072432836-e10032774350?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1588072432836-e10032774350?w=600&q=85'],
+ 4.9, 1250, ARRAY['highlighters','stabilo','pastel','study'], TRUE),
 
-('Ray-Ban Aviator Sunglasses',
- 'Classic aviator style with UV protection. Gold metal frame, green crystal lens.',
- 8999, 12000, 'Fashion', 'Ray-Ban', 75,
- 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600',
- ARRAY['https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600'],
- 4.6, 3200, ARRAY['sunglasses','eyewear','fashion'], FALSE),
+-- ── NOTEBOOKS & DIARIES ──────────────────────────────────────
+('Moleskine Classic Hardcover Journal (Large, Dotted, Black)',
+ 'The legendary notebook used by artists and thinkers. Thread-bound hard cover, 240 acid-free ivory pages, inner expandable pocket.',
+ 2199.00, 2799.00, 'Notebooks', 'Moleskine', 60,
+ 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=85','https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=85'],
+ 4.9, 640, ARRAY['moleskine','notebook','bullet-journal','hardbound'], TRUE),
 
--- Home & Lifestyle
-('Dyson V15 Detect Vacuum',
- 'Laser Detect technology reveals microscopic dust. 60-min run time, auto boost suction.',
- 52900, 64900, 'Home & Kitchen', 'Dyson', 20,
- 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600',
- ARRAY['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600'],
- 4.8, 1456, ARRAY['vacuum','dyson','home'], TRUE),
+('Leuchtturm1917 A5 Medium Dotted Hardcover Notebook',
+ 'Masterwork German engineering with 251 numbered pages, 80gsm ink-proof paper, double page marker, and blank table of contents.',
+ 2499.00, 3100.00, 'Notebooks', 'Leuchtturm1917', 45,
+ 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=85'],
+ 4.8, 480, ARRAY['journal','leuchtturm','dotted','bestseller'], TRUE),
 
-('Instant Pot Duo 7-in-1',
- 'Pressure cooker, slow cooker, rice cooker, steamer, sauté pan, yogurt maker, warmer.',
- 8999, 12999, 'Home & Kitchen', 'Instant Pot', 60,
- 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600',
- ARRAY['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600'],
- 4.7, 8921, ARRAY['cooking','kitchen','instant-pot'], FALSE),
+('Classmate Pulse 5-Subject Spiral Notebook 300 Pages',
+ 'High quality bright white paper with durable polypropylene cover and mobile pocket separator. Smooth twin-wire binding.',
+ 299.00, 399.00, 'Notebooks', 'Classmate', 300,
+ 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600&q=85'],
+ 4.6, 1850, ARRAY['classmate','spiral-notebook','student','college'], FALSE),
 
-('IKEA POÄNG Armchair',
- 'Layer-glued bent beech frame gives comfortable resilience. Choose cover separately.',
- 12999, 15999, 'Furniture', 'IKEA', 30,
- 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600',
- ARRAY['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600'],
- 4.4, 2341, ARRAY['chair','furniture','ikea'], FALSE),
+('Paperkraft Executive Leatherette 2026 Daily Planner',
+ 'Handcrafted vegan leather daily planner with magnetic closure, ribbon bookmark, pen loop, and gold gilded page edges.',
+ 1499.00, 2199.00, 'Diaries', 'Paperkraft', 40,
+ 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600&q=85'],
+ 4.7, 310, ARRAY['diary','planner','paperkraft','executive'], TRUE),
 
-('Scented Luxury Candle Set',
- 'Set of 6 hand-poured soy wax candles with calming fragrances. 40+ hour burn time each.',
- 2999, 4500, 'Home & Kitchen', 'Aromatic Co', 150,
- 'https://images.unsplash.com/photo-1603006905003-be475563bc59?w=600',
- ARRAY['https://images.unsplash.com/photo-1603006905003-be475563bc59?w=600'],
- 4.5, 892, ARRAY['candles','home-decor','lifestyle'], FALSE),
+('Post-it Super Sticky Notes 3x3 Inches (Pack of 6 Pads)',
+ '2x the sticking power. Stick and re-stick effortlessly on walls, monitors, and doors without residue.',
+ 549.00, 750.00, 'Notebooks', '3M Post-it', 250,
+ 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=85'],
+ 4.8, 1420, ARRAY['sticky-notes','post-it','office','memo'], FALSE),
 
--- Books
-('Atomic Habits — James Clear',
- 'No.1 New York Times bestseller. Tiny changes, remarkable results. The definitive guide to habit formation.',
- 699, 999, 'Books', 'Penguin', 500,
- 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600',
- ARRAY['https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600'],
- 4.9, 12453, ARRAY['self-help','habits','bestseller'], FALSE),
+-- ── OFFICE & DESK SUPPLIES ──────────────────────────────────
+('Casio FX-991EX ClassWiz Non-Programmable Scientific Calculator',
+ 'High-resolution LCD display with 552 functions. Solar + battery dual power. Approved for board & competitive exams.',
+ 1495.00, 1795.00, 'Calculators', 'Casio', 150,
+ 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=600&q=85'],
+ 4.9, 3210, ARRAY['calculator','casio','scientific','engineering'], TRUE),
 
-('The Psychology of Money',
- 'Timeless lessons on wealth, greed, and happiness by Morgan Housel. A must-read for every investor.',
- 599, 899, 'Books', 'Jaico', 400,
- 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600',
- ARRAY['https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600'],
- 4.8, 8321, ARRAY['finance','money','investing'], FALSE),
+('Natural Bamboo Desk Organizer with Phone Stand',
+ 'Eco-friendly solid bamboo organizer featuring 6 compartments for pens, sticky notes, paperclips, and smartphone dock.',
+ 1299.00, 1899.00, 'Desk Accessories', 'EcoDesk', 80,
+ 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&q=85'],
+ 4.7, 275, ARRAY['desk-organizer','bamboo','office','wooden'], TRUE),
 
--- Sports
-('Fitbit Charge 6',
- 'Built-in GPS, heart rate monitoring, sleep tracking, 7-day battery, 40+ exercise modes.',
- 14999, 19999, 'Sports', 'Fitbit', 80,
- 'https://images.unsplash.com/photo-1575311373937-040b8e1fd6b3?w=600',
- ARRAY['https://images.unsplash.com/photo-1575311373937-040b8e1fd6b3?w=600'],
- 4.4, 3201, ARRAY['fitness','tracker','wearable'], FALSE),
+('Magnetic Dry Erase Whiteboard (2x3 Feet) with Marker Holder',
+ 'Premium scratch-resistant aluminum frame whiteboard with smooth surface. Includes 4 markers, eraser, and 6 magnets.',
+ 1999.00, 2800.00, 'Office Supplies', 'Whitemark', 50,
+ 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=85'],
+ 4.6, 410, ARRAY['whiteboard','office','magnetic','presentation'], FALSE),
 
-('Yoga Mat Premium',
- 'Non-slip 6mm thick yoga mat with alignment lines, carrying strap. Eco-friendly TPE material.',
- 1999, 3500, 'Sports', 'YogaFlow', 200,
- 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600',
- ARRAY['https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600'],
- 4.6, 1823, ARRAY['yoga','fitness','wellness'], FALSE),
+('TaoTronics Dimmable LED Desk Lamp with Wireless Charging',
+ '5 color modes and 7 brightness levels with eye-caring flicker-free light. Integrated 10W Fast Qi Wireless Charger.',
+ 2999.00, 4200.00, 'Desk Accessories', 'TaoTronics', 40,
+ 'https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=600&q=85'],
+ 4.8, 590, ARRAY['desk-lamp','led','study','office'], TRUE),
 
--- Beauty
-('Charlotte Tilbury Pillow Talk Lipstick',
- 'The world''s best-selling lip liner and lipstick duo in the iconic Pillow Talk pink-nude shade.',
- 3999, 5200, 'Beauty', 'Charlotte Tilbury', 120,
- 'https://images.unsplash.com/photo-1586495777744-4e6232bf8ec5?w=600',
- ARRAY['https://images.unsplash.com/photo-1586495777744-4e6232bf8ec5?w=600'],
- 4.7, 4512, ARRAY['makeup','lipstick','beauty'], FALSE),
+('Kangaro Heavy Duty Expanding File Folder A4 (12 Pockets)',
+ 'Durable poly folder with index tab labels and secure elastic band closure. Holds up to 1000 sheets.',
+ 649.00, 899.00, 'Files & Folders', 'Kangaro', 110,
+ 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=85'],
+ 4.5, 330, ARRAY['files','folders','kangaro','organization'], FALSE),
 
-('The Ordinary Skincare Set',
- 'Complete routine: Hyaluronic Acid, Niacinamide, Retinol, AHA/BHA. Dermatologist recommended.',
- 4999, 7500, 'Beauty', 'The Ordinary', 90,
- 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600',
- ARRAY['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600'],
- 4.8, 6234, ARRAY['skincare','beauty','routine'], TRUE),
+-- ── ART & CRAFT ─────────────────────────────────────────────
+('Winsor & Newton Cotman Water Colour Studio Set (45 Half Pans)',
+ 'Professional quality watercolor set with high pigment load and optimal transparency. Includes pocket brush and mixing palette.',
+ 6499.00, 8500.00, 'Colors & Paints', 'Winsor & Newton', 20,
+ 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=85'],
+ 4.9, 185, ARRAY['watercolors','art','winsor-newton','painting'], TRUE),
 
--- Gaming
-('PlayStation 5 Console',
- 'Experience lightning-fast loading with PS5''s ultra-high speed SSD. Haptic feedback DualSense.',
- 54990, 59990, 'Gaming', 'Sony', 10,
- 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=600',
- ARRAY['https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=600'],
- 4.9, 9821, ARRAY['ps5','gaming','console'], TRUE),
+('Faber-Castell Albrecht Dürer Watercolour Pencils (24 Set)',
+ 'Unsurpassed lightfastness and brilliance. Soft, vibrant color stroke turns into rich watercolor with a wet brush.',
+ 3999.00, 5200.00, 'Colors & Paints', 'Faber-Castell', 30,
+ 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&q=85'],
+ 4.8, 290, ARRAY['colored-pencils','faber-castell','art','drawing'], TRUE),
 
-('Razer DeathAdder V3 Mouse',
- 'Ultra-lightweight 63g gaming mouse, Focus Pro 30K sensor, 90-hour battery, optical switches.',
- 8999, 11999, 'Gaming', 'Razer', 60,
- 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=600',
- ARRAY['https://images.unsplash.com/photo-1527814050087-3793815479db?w=600'],
- 4.6, 2341, ARRAY['gaming','mouse','razer'], FALSE);
+('Tombow Dual Brush Pen Art Markers (10 Pastel Shades)',
+ 'Flexible brush tip and fine tip in one marker. Water-based ink blends seamlessly for hand lettering and watercolor art.',
+ 1999.00, 2699.00, 'Markers & Highlighters', 'Tombow', 65,
+ 'https://images.unsplash.com/photo-1588072432836-e10032774350?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1588072432836-e10032774350?w=600&q=85'],
+ 4.9, 610, ARRAY['tombow','brush-pen','lettering','calligraphy'], TRUE),
+
+('Canson XL Series Watercolor Paper Pad A4 300gsm (30 Sheets)',
+ 'Cold press textured 140lb heavyweight paper suitable for watercolor, acrylic, and gouache without warping.',
+ 1150.00, 1500.00, 'Art & Craft', 'Canson', 85,
+ 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&q=85'],
+ 4.7, 440, ARRAY['canson','watercolor-paper','art-pad','sketchbook'], FALSE),
+
+-- ── SCHOOL & BACKPACKS ──────────────────────────────────────
+('Wildcraft Workpacks Ergonomic Laptop Backpack 30L',
+ 'Multi-compartment water-resistant school and college backpack with padded back system and rain cover.',
+ 1799.00, 2499.00, 'Backpacks', 'Wildcraft', 100,
+ 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85'],
+ 4.6, 920, ARRAY['backpack','wildcraft','school','bag'], TRUE),
+
+('Maped Helix Oxford Metal Geometry Box Set',
+ 'Classic metal tin box containing compass, divider, protractor, set squares, ruler, pencil, eraser, and sharpener.',
+ 399.00, 599.00, 'School Supplies', 'Maped', 180,
+ 'https://images.unsplash.com/photo-1584697964400-2ae6b29675ae?w=600&q=85',
+ ARRAY['https://images.unsplash.com/photo-1584697964400-2ae6b29675ae?w=600&q=85'],
+ 4.5, 730, ARRAY['geometry-box','maped','school','math'], FALSE);
 
 -- ============================================================
 -- SEED DATA — COUPONS
 -- ============================================================
 INSERT INTO coupons (code, discount_percent, max_uses, expires_at) VALUES
 ('NEXCART10', 10, 1000, NOW() + INTERVAL '1 year'),
-('WELCOME20', 20, 500, NOW() + INTERVAL '6 months'),
-('SALE30', 30, 100, NOW() + INTERVAL '1 month'),
-('FIRST50', 50, 50, NOW() + INTERVAL '2 weeks');
+('STATIONERY20', 20, 500, NOW() + INTERVAL '6 months'),
+('STUDENT30', 30, 100, NOW() + INTERVAL '1 month'),
+('WELCOME50', 50, 50, NOW() + INTERVAL '2 weeks');
 
 -- ============================================================
 -- SEED DATA — REVIEWS
 -- ============================================================
--- We'll add reviews for user 2 (john) on first few products
 INSERT INTO reviews (user_id, product_id, rating, title, body) VALUES
-(2, 1, 5, 'Absolutely incredible headphones!', 'Best noise cancellation I have ever experienced. Worth every rupee.'),
-(2, 2, 5, 'iPhone 15 Pro is a beast', 'The camera quality is phenomenal. Action button is a game changer.'),
-(2, 6, 4, 'Great shoes, super comfy', 'Bought these for daily runs. Very comfortable, cushioning is top notch.'),
-(3, 1, 4, 'Great but expensive', 'Amazing sound quality but the price is steep. Good for professionals.'),
-(3, 4, 5, 'MacBook is perfect', 'M3 chip is incredibly fast. Battery life is unreal at 22 hours.'),
-(3, 19, 5, 'PS5 is worth the wait', 'Finally got my hands on one. The haptic feedback is mind blowing.');
+(2, 1, 5, 'The ultimate writing instrument!', 'The gold nib glides on paper like butter. A true heirloom piece.'),
+(2, 7, 5, 'Best journal I have ever owned', 'The paper quality handles fountain pen ink without any ghosting or bleeding.'),
+(2, 12, 5, 'Lifesaver for engineering exams', 'ClassWiz screen is sharp and natural display makes calculations effortless.'),
+(3, 2, 4, 'Very smooth and comfortable grip', 'Love the raised dot grip. Writes cleanly without smudging.'),
+(3, 6, 5, 'Gorgeous pastel shades', 'Does not bleed through standard notebook paper. Perfect for bullet journaling.');
 
 -- Update review counts and ratings
 UPDATE products SET review_count = (SELECT COUNT(*) FROM reviews WHERE product_id = products.id),
                    rating = COALESCE((SELECT AVG(rating)::NUMERIC(3,2) FROM reviews WHERE product_id = products.id), products.rating)
 WHERE id IN (SELECT DISTINCT product_id FROM reviews);
 
-SELECT 'Database schema and seed data applied successfully!' AS status;
+SELECT 'Stationery database schema and seed data applied successfully!' AS status;

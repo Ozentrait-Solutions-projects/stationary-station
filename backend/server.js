@@ -1,12 +1,6 @@
 require('dotenv').config();
 
-// ─── AWS S3 Config Guard ──────────────────────────────────────────
-const REQUIRED_AWS_VARS = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION', 'AWS_S3_BUCKET_NAME'];
-const missingAws = REQUIRED_AWS_VARS.filter((v) => !process.env[v] || process.env[v].startsWith('your_'));
-if (missingAws.length > 0) {
-  console.warn(`⚠️  AWS S3 not configured. Missing or placeholder values: ${missingAws.join(', ')}`);
-  console.warn('   Image uploads will fail until you fill in these variables in your .env file.');
-}
+
 
 const express = require('express');
 const cors = require('cors');
@@ -35,6 +29,13 @@ app.use(cors({
 // ─── Body Parsing ────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ─── Static Files: serve uploaded images from /uploads ───────────
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads'), {
+  maxAge: '30d',
+  etag: true,
+}));
+
 
 // ─── API Routes ──────────────────────────────────────────────────
 app.use('/api/auth',      require('./routes/auth'));

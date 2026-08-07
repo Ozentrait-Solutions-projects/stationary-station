@@ -16,14 +16,16 @@ import VoiceSearchModal from '../common/VoiceSearchModal';
 
 
 
+
 const NAV_LINKS = [
-  { label: 'Daily Needs', to: '/products?category=Daily+Needs', isNew: true },
-  { label: 'Electronics', to: '/products?category=Electronics' },
-  { label: 'Fashion', to: '/products?category=Fashion' },
-  { label: 'Home & Living', to: '/products?category=Home+%26+Kitchen' },
-  { label: 'Beauty', to: '/products?category=Beauty' },
-  { label: 'Sports', to: '/products?category=Sports' },
-  { label: 'Books', to: '/products?category=Books' },
+  { label: 'Writing',           to: '/products?category=Writing',              isNew: false },
+  { label: 'Notebooks',         to: '/products?category=Notebooks',            isNew: false },
+  { label: 'Diaries',           to: '/products?category=Diaries',              isNew: true  },
+  { label: 'Art & Craft',       to: '/products?category=Art+%26+Craft',        isNew: false },
+  { label: 'Office Supplies',   to: '/products?category=Office+Supplies',      isNew: false },
+  { label: 'School Supplies',   to: '/products?category=School+Supplies',      isNew: false },
+  { label: 'Desk Accessories',  to: '/products?category=Desk+Accessories',     isNew: false },
+  { label: 'Calculators',       to: '/products?category=Calculators',          isNew: false },
 ];
 
 
