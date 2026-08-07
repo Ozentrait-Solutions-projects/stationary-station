@@ -1,7 +1,22 @@
 import axios from 'axios';
 
+const getApiBaseUrl = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  if (typeof window !== 'undefined') {
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalHost) {
+      return 'http://localhost:5000/api';
+    }
+  }
+
+  return 'https://stationary-sigma.vercel.app/api';
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: getApiBaseUrl(),
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
