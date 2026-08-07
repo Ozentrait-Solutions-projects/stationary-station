@@ -1,6 +1,7 @@
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../middleware/upload');
 const db = require('../config/db');
+const { sendOrderStatusEmail } = require('../utils/mailer');
 
 const parseArrayField = (value) => {
   if (Array.isArray(value)) return value;
@@ -116,6 +117,24 @@ const updateOrderStatus = async (req, res, next) => {
       [status, id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Order not found' });
+
+    // Fetch items and user email for email notification
+    const itemsResult = await db.query(
+      `SELECT oi.*, p.title, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = $1`,
+      [id]
+    );
+    const userResult = await db.query(
+      `SELECT email FROM users WHERE id = $1`,
+      [rows[0].user_id]
+    );
+
+    const fullOrder = { ...rows[0], items: itemsResult.rows };
+    if (userResult.rows.length) {
+      sendOrderStatusEmail(userResult.rows[0].email, fullOrder).catch(err => {
+        console.error(`Failed to send order status update email: ${err.message}`);
+      });
+    }
+
     res.json({ order: rows[0] });
   } catch (err) { next(err); }
 };
@@ -135,6 +154,12 @@ const createProduct = async (req, res, next) => {
   try {
     const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available } = req.body;
     if (!title || !price || !category) return res.status(400).json({ message: 'title, price, category required' });
+    if (stock === undefined || stock === null || stock === '') return res.status(400).json({ message: 'stock is required' });
+
+    const parsedStock = parseNumberField(stock);
+    if (parsedStock === null || parsedStock < 0) {
+      return res.status(400).json({ message: 'stock must be a valid non-negative number' });
+    }
 
     // req.file.location is the full S3 HTTPS URL provided by multer-s3
     const uploadedImageUrl = req.file ? req.file.location : null;
@@ -155,7 +180,7 @@ const createProduct = async (req, res, next) => {
         parseNumberField(original_price),
         category,
         brand,
-        parseNumberField(stock) ?? 1,
+        parsedStock,
         finalImageUrl,
         finalImages,
         finalTags,

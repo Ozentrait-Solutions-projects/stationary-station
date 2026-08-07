@@ -190,10 +190,20 @@ const addReview = async (req, res, next) => {
       });
     }
 
+    // Check if user already reviewed this product
+    const reviewCheck = await db.query(
+      `SELECT 1 FROM reviews WHERE user_id = $1 AND product_id = $2`,
+      [req.user.id, id]
+    );
+    if (reviewCheck.rows.length) {
+      return res.status(400).json({
+        message: 'You have already reviewed this product.',
+      });
+    }
+
     const { rows } = await db.query(
       `INSERT INTO reviews (user_id, product_id, rating, title, body)
        VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (user_id, product_id) DO UPDATE SET rating=$3, title=$4, body=$5, created_at=NOW()
        RETURNING *`,
       [req.user.id, id, rating, title, body]
     );

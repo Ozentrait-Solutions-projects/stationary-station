@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { sendOrderSuccessEmail } = require('../utils/mailer');
+const { sendOrderSuccessEmail, sendOrderStatusEmail } = require('../utils/mailer');
 
 // ─── CREATE ORDER ────────────────────────────────────────────────
 const createOrder = async (req, res, next) => {
@@ -46,11 +46,29 @@ const createOrder = async (req, res, next) => {
       return res.status(400).json({ message: 'No items to checkout' });
     }
 
-    // Verify stock
+    // Verify stock and purchase restrictions
     for (const item of itemsToProcess) {
       if (item.stock < item.quantity) {
         await client.query('ROLLBACK');
         return res.status(400).json({ message: `Insufficient stock for ${item.title}` });
+      }
+
+      // Check if user already purchased this product today (active, non-cancelled orders)
+      const alreadyBoughtToday = await client.query(
+        `SELECT 1 FROM orders o
+         JOIN order_items oi ON o.id = oi.order_id
+         WHERE o.user_id = $1 
+           AND oi.product_id = $2 
+           AND o.created_at >= CURRENT_DATE
+           AND o.status != 'cancelled'
+         LIMIT 1`,
+        [req.user.id, item.product_id]
+      );
+      if (alreadyBoughtToday.rows.length) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          message: `You cannot purchase "${item.title}" again on the same day.` 
+        });
       }
     }
 
@@ -202,6 +220,17 @@ const cancelOrder = async (req, res, next) => {
       ['cancelled', id]
     );
     await client.query('COMMIT');
+
+    // Send cancellation email asynchronously
+    const itemsResult = await db.query(
+      `SELECT oi.*, p.title, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = $1`,
+      [id]
+    );
+    const fullOrder = { ...updated.rows[0], items: itemsResult.rows };
+    sendOrderStatusEmail(req.user.email, fullOrder).catch(err => {
+      console.error(`Failed to send order cancellation email: ${err.message}`);
+    });
+
     res.json({ order: updated.rows[0], message: 'Order cancelled successfully' });
   } catch (err) {
     await client.query('ROLLBACK');
