@@ -11,33 +11,27 @@ const compression = require('compression');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ─── Security & Performance Middleware ───────────────────────────
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(compression());
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-
-// ─── Global CORS Middleware ───────────────────────────────────────
+// ─── Global CORS Middleware (FIRST in pipeline) ───────────────────
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
+  const origin = req.headers.origin || 'https://stationary-v2z6.vercel.app';
   
-  // Mirror requesting origin to support credentials without CORS wildcard conflict
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-  // Immediately fulfill HTTP OPTIONS preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
   next();
 });
+
+// ─── Security & Performance Middleware ───────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+
 
 
 
