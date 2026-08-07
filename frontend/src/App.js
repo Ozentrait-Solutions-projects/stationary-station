@@ -77,10 +77,10 @@ function AdminRoute({ children }) {
 function AppLayout() {
   useAutoUpdate();
   return (
-    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden" style={{ backgroundColor: '#FAFBFD', color: '#374151' }}>
+    <div className="min-h-[100dvh] flex flex-col w-full max-w-full overflow-x-hidden" style={{ backgroundColor: '#FAFBFD', color: '#374151' }}>
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1 w-full max-w-full overflow-x-hidden">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden pb-[env(safe-area-inset-bottom)]">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"                    element={<Home />} />

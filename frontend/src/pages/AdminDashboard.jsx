@@ -227,7 +227,7 @@ export default function AdminDashboard() {
             {tab === 'dashboard' && (
               <div className="space-y-5">
                 {/* Stat Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
+                <div className="flex flex-col sm:grid sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                   {loading
                     ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-24 sm:h-28 rounded-2xl animate-pulse" />)
                     : STAT_CARDS.map((card, i) => (
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Recent Orders + Top Products */}
-                <div className="grid lg:grid-cols-2 gap-4 sm:gap-5">
+                <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-5">
                   <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
                     <h3 className="font-black text-gray-950 mb-4 text-sm sm:text-base">Recent Orders</h3>
                     <div className="space-y-3">
@@ -902,7 +902,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
                 {[
                   { label: 'Use Image URL', mode: 'url' },
                   { label: 'Upload Image',  mode: 'upload', icon: Upload },

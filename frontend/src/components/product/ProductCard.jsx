@@ -56,7 +56,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
-      className="group relative product-card bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-300"
+      className="min-w-0 group relative product-card bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-300"
     >
       <Link to={`/products/${product.id}`} className="block">
 
@@ -132,7 +132,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           )}
 
           {/* Title */}
-          <h3 className={`font-bold text-gray-800 leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors duration-150 ${compact ? 'text-xs' : 'text-sm'}`}>
+          <h3 className={`font-bold text-gray-800 leading-snug line-clamp-2 break-words group-hover:text-indigo-600 transition-colors duration-150 ${compact ? 'text-xs' : 'text-sm'}`}>
             {product.title}
           </h3>
 

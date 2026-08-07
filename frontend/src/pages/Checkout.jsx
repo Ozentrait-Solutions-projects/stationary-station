@@ -137,7 +137,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] page-enter">
+    <div className="min-h-[100dvh] bg-[#FAFBFD] page-enter pb-[calc(100px+env(safe-area-inset-bottom))] lg:pb-12">
       <div className="nexcart-container py-6 max-w-5xl">
 
         {/* Logo header */}
@@ -237,7 +237,7 @@ export default function Checkout() {
                         <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
                         {[
                           { key: 'full_name',    placeholder: `${t('fullName')} *`,             span: false },
                           { key: 'phone',        placeholder: `${t('phone')} *`,                 span: false },
@@ -527,7 +527,7 @@ export default function Checkout() {
 
       {/* Mobile Sticky Action Bar for Step 3 */}
       {step === 3 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 lg:hidden shadow-lg flex items-center justify-between gap-3">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Amount</p>
             <p className="text-base font-black text-gray-900">{formatPrice(final)}</p>
