@@ -67,9 +67,23 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err.stack);
   const status = err.status || err.statusCode || 500;
+
+  let clientMessage = err.message || 'Internal Server Error';
+  if (
+    status >= 500 ||
+    clientMessage.includes('SELECT') ||
+    clientMessage.includes('INSERT') ||
+    clientMessage.includes('UPDATE') ||
+    clientMessage.includes('DELETE') ||
+    clientMessage.includes('postgres') ||
+    clientMessage.includes('relation') ||
+    clientMessage.includes('column')
+  ) {
+    clientMessage = "Something went wrong on our end. Please try again in a moment.";
+  }
+
   res.status(status).json({
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    message: clientMessage,
   });
 });
 
