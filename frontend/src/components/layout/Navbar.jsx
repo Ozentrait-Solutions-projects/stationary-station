@@ -461,8 +461,8 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Sub Navigation Bar */}
-        <div className="border-t border-gray-100 bg-white">
+        {/* Sub Navigation Bar - Desktop only */}
+        <div className="hidden lg:block border-t border-gray-100 bg-white">
           <div className="nexcart-container">
             <div className="flex items-center justify-between h-14">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
@@ -491,7 +491,7 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="hidden md:flex flex-shrink-0">
+              <div className="flex flex-shrink-0">
                 <Link
                   to="/products?featured=true"
                   className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-pink-500 to-[#8B5CF6] text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200"
@@ -615,7 +615,7 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      <div className="h-[105px] lg:h-[136px]" />
+      <div className="h-[92px] lg:h-[136px]" />
     </>
   );
 }

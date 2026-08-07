@@ -20,13 +20,20 @@
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html, body {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
 
   body {
     @apply font-sans antialiased text-[#374151];
-    background-color: var(--amazon-bg);
+    background-color: #FAFBFD;
     color: #374151;
     transition: background-color 0.2s ease;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   /* Custom Scrollbar */
@@ -242,7 +249,7 @@
 
   /* ── Container ────────────────────────────────────────────────── */
   .nexcart-container {
-    @apply max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8;
+    @apply w-full max-w-[1400px] mx-auto px-3.5 sm:px-6 lg:px-8;
   }
 
   /* ── Amazon Breadcrumb ────────────────────────────────────────── */

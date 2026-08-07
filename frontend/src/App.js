@@ -77,10 +77,10 @@ function AdminRoute({ children }) {
 function AppLayout() {
   useAutoUpdate();
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F9FAFB', color: '#374151' }}>
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden" style={{ backgroundColor: '#FAFBFD', color: '#374151' }}>
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"                    element={<Home />} />

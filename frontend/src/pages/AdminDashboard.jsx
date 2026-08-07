@@ -227,27 +227,29 @@ export default function AdminDashboard() {
             {tab === 'dashboard' && (
               <div className="space-y-5">
                 {/* Stat Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
                   {loading
-                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-2xl animate-pulse" />)
+                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-24 sm:h-28 rounded-2xl animate-pulse" />)
                     : STAT_CARDS.map((card, i) => (
                         <motion.div key={card.label}
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="rounded-2xl p-4 sm:p-5 text-white overflow-hidden relative shadow-sm"
+                          className="rounded-2xl p-3.5 sm:p-5 text-white overflow-hidden relative shadow-sm flex flex-col justify-between"
                           style={{ background: card.gradient }}
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                              <card.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <div className="flex items-start justify-between mb-2 sm:mb-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                              <card.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span className="text-[10px] sm:text-xs font-bold bg-white/20 px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1">
-                              <ArrowUpRight className="w-3 h-3" /> {card.change}
+                            <span className="text-[9px] sm:text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:py-1 rounded-full flex items-center gap-0.5 flex-shrink-0">
+                              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {card.change}
                             </span>
                           </div>
-                          <p className="font-display text-xl sm:text-2xl font-black truncate">{card.value}</p>
-                          <p className="text-white/80 text-xs mt-1 font-semibold">{card.label}</p>
+                          <div>
+                            <p className="font-display text-lg sm:text-2xl font-black truncate">{card.value}</p>
+                            <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 font-semibold truncate">{card.label}</p>
+                          </div>
                         </motion.div>
                       ))
                   }
@@ -255,22 +257,24 @@ export default function AdminDashboard() {
 
                 {/* Revenue Chart */}
                 {!loading && data?.revenueByDay?.length > 0 && (
-                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-950 mb-4 text-sm sm:text-base flex items-center gap-2">
-                      <BarChart2 className="w-5 h-5 text-indigo-600" /> Revenue (Last 30 Days)
+                  <div className="rounded-2xl p-3.5 sm:p-5 bg-white border border-gray-100 shadow-sm w-full overflow-hidden">
+                    <h3 className="font-black text-gray-950 mb-3 sm:mb-4 text-xs sm:text-base flex items-center gap-2">
+                      <BarChart2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" /> Revenue (Last 30 Days)
                     </h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <LineChart data={data.revenueByDay}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={d => d.slice(5)} />
-                        <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                        <Tooltip
-                          formatter={v => formatPrice(v)}
-                          contentStyle={{ background: '#FFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px', color: '#111', fontSize: '13px' }}
-                        />
-                        <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2.5} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div className="w-full h-[180px] sm:h-[220px] min-w-0 overflow-hidden">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data.revenueByDay} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={d => d.slice(5)} />
+                          <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                          <Tooltip
+                            formatter={v => formatPrice(v)}
+                            contentStyle={{ background: '#FFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px', color: '#111', fontSize: '12px' }}
+                          />
+                          <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2.5} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 )}
 
@@ -990,27 +994,27 @@ function AdminProductList({ onEdit, onDelete }) {
     <div className="space-y-1">
       {products.map(p => (
         <div key={p.id}
-          className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+          className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
         >
-          <img src={p.image_url} alt={p.title} className="w-12 h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
+          <img src={p.image_url} alt={p.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-xs text-gray-400 font-bold">{p.category} · {formatPrice(p.price)}</p>
+            <p className="font-bold text-xs sm:text-sm text-gray-800 truncate">{p.title}</p>
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <p className="text-[10px] sm:text-xs text-gray-400 font-bold">{p.category} · {formatPrice(p.price)}</p>
               {Number(p.stock) > 0
-                ? <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full">In Stock ({p.stock})</span>
-                : <span className="text-[10px] text-rose-600 font-extrabold bg-rose-50 px-2 py-0.5 rounded-full">Out of Stock</span>
+                ? <span className="text-[9px] sm:text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-1.5 py-0.5 rounded-full">In Stock ({p.stock})</span>
+                : <span className="text-[9px] sm:text-[10px] text-rose-600 font-extrabold bg-rose-50 px-1.5 py-0.5 rounded-full">Out of Stock</span>
               }
             </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
             <button onClick={() => onEdit(p)}
-              className="p-2 rounded-xl text-indigo-650 hover:bg-gray-100 transition-colors" title="Edit">
+              className="p-1.5 sm:p-2 rounded-xl text-indigo-650 hover:bg-indigo-50 transition-colors" title="Edit">
               <Edit3 className="w-4 h-4" />
             </button>
             <button onClick={() => onDelete(p.id)}
-              className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors" title="Delete">
+              className="p-1.5 sm:p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors" title="Delete">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
