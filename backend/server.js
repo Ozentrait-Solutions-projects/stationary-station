@@ -70,12 +70,19 @@ app.get('/api/health', (req, res) => {
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use((req, res) => {
+  const origin = req.headers.origin || 'https://stationary-v2z6.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err.stack);
+  const origin = req.headers.origin || 'https://stationary-v2z6.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   const status = err.status || err.statusCode || 500;
 
   let clientMessage = err.message || 'Internal Server Error';
@@ -96,6 +103,7 @@ app.use((err, req, res, next) => {
     message: clientMessage,
   });
 });
+
 
 // ─── Start Server ─────────────────────────────────────────────────
 if (require.main === module) {
