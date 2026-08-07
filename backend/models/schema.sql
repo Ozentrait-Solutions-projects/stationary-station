@@ -161,12 +161,13 @@ CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_reviews_product ON reviews(product_id);
 
 -- ============================================================
--- SEED DATA — USERS
+-- SEED DATA — USERS (password: password123)
 -- ============================================================
 INSERT INTO users (name, email, password_hash, role) VALUES
-('Admin User', 'admin@nexcart.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'admin'),
-('John Doe', 'john@example.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'user'),
-('Jane Smith', 'jane@example.com', '$2b$10$ipI3/x31uF94tJUfaHOMhO7/z7sSk9cGJusMzxyHCOjj7CvA7E8Qi', 'user');
+('Admin User', 'admin@nexcart.com', '$2b$10$gUxqLvMtNx/CT7MT9e19F.oSWEHs9v7BgugDmx7Ksxxs2L3ksbeOW', 'admin'),
+('John Doe', 'john@example.com', '$2b$10$gUxqLvMtNx/CT7MT9e19F.oSWEHs9v7BgugDmx7Ksxxs2L3ksbeOW', 'user'),
+('Jane Smith', 'jane@example.com', '$2b$10$gUxqLvMtNx/CT7MT9e19F.oSWEHs9v7BgugDmx7Ksxxs2L3ksbeOW', 'user');
+
 
 -- ============================================================
 -- SEED DATA — 100% STATIONERY PRODUCTS
