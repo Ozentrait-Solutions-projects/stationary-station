@@ -1,15 +1,24 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const multer = require('multer');
 
-// ─── Ensure upload directories exist ─────────────────────────────────────────
-const UPLOAD_BASE = path.join(__dirname, '..', 'uploads');
+// ─── Serverless-safe Upload Directory Initialization ─────────────────────────
+// Vercel serverless environment is read-only at /var/task; use OS temp dir if on serverless
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const UPLOAD_BASE = isServerless ? path.join(os.tmpdir(), 'uploads') : path.join(__dirname, '..', 'uploads');
 const IMAGE_DIR = path.join(UPLOAD_BASE, 'images');
 const VIDEO_DIR = path.join(UPLOAD_BASE, 'videos');
 const RETURN_DIR = path.join(UPLOAD_BASE, 'returns');
 
-[UPLOAD_BASE, IMAGE_DIR, VIDEO_DIR, RETURN_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+[UPLOAD_BASE, IMAGE_DIR, VIDEO_DIR, RETURN_DIR].forEach((dir) => {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn(`⚠️ Could not create upload directory ${dir}:`, err.message);
+  }
 });
 
 // ─── Generate unique filename ─────────────────────────────────────────────────
@@ -69,18 +78,12 @@ const uploadEvidence = multer({
 });
 
 /**
- * Get the public URL for a locally stored file.
- * req.file.path is the absolute FS path; we convert it to /uploads/images/<filename>
+ * Get public URL for a locally stored file.
  */
 const getLocalFileUrl = (req) => {
   if (!req.file) return null;
-  // Normalize to forward slashes and make path relative to uploads/
   const relative = path.relative(UPLOAD_BASE, req.file.path).replace(/\\/g, '/');
   return `/uploads/${relative}`;
 };
-
-// ─── Stub: modular AWS-ready interface ───────────────────────────────────────
-// When migrating to AWS later: replace upload/uploadEvidence with multer-s3 instances
-// and getLocalFileUrl with req.file.location (S3 URL). No other code needs to change.
 
 module.exports = { upload, uploadEvidence, getLocalFileUrl };
