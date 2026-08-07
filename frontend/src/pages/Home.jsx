@@ -202,6 +202,17 @@ export default function Home() {
                     <span className="inline-block text-xs font-black uppercase tracking-widest text-white/60 mb-4 bg-white/10 px-3 py-1 rounded-full">
                       {s.tag}
                     </span>
+                    <div className="lg:hidden mb-6 flex justify-center">
+                      <div className="relative w-full max-w-[280px] aspect-square rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+                        <img
+                          src={s.image}
+                          alt={s.imageAlt}
+                          className="w-full h-full object-cover"
+                          loading={i === 0 ? 'eager' : 'lazy'}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      </div>
+                    </div>
                     <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight">
                       {s.title}<br />
                       <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, #fff 0%, ${s.accent} 100%)` }}>

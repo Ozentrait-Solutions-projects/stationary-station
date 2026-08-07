@@ -78,12 +78,16 @@ const uploadEvidence = multer({
 });
 
 /**
- * Get public URL for a locally stored file.
+ * Get a public URL for a stored file.
+ * Supports both local disk uploads and providers that expose `location`.
  */
-const getLocalFileUrl = (req) => {
-  if (!req.file) return null;
-  const relative = path.relative(UPLOAD_BASE, req.file.path).replace(/\\/g, '/');
+const getFileUrl = (file) => {
+  if (!file) return null;
+  if (file.location) return file.location;
+  if (!file.path) return null;
+
+  const relative = path.relative(UPLOAD_BASE, file.path).replace(/\\/g, '/');
   return `/uploads/${relative}`;
 };
 
-module.exports = { upload, uploadEvidence, getLocalFileUrl };
+module.exports = { upload, uploadEvidence, getFileUrl };

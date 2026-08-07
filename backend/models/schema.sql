@@ -46,6 +46,7 @@ CREATE TABLE products (
   description    TEXT,
   price          NUMERIC(10,2) NOT NULL,
   original_price NUMERIC(10,2),
+  sale_price     NUMERIC(10,2),
   category       VARCHAR(100) NOT NULL,
   brand          VARCHAR(100),
   stock          INTEGER NOT NULL DEFAULT 0,
@@ -55,6 +56,7 @@ CREATE TABLE products (
   review_count   INTEGER DEFAULT 0,
   tags           TEXT[],
   is_featured    BOOLEAN DEFAULT FALSE,
+  return_exchange_available BOOLEAN DEFAULT TRUE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -138,6 +140,47 @@ CREATE TABLE reviews (
 );
 
 -- ============================================================
+-- RETURN REQUESTS
+-- ============================================================
+CREATE TABLE return_requests (
+  id              SERIAL PRIMARY KEY,
+  order_id        INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  order_item_id   INTEGER REFERENCES order_items(id) ON DELETE SET NULL,
+  user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id      INTEGER REFERENCES products(id) ON DELETE SET NULL,
+  type            VARCHAR(20) NOT NULL DEFAULT 'return' CHECK (type IN ('return','exchange')),
+  reason          TEXT,
+  status          VARCHAR(20) NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending','evidence_submitted','approved','rejected')),
+  photo_urls      TEXT[],
+  video_url       TEXT,
+  admin_notes     TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- USER ADDRESSES
+-- ============================================================
+CREATE TABLE user_addresses (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  label         VARCHAR(50) DEFAULT 'Home',
+  full_name     VARCHAR(100),
+  phone         VARCHAR(20),
+  address_line1 TEXT NOT NULL,
+  address_line2 TEXT,
+  city          VARCHAR(100) NOT NULL,
+  state         VARCHAR(100),
+  pin_code      VARCHAR(20),
+  country       VARCHAR(100) DEFAULT 'India',
+  is_default    BOOLEAN DEFAULT FALSE,
+  lat           NUMERIC(10,7),
+  lng           NUMERIC(10,7),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- RECENTLY VIEWED
 -- ============================================================
 CREATE TABLE recently_viewed (
@@ -159,6 +202,10 @@ CREATE INDEX idx_cart_user ON cart(user_id);
 CREATE INDEX idx_wishlist_user ON wishlist(user_id);
 CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_reviews_product ON reviews(product_id);
+CREATE INDEX idx_return_requests_user ON return_requests(user_id);
+CREATE INDEX idx_return_requests_order ON return_requests(order_id);
+CREATE INDEX idx_return_requests_status ON return_requests(status);
+CREATE INDEX idx_user_addresses_user ON user_addresses(user_id);
 
 -- ============================================================
 -- SEED DATA — USERS (password: password123)

@@ -7,6 +7,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
+const { initPromise } = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -108,10 +109,18 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ─────────────────────────────────────────────────
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🚀 NexCart API running on http://localhost:${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+  (async () => {
+    try {
+      await initPromise;
+      app.listen(PORT, () => {
+        console.log(`🚀 NexCart API running on http://localhost:${PORT}`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+    } catch (err) {
+      console.error('❌ Failed to initialize database:', err.message);
+      process.exit(1);
+    }
+  })();
 }
 
 module.exports = app;

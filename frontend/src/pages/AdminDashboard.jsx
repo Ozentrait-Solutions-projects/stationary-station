@@ -17,6 +17,15 @@ import {
 } from 'recharts';
 import toast from 'react-hot-toast';
 
+const resolveMediaUrl = (url) => {
+  if (!url) return url;
+  if (/^(https?:|blob:|data:)/i.test(url)) return url;
+
+  const apiBase = api.defaults.baseURL || 'http://localhost:5000/api';
+  const origin = apiBase.replace(/\/api\/?$/, '');
+  return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const TABS = [
   { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
   { id: 'orders',     label: 'Orders',     icon: ShoppingBag },
@@ -493,8 +502,8 @@ export default function AdminDashboard() {
                                   <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos</p>
                                   <div className="flex gap-2 flex-wrap">
                                     {req.photo_urls.map((url, i) => (
-                                      <a key={i} href={url} target="_blank" rel="noreferrer">
-                                        <img src={url} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                                      <a key={i} href={resolveMediaUrl(url)} target="_blank" rel="noreferrer">
+                                        <img src={resolveMediaUrl(url)} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
                                       </a>
                                     ))}
                                   </div>
@@ -503,7 +512,7 @@ export default function AdminDashboard() {
                               {req.video_url && (
                                 <div>
                                   <p className="text-xs font-bold text-gray-500 mb-2">Evidence Video</p>
-                                  <video src={req.video_url} controls className="w-full max-h-40 rounded-xl" />
+                                  <video src={resolveMediaUrl(req.video_url)} controls className="w-full max-h-40 rounded-xl" />
                                 </div>
                               )}
                               {req.admin_notes && (

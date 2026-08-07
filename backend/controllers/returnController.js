@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { getFileUrl } = require('../middleware/upload');
 
 // ─── CREATE RETURN / EXCHANGE REQUEST ─────────────────────────────
 const createReturnRequest = async (req, res, next) => {
@@ -72,17 +73,22 @@ const uploadReturnEvidence = async (req, res, next) => {
     }
 
     const request = rows[0];
-    const uploadedFiles = req.files || [];
+    const uploadedFiles = Array.isArray(req.files)
+      ? req.files
+      : Object.values(req.files || {}).flat();
 
     const photoUrls = [];
     let videoUrl = request.video_url;
 
     for (const file of uploadedFiles) {
       const isVideo = file.mimetype.startsWith('video/');
+      const fileUrl = getFileUrl(file);
+      if (!fileUrl) continue;
+
       if (isVideo) {
-        videoUrl = file.location; // S3 URL
+        videoUrl = fileUrl;
       } else {
-        photoUrls.push(file.location);
+        photoUrls.push(fileUrl);
       }
     }
 
