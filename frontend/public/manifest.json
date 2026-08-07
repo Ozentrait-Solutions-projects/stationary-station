@@ -1,7 +1,7 @@
 {
   "short_name": "NexCart",
   "name": "NexCart — The Future of Shopping",
-  "description": "Shop electronics, fashion, home goods, and stationery with NexCart.",
+  "description": "Shop electronics, fashion, home goods, and more with NexCart — Your Smart Shopping Destination.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -81,6 +81,9 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#6366F1",
-  "background_color": "#FAFBFD"
+  "theme_color": "#12063a",
+  "background_color": "#0a0a1a",
+  "categories": ["shopping", "lifestyle"],
+  "lang": "en-IN",
+  "scope": "/"
 }

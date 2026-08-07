@@ -540,8 +540,8 @@ export default function ProductDetail() {
           </div>
 
           {/* Reviews */}
-          <div id="reviews" className="rounded-2xl p-6 bg-white border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <div id="reviews" className="rounded-2xl p-4 sm:p-6 bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
               <h2 className="font-display text-lg font-black text-gray-950">
                 Customer Reviews
                 <span className="text-gray-400 text-base font-normal ml-2">({reviews.length})</span>
@@ -642,28 +642,36 @@ export default function ProductDetail() {
                 <p className="text-gray-400 font-medium">No reviews yet. Be the first to review!</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 {reviews.map(r => (
-                  <div key={r.id} className="pb-6 border-b border-gray-100">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0 border border-indigo-100">
+                  <div key={r.id} className="pb-5 sm:pb-6 border-b border-gray-100 last:border-b-0 last:pb-0 min-w-0">
+                    <div className="flex items-start gap-3 min-w-0">
+                      {/* Avatar */}
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0 border border-indigo-100 overflow-hidden">
                         {r.user_avatar
                           ? <img src={r.user_avatar} alt="" className="w-full h-full rounded-full object-cover" />
                           : r.user_name?.[0]?.toUpperCase()
                         }
                       </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-sm text-gray-800">{r.user_name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex">
+                      {/* Content — min-w-0 is CRITICAL: without it the flex child
+                           ignores the parent width and text overflows the card */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-gray-800 truncate">{r.user_name}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <div className="flex flex-shrink-0">
                             {[1,2,3,4,5].map(s => (
                               <Star key={s} className={`w-3.5 h-3.5 ${s <= r.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
                             ))}
                           </div>
-                          {r.title && <span className="text-sm font-bold text-gray-800">{r.title}</span>}
+                          {r.title && <span className="text-sm font-bold text-gray-800 break-words min-w-0">{r.title}</span>}
                         </div>
                         <p className="text-xs text-gray-400 font-bold mt-1">Reviewed on {formatDate(r.created_at)}</p>
-                        {r.body && <p className="text-sm text-gray-650 mt-2 leading-relaxed font-medium">{r.body}</p>}
+                        {r.body && (
+                          <p className="text-sm text-gray-600 mt-2 leading-relaxed font-medium break-words"
+                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                            {r.body}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

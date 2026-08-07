@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 import CompareBar from './components/product/CompareBar';
 import InstallPrompt from './components/layout/InstallPrompt';
+import SplashScreen from './components/common/SplashScreen';
 import { useAutoUpdate } from './hooks/useAutoUpdate';
 
 // Lazy-load pages for code splitting
@@ -126,49 +127,66 @@ function NotFound() {
 }
 
 export default function App() {
+  // Show splash once per browser session
+  const [splashDone, setSplashDone] = useState(() => {
+    try { return sessionStorage.getItem('nx_splash_shown') === '1'; }
+    catch { return false; }
+  });
+
+  const handleSplashComplete = () => {
+    try { sessionStorage.setItem('nx_splash_shown', '1'); } catch {}
+    setSplashDone(true);
+  };
+
   return (
-    <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <CompareProvider>
-                <AppLayout />
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 3000,
-                    style: {
-                      borderRadius: '8px',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '14px',
-                      background: '#232F3E',
-                      color: '#E7E9EA',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    },
-                    success: {
+    <>
+      {/* Splash screen — shown once per session */}
+      {!splashDone && <SplashScreen onComplete={handleSplashComplete} />}
+
+      {/* Main app — rendered behind the splash so it loads in parallel */}
+      <BrowserRouter>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <CompareProvider>
+                  <AppLayout />
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
+                      duration: 3000,
                       style: {
-                        background: '#1a2e1a',
-                        color: '#86efac',
-                        border: '1px solid rgba(134,239,172,0.2)',
+                        borderRadius: '8px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        background: '#232F3E',
+                        color: '#E7E9EA',
+                        border: '1px solid rgba(255,255,255,0.1)',
                       },
-                      iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
-                    },
-                    error: {
-                      style: {
-                        background: '#2d1a1a',
-                        color: '#fca5a5',
-                        border: '1px solid rgba(252,165,165,0.2)',
+                      success: {
+                        style: {
+                          background: '#1a2e1a',
+                          color: '#86efac',
+                          border: '1px solid rgba(134,239,172,0.2)',
+                        },
+                        iconTheme: { primary: '#4ade80', secondary: '#1a2e1a' },
                       },
-                      iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
-                    },
-                  }}
-                />
-              </CompareProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </BrowserRouter>
+                      error: {
+                        style: {
+                          background: '#2d1a1a',
+                          color: '#fca5a5',
+                          border: '1px solid rgba(252,165,165,0.2)',
+                        },
+                        iconTheme: { primary: '#f87171', secondary: '#2d1a1a' },
+                      },
+                    }}
+                  />
+                </CompareProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </BrowserRouter>
+    </>
   );
 }
