@@ -16,42 +16,29 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// ─── CORS Configuration ──────────────────────────────────────────
-const defaultAllowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5000',
-  'https://stationary-v2z6.vercel.app',
-];
+// ─── Global CORS Middleware ───────────────────────────────────────
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Mirror requesting origin to support credentials without CORS wildcard conflict
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
 
-if (process.env.CLIENT_ORIGIN) {
-  process.env.CLIENT_ORIGIN.split(',').forEach((o) => {
-    const clean = o.trim().replace(/\/$/, '');
-    if (clean && !defaultAllowedOrigins.includes(clean)) {
-      defaultAllowedOrigins.push(clean);
-    }
-  });
-}
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, curl, server-to-server)
-    if (!origin) return callback(null, true);
+  // Immediately fulfill HTTP OPTIONS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
 
-    // Allow listed origins or any *.vercel.app domain
-    if (defaultAllowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
-      return callback(null, true);
-    }
+  next();
+});
 
-    // Fallback: allow request to prevent breaking deployment
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 
 // ─── Body Parsing ────────────────────────────────────────────────
