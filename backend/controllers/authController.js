@@ -99,9 +99,12 @@ const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPassword = String(password || '').trim();
+
     const { rows } = await db.query(
-      'SELECT id, name, email, password_hash, role, avatar FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      'SELECT id, name, email, password_hash, role, avatar FROM users WHERE LOWER(email) = LOWER($1)',
+      [cleanEmail]
     );
 
     if (!rows.length) {
@@ -109,7 +112,8 @@ const login = async (req, res, next) => {
     }
 
     const user = rows[0];
-    const match = await bcrypt.compare(password, user.password_hash);
+    const match = await bcrypt.compare(cleanPassword, user.password_hash);
+
     if (!match) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }

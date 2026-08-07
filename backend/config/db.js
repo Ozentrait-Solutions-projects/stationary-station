@@ -11,7 +11,10 @@ const pool = new Pool({
   }),
   ssl: (process.env.DATABASE_URL || process.env.DB_SSL === 'true')
     ? { rejectUnauthorized: false }
-    : false
+    : false,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on('connect', () => {
@@ -20,9 +23,9 @@ pool.on('connect', () => {
   }
 });
 
+// Log pool errors gracefully — NEVER call process.exit in serverless environments
 pool.on('error', (err) => {
-  console.error('❌ PostgreSQL pool error:', err);
-  process.exit(-1);
+  console.warn('⚠️ PostgreSQL idle client pool warning:', err.message);
 });
 
 // Auto-ensure critical tables exist
@@ -37,7 +40,7 @@ const initDbTables = async () => {
       );
     `);
   } catch (err) {
-    console.error('⚠️ DB table auto-init warning:', err.message);
+    console.warn('⚠️ DB table auto-init warning:', err.message);
   }
 };
 initDbTables();
