@@ -91,7 +91,9 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 transition-all duration-200 ${scrolled ? 'shadow-md' : ''}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 transition-all duration-200 ${scrolled ? 'shadow-md' : ''}`}
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         
         {/* Top Navbar */}
         <div className="nexcart-container">
@@ -366,7 +368,8 @@ export default function Navbar() {
                 {/* Mobile Drawer Trigger */}
                 <button
                   onClick={() => setMobileOpen(!mobileOpen)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  className="w-10 h-10 min-w-[40px] rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                  aria-label="Toggle menu"
                 >
                   {mobileOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
                 </button>

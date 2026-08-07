@@ -177,17 +177,17 @@ export default function Profile() {
         )}
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="space-y-1">
+          {/* Sidebar Tabs */}
+          <aside className="flex lg:flex-col overflow-x-auto no-scrollbar gap-2 lg:gap-1 pb-2 lg:pb-0 border-b lg:border-b-0 border-gray-100 mb-4 lg:mb-0">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
+                className={`flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-2.5 px-4 py-2.5 lg:py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-150 ${
                   tab === t.id
                     ? 'text-white bg-[#6366F1] shadow-md shadow-indigo-100'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'
+                    : 'text-gray-500 hover:text-gray-900 bg-gray-50 lg:bg-transparent hover:bg-gray-100/60'
                 }`}
               >
-                <t.icon className="w-4 h-4" /> {t.label}
+                <t.icon className="w-4 h-4 flex-shrink-0" /> {t.label}
               </button>
             ))}
           </aside>

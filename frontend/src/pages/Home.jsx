@@ -155,7 +155,7 @@ export default function Home() {
 
       {/* ── Hero Banner ──────────────────────────────────────────── */}
       <section className="nexcart-container py-5">
-        <div className="relative rounded-[28px] overflow-hidden min-h-[500px] flex items-center shadow-xl">
+        <div className="relative rounded-[20px] sm:rounded-[28px] overflow-hidden flex items-center shadow-xl" style={{ minHeight: 'clamp(360px, 65vw, 580px)' }}>
 
           {/* Animated gradient background */}
           <AnimatePresence mode="wait">
@@ -187,7 +187,7 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="grid lg:grid-cols-2 gap-8 items-center w-full px-8 lg:px-14 py-10 relative z-10"
+              className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full px-4 sm:px-8 lg:px-14 py-8 sm:py-10 relative z-10"
             >
               {/* Left text */}
               <div className="space-y-5 text-white">
@@ -196,12 +196,12 @@ export default function Home() {
                   <span className="text-xs font-bold tracking-wide text-white/90">{SLIDES[slide].tag}</span>
                 </div>
 
-                <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.1]">
+                <h1 className="font-display text-3xl sm:text-4xl lg:text-[3.5rem] font-black leading-[1.1]">
                   {SLIDES[slide].title}<br />
                   <span className="text-white drop-shadow-lg">{SLIDES[slide].highlight}</span>
                 </h1>
 
-                <p className="text-white/75 text-base font-medium max-w-md leading-relaxed">
+                <p className="text-white/75 text-sm sm:text-base font-medium max-w-md leading-relaxed">
                   {SLIDES[slide].desc}
                 </p>
 
@@ -327,7 +327,7 @@ export default function Home() {
             All Products <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 sm:gap-3">
           {MAIN_CATEGORIES.map((cat, idx) => (
             <Link
               key={idx}

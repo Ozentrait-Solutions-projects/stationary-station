@@ -103,7 +103,7 @@ function ReturnModal({ order, item, onClose, onSuccess }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100">
           <div>
             <h3 className="font-display font-black text-gray-900 text-lg">
               {type === 'return' ? 'Request Return' : 'Request Exchange'}
@@ -125,7 +125,7 @@ function ReturnModal({ order, item, onClose, onSuccess }) {
         </div>
 
         {step === 1 ? (
-          <form onSubmit={handleSubmitDetails} className="p-6 space-y-5">
+          <form onSubmit={handleSubmitDetails} className="p-4 sm:p-6 space-y-4 sm:space-y-5">
             {/* Type */}
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">Request Type</label>

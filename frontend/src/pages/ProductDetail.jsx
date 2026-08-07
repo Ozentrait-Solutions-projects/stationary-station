@@ -159,7 +159,7 @@ export default function ProductDetail() {
   if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] pb-12">
+    <div className="min-h-screen bg-[#FAFBFD] pb-24 lg:pb-12">
       <div className="nexcart-container py-4">
 
         {/* Breadcrumb */}
@@ -692,7 +692,7 @@ export default function ProductDetail() {
       </div>
 
       {/* Mobile Sticky CTA Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 flex gap-2 lg:hidden shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2 lg:hidden shadow-lg">
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleAddToCart}

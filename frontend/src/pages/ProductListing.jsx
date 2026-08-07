@@ -296,7 +296,7 @@ export default function ProductListing() {
             <motion.div
               initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] z-50 overflow-y-auto bg-white border-r border-gray-100 shadow-2xl"
+              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] z-50 flex flex-col bg-white border-r border-gray-100 shadow-2xl"
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
                 <h3 className="font-black text-gray-900">Filters</h3>
@@ -305,7 +305,7 @@ export default function ProductListing() {
                 </button>
               </div>
 
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-4 overflow-y-auto flex-1 pb-[env(safe-area-inset-bottom,16px)]">
                 <FilterSection title="Department">
                   <ul className="space-y-1">
                     {CATEGORIES.map(cat => (

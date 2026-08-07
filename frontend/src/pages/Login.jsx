@@ -28,7 +28,7 @@ export default function Login() {
 
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-6 sm:py-12">
 
       {/* Logo */}
       <Link to="/" className="flex items-center gap-2 mb-6 group">
