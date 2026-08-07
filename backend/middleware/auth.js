@@ -11,8 +11,9 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized, no token' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const JWT_SECRET = process.env.JWT_SECRET || 'nexcart_super_secret_key_2026';
+    const decoded = jwt.verify(token, JWT_SECRET);
+
 
     const { rows } = await db.query(
       'SELECT id, name, email, role, avatar FROM users WHERE id = $1',

@@ -3,9 +3,12 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { sendOTPEmail, sendResetPasswordEmail } = require('../utils/mailer');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'nexcart_super_secret_key_2026';
+
 /** Generate JWT */
 const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+  jwt.sign({ id }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+
 
 // ─── SEND OTP ─────────────────────────────────────────────────────
 const sendOTP = async (req, res, next) => {
