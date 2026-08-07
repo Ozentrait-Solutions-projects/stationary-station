@@ -179,12 +179,21 @@
 
   /* ── Inputs ───────────────────────────────────────────────────── */
   .input {
-    @apply w-full px-4 py-3 rounded-lg
+    @apply w-full px-3.5 py-3 rounded-lg
            text-gray-800 placeholder-gray-400
            focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent
            transition-all duration-200;
     background-color: var(--amazon-surface);
     border: 1px solid var(--amazon-border-bright);
+    /* Prevent flex/grid blowout — inputs don't respect min-width by default */
+    min-width: 0;
+    /* Guarantee box-sizing so padding never adds to declared width */
+    box-sizing: border-box;
+    /* Consistent touch target height on all mobile devices */
+    min-height: 44px;
+    /* Prevent iOS default appearance overriding our styles */
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .amazon-search-input {

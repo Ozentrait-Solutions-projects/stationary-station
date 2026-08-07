@@ -208,10 +208,12 @@ export default function Checkout() {
               <AnimatePresence>
                 {step === 1 && (
                   <motion.div
-                    initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
-                    className="overflow-hidden"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
                   >
-                    <div className="p-5">
+                    <div className="p-4 sm:p-5">
                       {/* Use Current Location Button */}
                       <motion.button
                         whileTap={{ scale: 0.97 }}
@@ -232,33 +234,47 @@ export default function Checkout() {
                       </motion.button>
 
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
-                        <span className="text-xs text-[#6B7280]">or fill manually</span>
-                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                        <div className="flex-1 h-px bg-gray-100" />
+                        <span className="text-xs text-[#6B7280] font-medium">or fill manually</span>
+                        <div className="flex-1 h-px bg-gray-100" />
                       </div>
 
-                      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
+                      {/*
+                        ── Root cause fix ────────────────────────────────────────
+                        Using a PURE CSS grid (no flex fallback) with consistent
+                        column tracks. Every input is wrapped in a <div> so that
+                        col-span-2 applies to the WRAPPER, not the input itself
+                        (applying col-span directly to <input> in a .map() is
+                        unreliable because grid-placement applies to block-level
+                        children, not form elements in some browsers).
+                        min-w-0 on all cells prevents grid blowout.
+                        ────────────────────────────────────────────────────────
+                      */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {[
-                          { key: 'full_name',    placeholder: `${t('fullName')} *`,             span: false },
-                          { key: 'phone',        placeholder: `${t('phone')} *`,                 span: false },
-                          { key: 'address_line', placeholder: `${t('address')} (House No, Street, Area) *`, span: true },
-                          { key: 'city',         placeholder: `${t('cityDistrict')} *`,         span: false },
-                          { key: 'state',        placeholder: `${t('state')} *`,                span: false },
-                          { key: 'pincode',      placeholder: `${t('pinCode')} *`,              span: false },
-                          { key: 'country',      placeholder: `${t('country')}`,                 span: false },
+                          { key: 'full_name',    placeholder: `${t('fullName')} *`,                       span2: false },
+                          { key: 'phone',        placeholder: `${t('phone')} *`,                           span2: false },
+                          { key: 'address_line', placeholder: `${t('address')} (House No, Street, Area) *`, span2: true  },
+                          { key: 'city',         placeholder: `${t('cityDistrict')} *`,                    span2: false },
+                          { key: 'state',        placeholder: `${t('state')} *`,                           span2: false },
+                          { key: 'pincode',      placeholder: `${t('pinCode')} *`,                         span2: false },
+                          { key: 'country',      placeholder: `${t('country')}`,                            span2: false },
                         ].map(field => (
-                          <input
-                            key={field.key}
-                            className={`input text-sm ${field.span ? 'sm:col-span-2' : ''}`}
-                            placeholder={field.placeholder}
-                            value={address[field.key]}
-                            onChange={e => setAddress(a => ({ ...a, [field.key]: e.target.value }))}
-                          />
+                          <div key={field.key} className={`min-w-0 ${field.span2 ? 'sm:col-span-2' : ''}`}>
+                            <input
+                              className="input text-sm w-full"
+                              placeholder={field.placeholder}
+                              value={address[field.key]}
+                              onChange={e => setAddress(a => ({ ...a, [field.key]: e.target.value }))}
+                              autoComplete={field.key === 'full_name' ? 'name' : field.key === 'phone' ? 'tel' : field.key === 'pincode' ? 'postal-code' : field.key === 'country' ? 'country-name' : field.key === 'city' ? 'address-level2' : field.key === 'state' ? 'address-level1' : 'street-address'}
+                            />
+                          </div>
                         ))}
                       </div>
+
                       <button
                         onClick={() => setStep(2)}
-                        className="mt-4 bg-[#6366F1] hover:bg-[#4F46E5] text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                        className="mt-4 w-full sm:w-auto bg-[#6366F1] hover:bg-[#4F46E5] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2"
                       >
                         {t('continue', 'Continue')} <ChevronRight className="w-4 h-4" />
                       </button>
