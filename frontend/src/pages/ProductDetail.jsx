@@ -541,21 +541,21 @@ export default function ProductDetail() {
 
           {/* Reviews */}
           <div id="reviews" className="rounded-2xl p-4 sm:p-6 bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-              <h2 className="font-display text-lg font-black text-gray-950">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 w-full min-w-0">
+              <h2 className="font-display text-lg font-black text-gray-950 min-w-0 break-words">
                 Customer Reviews
                 <span className="text-gray-400 text-base font-normal ml-2">({reviews.length})</span>
               </h2>
 
               {/* Overall rating summary */}
-              <div className="flex items-center gap-3">
-                <div className="flex">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <div className="flex flex-shrink-0 gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className={`w-5 h-5 ${i < fullStars ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#E5E7EB] text-[#E5E7EB]'}`} />
                   ))}
                 </div>
-                <span className="text-xl font-black text-gray-900">{Number(product.rating).toFixed(1)}</span>
-                <span className="text-sm text-gray-400 font-bold">out of 5</span>
+                <span className="text-xl font-black text-gray-900 min-w-0">{Number(product.rating).toFixed(1)}</span>
+                <span className="text-sm text-gray-400 font-bold min-w-0">out of 5</span>
               </div>
             </div>
 
@@ -645,7 +645,7 @@ export default function ProductDetail() {
               <div className="space-y-5 sm:space-y-6">
                 {reviews.map(r => (
                   <div key={r.id} className="pb-5 sm:pb-6 border-b border-gray-100 last:border-b-0 last:pb-0 w-full min-w-0">
-                    <div className="flex items-start gap-3 w-full min-w-0">
+                    <div className="flex flex-col sm:flex-row items-start gap-3 w-full min-w-0">
                       {/* Avatar — fixed size, no flex shrink needed */}
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0 border border-indigo-100 overflow-hidden">
                         {r.user_avatar
@@ -668,7 +668,7 @@ export default function ProductDetail() {
                           </div>
                           {/* Review Title — wrap naturally, min-w-0 allows text breaking */}
                           {r.title && (
-                            <span className="text-sm font-bold text-gray-800 min-w-0 break-words" style={{ wordBreak: 'break-word' }}>
+                            <span className="text-sm font-bold text-gray-800 min-w-0 break-words w-full sm:w-auto" style={{ wordBreak: 'break-word' }}>
                               {r.title}
                             </span>
                           )}
@@ -679,8 +679,8 @@ export default function ProductDetail() {
                         
                         {/* Review Body Text — min-w-0 for proper text wrapping */}
                         {r.body && (
-                          <p className="text-sm text-gray-600 mt-2.5 leading-relaxed font-medium w-full min-w-0 break-words"
-                            style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <p className="text-sm text-gray-600 mt-2.5 leading-relaxed font-medium w-full min-w-0 break-words whitespace-pre-wrap"
+                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                             {r.body}
                           </p>
                         )}

@@ -250,7 +250,7 @@ export default function Checkout() {
                         6. No dynamic rendering = no layout shifts
                         ──────────────────────────────────────────────────────────
                       */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-full">
                         {[
                           { key: 'full_name',    label: t('fullName'),                                     span2: false },
                           { key: 'phone',        label: t('phone'),                                         span2: false },
@@ -262,12 +262,12 @@ export default function Checkout() {
                         ].map(field => (
                           <div
                             key={field.key}
-                            className={`min-w-0 w-full ${
+                            className={`form-field-wrapper min-w-0 w-full ${
                               field.span2 ? 'sm:col-span-2' : 'sm:col-span-1'
                             }`}
                           >
                             <input
-                              className="input text-sm w-full h-[2.75rem]"
+                              className="input input-standard-height text-sm w-full max-w-full"
                               placeholder={`${field.label} ${field.key !== 'country' ? '*' : ''}`}
                               value={address[field.key]}
                               onChange={e => setAddress(a => ({ ...a, [field.key]: e.target.value }))}

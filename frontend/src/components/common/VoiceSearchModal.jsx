@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, AlertCircle, CheckCircle2, Loader2, Volume2 } from 'lucide-react';
+import { Mic, MicOff, X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function VoiceSearchModal({ isOpen, onClose, onSearch }) {
   const [status, setStatus]           = useState('idle'); // 'listening' | 'processing' | 'success' | 'error' | 'permission_denied' | 'unsupported'
