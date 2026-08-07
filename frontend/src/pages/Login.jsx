@@ -76,18 +76,22 @@ export default function Login() {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1.5">
                 Email or mobile phone number
               </label>
               <input
                 type="email"
+                name="login_email"
                 className="input text-sm py-2.5"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 required
                 autoFocus
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
               />
             </div>
 
@@ -101,11 +105,13 @@ export default function Login() {
               <div className="relative">
                 <input
                   type={showPw ? 'text' : 'password'}
+                  name="login_password"
                   className="input text-sm py-2.5 pr-10"
                   placeholder="At least 6 characters"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   required
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

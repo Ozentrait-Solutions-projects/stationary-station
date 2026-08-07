@@ -119,7 +119,7 @@ export default function Signup() {
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               {[
                 { key: 'name',    label: 'Your name',    type: 'text',     placeholder: 'First and last name' },
                 { key: 'email',   label: 'Email',         type: 'email',    placeholder: 'you@example.com' },
@@ -128,12 +128,16 @@ export default function Signup() {
                   <label className="block text-sm font-bold text-gray-700 mb-1.5">{field.label}</label>
                   <input
                     type={field.type}
+                    name={`signup_${field.key}`}
                     className="input text-sm py-2.5"
                     placeholder={field.placeholder}
                     value={form[field.key]}
                     onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
                     required
                     autoFocus={field.key === 'name'}
+                    autoComplete="off"
+                    autoCapitalize={field.key === 'email' ? 'none' : undefined}
+                    spellCheck={field.key === 'email' ? false : undefined}
                   />
                 </div>
               ))}
@@ -144,11 +148,13 @@ export default function Signup() {
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
+                    name="signup_password"
                     className="input text-sm py-2.5 pr-10"
                     placeholder="At least 6 characters"
                     value={form.password}
                     onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                     required
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -181,11 +187,13 @@ export default function Signup() {
                 <div className="relative">
                   <input
                     type="password"
+                    name="signup_confirm_password"
                     className="input text-sm py-2.5 pr-10"
                     placeholder="Repeat your password"
                     value={form.confirm}
                     onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
                     required
+                    autoComplete="new-password"
                   />
                   {form.confirm && form.confirm === form.password && (
                     <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 font-bold" />
@@ -233,12 +241,14 @@ export default function Signup() {
                 <input
                   type="text"
                   maxLength={6}
+                  name="signup_verification_code"
                   placeholder="0 0 0 0 0 0"
                   className="input text-center text-xl tracking-[0.4em] py-2.5 font-black placeholder:tracking-normal placeholder:text-gray-300"
                   value={verificationCode}
                   onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                   required
                   autoFocus
+                  autoComplete="off"
                 />
                 <p className="text-center text-xs text-gray-450 font-bold mt-2.5 bg-gray-50 border border-gray-100 rounded-xl py-2">
                   Code sent to <span className="text-indigo-650 font-black">{form.email}</span>

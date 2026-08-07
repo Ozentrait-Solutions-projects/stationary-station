@@ -114,17 +114,21 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            <form onSubmit={handleRequestOtp} className="space-y-4">
+            <form onSubmit={handleRequestOtp} className="space-y-4" autoComplete="off">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1.5">Email address</label>
                 <input
                   type="email"
+                  name="forgot_email"
                   className="input text-sm py-2.5"
                   placeholder="you@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                   autoFocus
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
                 />
               </div>
 
@@ -150,18 +154,20 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form onSubmit={handleResetPassword} className="space-y-4" autoComplete="off">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1.5">6-Digit Code</label>
                 <input
                   type="text"
                   maxLength={6}
+                  name="forgot_verification_code"
                   placeholder="0 0 0 0 0 0"
                   className="input text-center text-xl tracking-[0.4em] py-2.5 font-black placeholder:tracking-normal placeholder:text-gray-300"
                   value={verificationCode}
                   onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                   required
                   autoFocus
+                  autoComplete="off"
                 />
                 <p className="text-center text-xs text-gray-450 font-bold mt-2.5 bg-gray-50 border border-gray-100 rounded-xl py-2">
                   Code sent to <span className="text-indigo-650 font-black">{email}</span>
@@ -173,11 +179,13 @@ export default function ForgotPassword() {
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
+                    name="forgot_new_password"
                     className="input text-sm py-2.5 pr-10"
                     placeholder="At least 6 characters"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     required
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -209,11 +217,13 @@ export default function ForgotPassword() {
                 <div className="relative">
                   <input
                     type="password"
+                    name="forgot_confirm_password"
                     className="input text-sm py-2.5 pr-10"
                     placeholder="Repeat your password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     required
+                    autoComplete="new-password"
                   />
                   {confirmPassword && confirmPassword === newPassword && (
                     <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 font-bold" />

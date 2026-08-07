@@ -1,7 +1,10 @@
 const { Pool } = require('pg');
 
+const DEFAULT_SHARED_DATABASE_URL = 'postgresql://neondb_owner:npg_wDOmkaZ4Up8K@ep-polished-frog-aoicqyq2-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const databaseUrl = process.env.DATABASE_URL || DEFAULT_SHARED_DATABASE_URL;
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ...(process.env.DATABASE_URL ? {} : {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
@@ -9,7 +12,7 @@ const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
   }),
-  ssl: (process.env.DATABASE_URL || process.env.DB_SSL === 'true')
+  ssl: (databaseUrl || process.env.DB_SSL === 'true')
     ? { rejectUnauthorized: false }
     : false,
   max: 10,
