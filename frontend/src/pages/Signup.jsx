@@ -70,7 +70,7 @@ export default function Signup() {
   const strength = form.password.length >= 8 ? 'strong' : form.password.length >= 6 ? 'medium' : 'weak';
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-6 sm:py-12">
 
       {/* Logo */}
       <Link to="/" className="flex items-center gap-2 mb-6">

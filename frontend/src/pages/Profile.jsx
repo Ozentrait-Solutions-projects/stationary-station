@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { User, Package, Heart, Save, Loader2, ChevronRight, Mail, Shield, LayoutDashboard, MapPin, Globe } from 'lucide-react';
+import { User, Package, Heart, Save, Loader2, ChevronRight, Mail, Shield, LayoutDashboard, MapPin, Globe, Plus, Navigation, Trash2, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useWishlist } from '../context/WishlistContext';
 import api from '../services/api';
-import { orderService } from '../services/productService';
+import { orderService, addressService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
 import toast from 'react-hot-toast';
 import ProductCard from '../components/product/ProductCard';
@@ -31,6 +31,76 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving]   = useState(false);
   const [form, setForm] = useState({ name: user?.name || '', phone: user?.phone || '', avatar: user?.avatar || '' });
+
+  // Address management
+  const [addresses, setAddresses] = useState([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressForm, setAddressForm] = useState({ label: 'Home', full_name: '', phone: '', address_line1: '', city: '', state: '', pin_code: '', country: 'India' });
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  useEffect(() => {
+    addressService.getAddresses().then(res => setAddresses(res.data.addresses || [])).catch(() => {});
+  }, []);
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) return toast.error('Geolocation is not supported by your browser');
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+          const data = await res.json();
+          const addr = data.address;
+          setAddressForm(f => ({
+            ...f,
+            address_line1: [addr.road, addr.suburb].filter(Boolean).join(', ') || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+            city: addr.city || addr.town || addr.village || addr.county || '',
+            state: addr.state || '',
+            pin_code: addr.postcode || '',
+            country: addr.country || 'India',
+          }));
+          toast.success('Location detected! Please review and save.');
+        } catch {
+          toast.error('Could not reverse-geocode location. Please fill address manually.');
+        }
+        setDetectingLocation(false);
+      },
+      () => { toast.error('Location access denied.'); setDetectingLocation(false); },
+      { timeout: 10000 }
+    );
+  };
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    if (!addressForm.address_line1 || !addressForm.city) return toast.error('Address and city are required');
+    setSavingAddress(true);
+    try {
+      const res = await addressService.createAddress(addressForm);
+      setAddresses(prev => [res.data.address, ...prev.filter(a => !(addressForm.is_default && a.is_default))]);
+      setAddressForm({ label: 'Home', full_name: '', phone: '', address_line1: '', city: '', state: '', pin_code: '', country: 'India' });
+      setShowAddressForm(false);
+      toast.success('Address saved!');
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to save address'); }
+    finally { setSavingAddress(false); }
+  };
+
+  const handleDeleteAddress = async (id) => {
+    try {
+      await addressService.deleteAddress(id);
+      setAddresses(prev => prev.filter(a => a.id !== id));
+      toast.success('Address removed');
+    } catch { toast.error('Failed to remove address'); }
+  };
+
+  const handleSetDefault = async (id) => {
+    try {
+      await addressService.setDefault(id);
+      setAddresses(prev => prev.map(a => ({ ...a, is_default: a.id === id })));
+      toast.success('Default address updated');
+    } catch { toast.error('Failed to update default'); }
+  };
 
   useEffect(() => {
     if (tab === 'orders') {
@@ -107,17 +177,17 @@ export default function Profile() {
         )}
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="space-y-1">
+          {/* Sidebar Tabs */}
+          <aside className="flex lg:flex-col overflow-x-auto no-scrollbar gap-2 lg:gap-1 pb-2 lg:pb-0 border-b lg:border-b-0 border-gray-100 mb-4 lg:mb-0">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
+                className={`flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-2.5 px-4 py-2.5 lg:py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-150 ${
                   tab === t.id
                     ? 'text-white bg-[#6366F1] shadow-md shadow-indigo-100'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'
+                    : 'text-gray-500 hover:text-gray-900 bg-gray-50 lg:bg-transparent hover:bg-gray-100/60'
                 }`}
               >
-                <t.icon className="w-4 h-4" /> {t.label}
+                <t.icon className="w-4 h-4 flex-shrink-0" /> {t.label}
               </button>
             ))}
           </aside>
@@ -171,35 +241,127 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Delivery Location section */}
-                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-150 shadow-xs">
-                  <div className="flex items-center gap-2 mb-3">
-                    <MapPin className="w-4 h-4 text-indigo-600" />
-                    <h2 className="font-black text-gray-955 text-base">Delivery Country/Region</h2>
+                {/* Delivery Addresses section */}
+                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-indigo-600" />
+                      <h2 className="font-black text-gray-950 text-base">Saved Addresses</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowAddressForm(!showAddressForm)}
+                      className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 px-3 py-1.5 rounded-xl transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Address
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-500 font-bold">
-                    <p>Current region set for deliveries:</p>
-                    <span className="bg-indigo-50 border border-indigo-150 text-indigo-700 px-3 py-1 rounded-full text-xs font-black">India</span>
-                  </div>
+
+                  {/* Add Address Form */}
+                  <AnimatePresence>
+                    {showAddressForm && (
+                      <motion.form
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        onSubmit={handleSaveAddress}
+                        className="overflow-hidden mb-4"
+                      >
+                        <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm font-bold text-gray-700">New Address</p>
+                            <button
+                              type="button"
+                              onClick={detectingLocation ? undefined : detectLocation}
+                              disabled={detectingLocation}
+                              className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-xl transition-all disabled:opacity-60"
+                            >
+                              {detectingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
+                              {detectingLocation ? 'Detecting…' : 'Use My Location'}
+                            </button>
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            <input className="input text-sm" placeholder="Label (e.g. Home, Office)" value={addressForm.label} onChange={e => setAddressForm(f => ({...f, label: e.target.value}))} />
+                            <input className="input text-sm" placeholder="Your full name" value={addressForm.full_name} onChange={e => setAddressForm(f => ({...f, full_name: e.target.value}))} />
+                            <input className="input text-sm sm:col-span-2" placeholder="Address line * (street, landmark)" required value={addressForm.address_line1} onChange={e => setAddressForm(f => ({...f, address_line1: e.target.value}))} />
+                            <input className="input text-sm" placeholder="City *" required value={addressForm.city} onChange={e => setAddressForm(f => ({...f, city: e.target.value}))} />
+                            <input className="input text-sm" placeholder="State" value={addressForm.state} onChange={e => setAddressForm(f => ({...f, state: e.target.value}))} />
+                            <input className="input text-sm" placeholder="PIN Code" value={addressForm.pin_code} onChange={e => setAddressForm(f => ({...f, pin_code: e.target.value}))} />
+                            <input className="input text-sm" placeholder="Country" value={addressForm.country} onChange={e => setAddressForm(f => ({...f, country: e.target.value}))} />
+                            <input className="input text-sm" placeholder="Phone" value={addressForm.phone} onChange={e => setAddressForm(f => ({...f, phone: e.target.value}))} />
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={!!addressForm.is_default} onChange={e => setAddressForm(f => ({...f, is_default: e.target.checked}))} className="accent-indigo-600 w-4 h-4" />
+                            <span className="text-xs font-bold text-gray-600">Set as default delivery address</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => setShowAddressForm(false)} className="flex-1 border border-gray-200 text-gray-600 font-bold py-2 rounded-xl text-xs hover:bg-gray-50 transition-colors">Cancel</button>
+                            <button type="submit" disabled={savingAddress} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs transition-colors disabled:opacity-60">
+                              {savingAddress ? 'Saving…' : 'Save Address'}
+                            </button>
+                          </div>
+                        </div>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Saved addresses list */}
+                  {addresses.length === 0 ? (
+                    <div className="text-center py-6">
+                      <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400 font-semibold">No saved addresses yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {addresses.map(addr => (
+                        <div key={addr.id} className={`p-3 rounded-xl border transition-all ${addr.is_default ? 'border-indigo-200 bg-indigo-50/40' : 'border-gray-100 bg-gray-50/50'}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-black text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">{addr.label}</span>
+                                {addr.is_default && <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1"><Star className="w-2.5 h-2.5" />Default</span>}
+                              </div>
+                              <p className="text-sm font-bold text-gray-800">{addr.full_name}</p>
+                              <p className="text-xs text-gray-500 font-medium">{addr.address_line1}</p>
+                              <p className="text-xs text-gray-500 font-medium">{[addr.city, addr.state, addr.pin_code].filter(Boolean).join(', ')}</p>
+                              <p className="text-xs text-gray-400 font-medium">{addr.country}{addr.phone ? ` · ${addr.phone}` : ''}</p>
+                            </div>
+                            <div className="flex gap-1.5 flex-shrink-0">
+                              {!addr.is_default && (
+                                <button onClick={() => handleSetDefault(addr.id)} title="Set as default" className="w-7 h-7 rounded-lg flex items-center justify-center text-indigo-600 hover:bg-indigo-100 transition-colors">
+                                  <Star className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <button onClick={() => handleDeleteAddress(addr.id)} title="Remove address" className="w-7 h-7 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Language section */}
-                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-150 shadow-xs">
+                <div className="rounded-2xl p-5 mt-4 bg-white border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
                     <Globe className="w-4 h-4 text-indigo-650" />
-                    <h2 className="font-black text-gray-955 text-base">{t('language', 'Language')}</h2>
+                    <h2 className="font-black text-gray-950 text-base">{t('language', 'Language')}</h2>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-gray-500 font-bold">
-                    <p>Preferred display language:</p>
+                    <p>Preferred display language: <span className="text-gray-700 font-black">{languages.find(l => l.code === language)?.label}</span></p>
                     <div className="flex gap-2 flex-wrap">
                       {languages.map((lang) => (
                         <button
                           key={lang.code}
                           type="button"
-                          onClick={() => setLanguage(lang.code)}
+                          onClick={() => {
+                            setLanguage(lang.code);
+                            toast.success(`Language set to ${lang.label}`);
+                          }}
                           className={`px-4 py-2 rounded-full text-xs font-black border transition-all duration-150 ${
                             language === lang.code
-                              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs'
+                              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs ring-1 ring-indigo-300'
                               : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                           }`}
                         >
@@ -209,6 +371,7 @@ export default function Profile() {
                       ))}
                     </div>
                   </div>
+                  <p className="text-xs text-gray-400 font-semibold mt-3">Changing the language updates the display text in the app (searchbar, product page labels, and key UI strings).</p>
                 </div>
               </motion.div>
             )}

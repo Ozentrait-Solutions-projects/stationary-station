@@ -63,7 +63,9 @@ export default function InstallPrompt() {
     setIsVisible(false);
   };
 
-  if (!isVisible) return null;
+  const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone);
+
+  if (isStandalone || !isVisible) return null;
 
   return (
     <AnimatePresence>
@@ -72,9 +74,9 @@ export default function InstallPrompt() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50 overflow-hidden"
+        className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-[380px] max-w-[calc(100vw-2rem)] z-50 overflow-hidden"
       >
-        <div className="glass shadow-2xl rounded-2xl p-5 border border-indigo-150 flex flex-col gap-4 relative bg-white/95 backdrop-blur-xl">
+        <div className="shadow-2xl rounded-3xl p-5 border border-indigo-100 flex flex-col gap-4 relative bg-white/95 backdrop-blur-xl">
           {/* Close Button */}
           <button
             onClick={handleDismiss}

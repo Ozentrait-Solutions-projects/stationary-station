@@ -130,10 +130,10 @@ const getAllUsers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ─── CREATE PRODUCT ──────────────────────────────────────────────
+// ─── CREATE PRODUCT ────────────────────────────────────────────────
 const createProduct = async (req, res, next) => {
   try {
-    const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured } = req.body;
+    const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available } = req.body;
     if (!title || !price || !category) return res.status(400).json({ message: 'title, price, category required' });
 
     // req.file.location is the full S3 HTTPS URL provided by multer-s3
@@ -142,10 +142,12 @@ const createProduct = async (req, res, next) => {
     const finalImages = parseArrayField(images);
     const finalTags = parseArrayField(tags);
     const finalFeatured = parseBooleanField(is_featured) || false;
+    const finalReturnExchange = parseBooleanField(return_exchange_available);
+    const finalSalePrice = parseNumberField(sale_price);
 
     const { rows } = await db.query(
-      `INSERT INTO products (title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      `INSERT INTO products (title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
       [
         title,
         description,
@@ -158,6 +160,8 @@ const createProduct = async (req, res, next) => {
         finalImages,
         finalTags,
         finalFeatured,
+        finalSalePrice,
+        finalReturnExchange !== null ? finalReturnExchange : true,
       ]
     );
     res.status(201).json({ product: rows[0] });
@@ -168,7 +172,7 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured } = req.body;
+    const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available } = req.body;
 
     // req.file.location is the full S3 HTTPS URL provided by multer-s3
     const uploadedImageUrl = req.file ? req.file.location : null;
@@ -176,6 +180,8 @@ const updateProduct = async (req, res, next) => {
     const finalImages = images === undefined ? null : parseArrayField(images);
     const finalTags = tags === undefined ? null : parseArrayField(tags);
     const finalFeatured = parseBooleanField(is_featured);
+    const finalReturnExchange = parseBooleanField(return_exchange_available);
+    const finalSalePrice = sale_price !== undefined ? parseNumberField(sale_price) : undefined;
 
     const { rows } = await db.query(
       `UPDATE products SET
@@ -184,8 +190,10 @@ const updateProduct = async (req, res, next) => {
         category = COALESCE($5, category), brand = COALESCE($6, brand),
         stock = COALESCE($7, stock), image_url = COALESCE($8, image_url),
         images = COALESCE($9, images), tags = COALESCE($10, tags),
-        is_featured = COALESCE($11, is_featured)
-       WHERE id = $12 RETURNING *`,
+        is_featured = COALESCE($11, is_featured),
+        sale_price = COALESCE($12, sale_price),
+        return_exchange_available = COALESCE($13, return_exchange_available)
+       WHERE id = $14 RETURNING *`,
       [
         title,
         description,
@@ -198,6 +206,8 @@ const updateProduct = async (req, res, next) => {
         finalImages,
         finalTags,
         finalFeatured,
+        finalSalePrice !== undefined ? finalSalePrice : null,
+        finalReturnExchange,
         id,
       ]
     );
@@ -232,4 +242,49 @@ const deleteProduct = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct };
+// ─── GET ALL RETURN REQUESTS (ADMIN) ───────────────────────────────
+const getAllReturnRequests = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    let where = '';
+    if (status) { params.push(status); where = `WHERE rr.status = $1`; }
+
+    const { rows } = await db.query(
+      `SELECT rr.*, u.name as user_name, u.email as user_email,
+              p.title as product_title, p.image_url as product_image
+       FROM return_requests rr
+       JOIN users u ON rr.user_id = u.id
+       LEFT JOIN products p ON rr.product_id = p.id
+       ${where}
+       ORDER BY rr.created_at DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, parseInt(limit), offset]
+    );
+    const count = await db.query(
+      `SELECT COUNT(*) FROM return_requests rr ${where}`, params
+    );
+    res.json({ requests: rows, total: parseInt(count.rows[0].count) });
+  } catch (err) { next(err); }
+};
+
+// ─── UPDATE RETURN STATUS (ADMIN) ───────────────────────────────────
+const updateReturnStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, admin_notes } = req.body;
+    const valid = ['pending', 'evidence_submitted', 'approved', 'rejected'];
+    if (!valid.includes(status)) return res.status(400).json({ message: 'Invalid status' });
+
+    const { rows } = await db.query(
+      `UPDATE return_requests SET status = $1, admin_notes = $2, updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [status, admin_notes || null, id]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'Return request not found' });
+    res.json({ request: rows[0] });
+  } catch (err) { next(err); }
+};
+
+module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct, getAllReturnRequests, updateReturnStatus };

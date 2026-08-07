@@ -70,7 +70,7 @@ export default function ForgotPassword() {
   const strength = newPassword.length >= 8 ? 'strong' : newPassword.length >= 6 ? 'medium' : 'weak';
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#FAFBFD] flex flex-col items-center justify-center px-4 py-6 sm:py-12">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-2 mb-6">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">

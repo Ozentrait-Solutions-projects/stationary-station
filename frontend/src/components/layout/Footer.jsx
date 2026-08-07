@@ -52,17 +52,17 @@ export default function Footer() {
       </button>
 
       {/* Main footer links */}
-      <div className="nexcart-container py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="nexcart-container py-8 sm:py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8">
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section}>
-              <h4 className="text-gray-900 font-bold text-sm mb-4">{section}</h4>
-              <ul className="space-y-2">
+              <h4 className="text-gray-900 font-bold text-sm mb-3 sm:mb-4">{section}</h4>
+              <ul className="space-y-1.5 sm:space-y-2">
                 {links.map(link => (
                   <li key={link.label}>
                     <Link
                       to={link.to}
-                      className="text-gray-500 text-sm hover:text-indigo-600 hover:underline transition-colors duration-150 font-medium"
+                      className="text-gray-500 text-xs sm:text-sm hover:text-indigo-600 hover:underline transition-colors duration-150 font-medium break-words"
                     >
                       {link.label}
                     </Link>

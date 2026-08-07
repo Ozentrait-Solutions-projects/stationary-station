@@ -21,15 +21,43 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Global error handling
+// Global error handling & message sanitization
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('nexcart_token');
       delete api.defaults.headers.common['Authorization'];
-      // Don't redirect here — let the auth context handle it
     }
+
+    // Format clean user-facing error message
+    let userMsg = "We're having trouble processing your request. Please try again in a moment.";
+
+    if (!error.response) {
+      userMsg = "Unable to connect to the server. Please check your internet connection and try again.";
+    } else if (error.response.status >= 500) {
+      userMsg = "Something went wrong on our end. Please try again in a moment.";
+    } else if (error.response.data?.message) {
+      const msg = String(error.response.data.message);
+      // Suppress raw DB / stack errors
+      if (
+        !msg.includes('SELECT') &&
+        !msg.includes('INSERT') &&
+        !msg.includes('UPDATE') &&
+        !msg.includes('DELETE') &&
+        !msg.includes('postgres') &&
+        !msg.includes('Error:') &&
+        !msg.includes('at ')
+      ) {
+        userMsg = msg;
+      }
+    }
+
+    if (error.response?.data) {
+      error.response.data.message = userMsg;
+    }
+    error.userFriendlyMessage = userMsg;
+
     return Promise.reject(error);
   }
 );

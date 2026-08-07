@@ -7,29 +7,54 @@ const createOrder = async (req, res, next) => {
   try {
     await client.query('BEGIN');
 
-    const { shipping_address, coupon_code, payment_method = 'mock' } = req.body;
+    const { items: customItems, shipping_address, coupon_code, payment_method = 'mock' } = req.body;
 
-    // Get cart items
-    const cartResult = await client.query(
-      `SELECT c.quantity, p.id as product_id, p.price, p.stock, p.title
-       FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1`,
-      [req.user.id]
-    );
+    let itemsToProcess = [];
+    let isBuyNowFlow = false;
 
-    if (!cartResult.rows.length) {
+    if (customItems && Array.isArray(customItems) && customItems.length > 0) {
+      isBuyNowFlow = true;
+      for (const ci of customItems) {
+        const pResult = await client.query(
+          'SELECT id as product_id, price, stock, title FROM products WHERE id = $1',
+          [ci.product_id]
+        );
+        if (pResult.rows.length) {
+          itemsToProcess.push({
+            quantity: Number(ci.quantity) || 1,
+            ...pResult.rows[0],
+            price: Number(pResult.rows[0].price),
+            stock: Number(pResult.rows[0].stock)
+          });
+        }
+      }
+    } else {
+      const cartResult = await client.query(
+        `SELECT c.quantity, p.id as product_id, p.price, p.stock, p.title
+         FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $1`,
+        [req.user.id]
+      );
+      itemsToProcess = cartResult.rows.map(r => ({
+        ...r,
+        price: Number(r.price),
+        stock: Number(r.stock)
+      }));
+    }
+
+    if (!itemsToProcess.length) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Cart is empty' });
+      return res.status(400).json({ message: 'No items to checkout' });
     }
 
     // Verify stock
-    for (const item of cartResult.rows) {
+    for (const item of itemsToProcess) {
       if (item.stock < item.quantity) {
         await client.query('ROLLBACK');
         return res.status(400).json({ message: `Insufficient stock for ${item.title}` });
       }
     }
 
-    const total_price = cartResult.rows.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const total_price = itemsToProcess.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
     // Apply coupon
     let discount = 0;
@@ -55,7 +80,7 @@ const createOrder = async (req, res, next) => {
     const order = orderResult.rows[0];
 
     // Insert order items & decrement stock
-    for (const item of cartResult.rows) {
+    for (const item of itemsToProcess) {
       await client.query(
         'INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES ($1, $2, $3, $4)',
         [order.id, item.product_id, item.quantity, item.price]
@@ -66,8 +91,10 @@ const createOrder = async (req, res, next) => {
       );
     }
 
-    // Clear cart
-    await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
+    // Clear cart only if it was a standard Cart Checkout
+    if (!isBuyNowFlow) {
+      await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
+    }
 
     await client.query('COMMIT');
 

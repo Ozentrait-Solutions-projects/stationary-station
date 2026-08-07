@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Package, ShoppingBag, Users, TrendingUp,
+  LayoutDashboard, Package, ShoppingBag, TrendingUp,
   Plus, Edit3, Trash2, Loader2, BarChart2, ArrowUpRight,
   X, Save, Upload, Eye, MapPin, CreditCard, Phone, Mail,
-  User as UserIcon, CheckCircle2,
+  User as UserIcon, CheckCircle2, RotateCcw, BadgePercent,
 } from 'lucide-react';
 import { adminService } from '../services/productService';
 import api from '../services/api';
@@ -18,10 +18,11 @@ import {
 import toast from 'react-hot-toast';
 
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'orders',    label: 'Orders',    icon: ShoppingBag },
-  { id: 'products',  label: 'Products',  icon: Package },
-  { id: 'users',     label: 'Users',     icon: Users },
+  { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
+  { id: 'orders',     label: 'Orders',     icon: ShoppingBag },
+  { id: 'products',   label: 'Products',   icon: Package },
+  { id: 'returns',    label: 'Returns',    icon: RotateCcw },
+  { id: 'promotions', label: 'Promotions', icon: BadgePercent },
 ];
 
 export default function AdminDashboard() {
@@ -30,7 +31,8 @@ export default function AdminDashboard() {
   const [tab, setTab]           = useState('dashboard');
   const [data, setData]         = useState(null);
   const [orders, setOrders]     = useState([]);
-  const [users, setUsers]       = useState([]);
+  const [returns, setReturns]   = useState([]);
+  const [products, setProducts] = useState([]);
   const [saving, setSaving]     = useState(false);
   const [imageMode, setImageMode]     = useState('url');
   const [productImageFile, setProductImageFile] = useState(null);
@@ -38,6 +40,11 @@ export default function AdminDashboard() {
   const [productModal, setProductModal] = useState(null);
   const [productForm, setProductForm]   = useState({});
   const [loading, setLoading]           = useState(true);
+  const [returnDetailId, setReturnDetailId] = useState(null);
+  const [updatingReturnId, setUpdatingReturnId] = useState(null);
+  const [promoProductId, setPromoProductId] = useState('');
+  const [promoSalePrice, setPromoSalePrice] = useState('');
+  const [savingPromo, setSavingPromo] = useState(false);
 
   // Order detail modal
   const [selectedOrder, setSelectedOrder]     = useState(null);
@@ -51,16 +58,19 @@ export default function AdminDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [dash, ord, usr] = await Promise.all([
+      const [dash, ord] = await Promise.all([
         adminService.getDashboard(),
         adminService.getAllOrders(),
-        adminService.getAllUsers(),
       ]);
       setData(dash.data);
       setOrders(ord.data.orders || []);
-      setUsers(usr.data.users || []);
+      // Load products for promotions tab
+      const prodRes = await api.get('/products?limit=100');
+      setProducts(prodRes.data.products || []);
     } catch { toast.error('Failed to load dashboard'); }
     finally { setLoading(false); }
+    // Load returns in background
+    adminService.getAllReturns().then(res => setReturns(res.data.requests || [])).catch(() => {});
   };
 
   const updateStatus = async (orderId, status) => {
@@ -90,13 +100,13 @@ export default function AdminDashboard() {
 
   const openProductModal = (product = null) => {
     if (product) {
-      setProductForm({ ...product, images: product.images?.join(', ') || '', tags: product.tags?.join(', ') || '' });
+      setProductForm({ ...product, images: product.images?.join(', ') || '', tags: product.tags?.join(', ') || '', sale_price: product.sale_price || '', return_exchange_available: product.return_exchange_available !== false });
       setProductModal('edit');
       setImageMode('url');
       setProductImageFile(null);
       setProductImagePreview(product.image_url || '');
     } else {
-      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false });
+      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false, sale_price:'', return_exchange_available:true });
       setProductModal('create');
       setImageMode('url');
       setProductImageFile(null);
@@ -131,6 +141,8 @@ export default function AdminDashboard() {
           price: String(Number(productForm.price)), original_price: productForm.original_price ? String(Number(productForm.original_price)) : '',
           category: productForm.category, brand: productForm.brand, stock: String(stockNum),
           images: JSON.stringify(imagesArray), tags: JSON.stringify(tagsArray), is_featured: String(!!productForm.is_featured),
+          sale_price: productForm.sale_price ? String(Number(productForm.sale_price)) : '',
+          return_exchange_available: String(productForm.return_exchange_available !== false),
         }).forEach(([k, v]) => formData.append(k, v));
         formData.append('image', productImageFile);
         productModal === 'create' ? await adminService.createProduct(formData) : await adminService.updateProduct(productForm.id, formData);
@@ -138,7 +150,10 @@ export default function AdminDashboard() {
         setProductModal(null); loadData(); return;
       }
 
-      const payload = { ...productForm, price: Number(productForm.price), original_price: Number(productForm.original_price)||null, stock: stockNum, images: imagesArray, tags: tagsArray };
+      const payload = { ...productForm, price: Number(productForm.price), original_price: Number(productForm.original_price)||null, stock: stockNum, images: imagesArray, tags: tagsArray,
+        sale_price: productForm.sale_price ? Number(productForm.sale_price) : null,
+        return_exchange_available: productForm.return_exchange_available !== false,
+      };
       productModal === 'create' ? await adminService.createProduct(payload) : await adminService.updateProduct(productForm.id, payload);
       toast.success(productModal === 'create' ? 'Product created!' : 'Product updated!');
       setProductModal(null); loadData();
@@ -155,27 +170,43 @@ export default function AdminDashboard() {
   const STAT_CARDS = data ? [
     { label: 'Total Revenue', value: formatPrice(data.stats.totalRevenue), icon: TrendingUp,  gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)', change: '+12.5%' },
     { label: 'Total Orders',  value: data.stats.totalOrders.toLocaleString(), icon: ShoppingBag, gradient: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', change: '+8.2%' },
-    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: Users,       gradient: 'linear-gradient(135deg, #10B981, #059669)', change: '+5.1%' },
+    { label: 'Total Users',   value: data.stats.totalUsers.toLocaleString(), icon: UserIcon,    gradient: 'linear-gradient(135deg, #10B981, #059669)', change: '+5.1%' },
     { label: 'Products',      value: data.stats.totalProducts.toLocaleString(), icon: Package,  gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)', change: '+2 new' },
   ] : [];
 
   return (
     <div className="min-h-screen bg-[#FAFBFD]">
-      <div className="nexcart-container py-6">
+      <div className="nexcart-container py-4 sm:py-6 px-3 sm:px-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h1 className="font-display text-2xl font-black text-gray-900">Admin Panel</h1>
-            <p className="text-sm text-gray-400 font-bold mt-0.5">Welcome back, {user?.name}</p>
+            <h1 className="font-display text-xl sm:text-2xl font-black text-gray-900">Admin Panel</h1>
+            <p className="text-xs sm:text-sm text-gray-400 font-bold mt-0.5">Welcome back, {user?.name}</p>
           </div>
-          <Link to="/" className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm">
+          <Link to="/" className="inline-flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl transition-all shadow-xs text-xs sm:text-sm self-start sm:self-auto">
             ← Back to Store
           </Link>
         </div>
 
+        {/* Mobile Tabs Bar */}
+        <div className="lg:hidden flex gap-1.5 overflow-x-auto no-scrollbar mb-5 p-1 bg-gray-100/80 rounded-2xl border border-gray-200/50">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                tab === t.id
+                  ? 'text-white bg-[#6366F1] shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 bg-transparent'
+              }`}
+            >
+              <t.icon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="whitespace-nowrap">{t.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="flex gap-6">
-          {/* Sidebar */}
+          {/* Sidebar - Desktop */}
           <aside className="hidden lg:block w-52 flex-shrink-0 space-y-1">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
@@ -190,46 +221,35 @@ export default function AdminDashboard() {
             ))}
           </aside>
 
-          {/* Mobile tabs */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto no-scrollbar mb-4 w-full">
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  tab === t.id ? 'text-white bg-[#6366F1] shadow-sm' : 'text-gray-500 bg-white border border-gray-100 shadow-xs'
-                }`}
-              >
-                <t.icon className="w-3.5 h-3.5" /> {t.label}
-              </button>
-            ))}
-          </div>
-
           <div className="flex-1 min-w-0">
 
             {/* ── Dashboard Tab ─────────────────────────────────── */}
             {tab === 'dashboard' && (
               <div className="space-y-5">
                 {/* Stat Cards */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="flex flex-col sm:grid sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                   {loading
-                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-lg animate-pulse" />)
+                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-24 sm:h-28 rounded-2xl animate-pulse" />)
                     : STAT_CARDS.map((card, i) => (
                         <motion.div key={card.label}
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="rounded-2xl p-5 text-white overflow-hidden relative shadow-sm"
+                          className="rounded-2xl p-3.5 sm:p-5 text-white overflow-hidden relative shadow-sm flex flex-col justify-between"
                           style={{ background: card.gradient }}
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                              <card.icon className="w-5 h-5" />
+                          <div className="flex items-start justify-between mb-2 sm:mb-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                              <card.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded-full flex items-center gap-1">
-                              <ArrowUpRight className="w-3 h-3" /> {card.change}
+                            <span className="text-[9px] sm:text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:py-1 rounded-full flex items-center gap-0.5 flex-shrink-0">
+                              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {card.change}
                             </span>
                           </div>
-                          <p className="font-display text-2xl font-black">{card.value}</p>
-                          <p className="text-white/80 text-xs mt-1 font-semibold">{card.label}</p>
+                          <div>
+                            <p className="font-display text-lg sm:text-2xl font-black truncate">{card.value}</p>
+                            <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 font-semibold truncate">{card.label}</p>
+                          </div>
                         </motion.div>
                       ))
                   }
@@ -237,65 +257,67 @@ export default function AdminDashboard() {
 
                 {/* Revenue Chart */}
                 {!loading && data?.revenueByDay?.length > 0 && (
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-950 mb-4 flex items-center gap-2">
-                      <BarChart2 className="w-5 h-5 text-indigo-600" /> Revenue (Last 30 Days)
+                  <div className="rounded-2xl p-3.5 sm:p-5 bg-white border border-gray-100 shadow-sm w-full overflow-hidden">
+                    <h3 className="font-black text-gray-950 mb-3 sm:mb-4 text-xs sm:text-base flex items-center gap-2">
+                      <BarChart2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" /> Revenue (Last 30 Days)
                     </h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <LineChart data={data.revenueByDay}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={d => d.slice(5)} />
-                        <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                        <Tooltip
-                          formatter={v => formatPrice(v)}
-                          contentStyle={{ background: '#FFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px', color: '#111', fontSize: '13px' }}
-                        />
-                        <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2.5} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div className="w-full h-[180px] sm:h-[220px] min-w-0 overflow-hidden">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data.revenueByDay} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={d => d.slice(5)} />
+                          <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                          <Tooltip
+                            formatter={v => formatPrice(v)}
+                            contentStyle={{ background: '#FFF', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px', color: '#111', fontSize: '12px' }}
+                          />
+                          <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2.5} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 )}
 
                 {/* Recent Orders + Top Products */}
-                <div className="grid lg:grid-cols-2 gap-5">
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-950 mb-4">Recent Orders</h3>
+                <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-5">
+                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-950 mb-4 text-sm sm:text-base">Recent Orders</h3>
                     <div className="space-y-3">
                       {(data?.recentOrders || []).slice(0, 5).map(order => (
                         <div key={order.id} className="flex items-center justify-between gap-2 text-sm py-2 border-b border-gray-50 last:border-b-0 cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors"
                           onClick={() => openOrderDetails(order)}>
                           <div className="min-w-0">
-                            <p className="font-bold text-gray-800 truncate">{order.user_name}</p>
-                            <p className="text-xs text-gray-400 font-semibold">#{order.id} · {formatDate(order.created_at)}</p>
+                            <p className="font-bold text-gray-800 truncate text-xs sm:text-sm">{order.user_name}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-semibold">#{order.id} · {formatDate(order.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[10px]`}>
+                            <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[9px] sm:text-[10px]`}>
                               {ORDER_STATUS[order.status]?.label}
                             </span>
-                            <span className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</span>
+                            <span className="font-black text-gray-900 text-xs sm:text-sm">{formatPrice(order.final_price)}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-                    <h3 className="font-black text-gray-955 mb-4">Top Selling Products</h3>
+                  <div className="rounded-2xl p-4 sm:p-5 bg-white border border-gray-100 shadow-sm">
+                    <h3 className="font-black text-gray-955 mb-4 text-sm sm:text-base">Top Selling Products</h3>
                     <div className="space-y-3">
                       {(data?.topProducts || []).map((p, i) => (
                         <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-b-0">
-                          <span className="font-bold text-gray-400 text-sm w-5">#{i + 1}</span>
-                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
+                          <span className="font-bold text-gray-400 text-xs sm:text-sm w-4 sm:w-5">#{i + 1}</span>
+                          <img src={p.image_url} alt={p.title} className="w-9 h-9 sm:w-10 sm:h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-805 truncate">{p.title}</p>
-                            <p className="text-xs text-gray-400 font-semibold">{Number(p.total_sold).toLocaleString()} sold</p>
+                            <p className="text-xs sm:text-sm font-bold text-gray-805 truncate">{p.title}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-semibold">{Number(p.total_sold).toLocaleString()} sold</p>
                           </div>
-                          <p className="text-sm font-black text-indigo-650 flex-shrink-0">{formatPrice(p.revenue)}</p>
+                          <p className="text-xs sm:text-sm font-black text-indigo-650 flex-shrink-0">{formatPrice(p.revenue)}</p>
                         </div>
                       ))}
                       {(!data?.topProducts || data.topProducts.length === 0) && (
-                        <p className="text-gray-400 text-sm text-center py-6 font-semibold">No sales data yet</p>
+                        <p className="text-gray-400 text-xs sm:text-sm text-center py-6 font-semibold">No sales data yet</p>
                       )}
                     </div>
                   </div>
@@ -303,14 +325,64 @@ export default function AdminDashboard() {
               </div>
             )}
 
-             {/* ── Orders Tab ────────────────────────────────────── */}
+            {/* ── Orders Tab ────────────────────────────────────── */}
             {tab === 'orders' && (
               <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="font-black text-gray-950">All Orders ({orders.length})</h3>
-                  <p className="text-xs text-gray-400 font-bold mt-1">Click any row to view full order details</p>
+                <div className="px-4 sm:px-5 py-4 border-b border-gray-100">
+                  <h3 className="font-black text-gray-950 text-base sm:text-lg">All Orders ({orders.length})</h3>
+                  <p className="text-xs text-gray-400 font-semibold mt-0.5">Click any order to view details</p>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden divide-y divide-gray-100">
+                  {orders.map(order => (
+                    <div key={order.id} className="p-4 space-y-3 bg-white hover:bg-gray-50/80 transition-colors cursor-pointer" onClick={() => openOrderDetails(order)}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="font-mono text-indigo-650 font-black text-xs">#{order.id}</span>
+                          <h4 className="font-bold text-sm text-gray-900 truncate">{order.user_name}</h4>
+                          <p className="text-xs text-gray-400 truncate">{order.user_email}</p>
+                        </div>
+                        <span className={`badge badge-${ORDER_STATUS[order.status]?.color || 'info'} text-[10px] flex-shrink-0`}>
+                          {ORDER_STATUS[order.status]?.label}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
+                        <div>
+                          <span className="text-gray-400 block text-[10px]">Date</span>
+                          <span className="font-semibold text-gray-700">{formatDate(order.created_at)}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-gray-400 block text-[10px]">Total</span>
+                          <span className="font-black text-gray-900 text-sm">{formatPrice(order.final_price)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                        <select
+                          value={order.status}
+                          onChange={e => { e.stopPropagation(); updateStatus(order.id, e.target.value); }}
+                          className="flex-1 text-xs bg-gray-50 border border-gray-200 text-gray-750 font-bold rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          {Object.keys(ORDER_STATUS).map(s => <option key={s} value={s}>{ORDER_STATUS[s].label}</option>)}
+                        </select>
+                        <button
+                          onClick={() => openOrderDetails(order)}
+                          className="bg-indigo-50 text-indigo-650 hover:bg-indigo-100 font-bold text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {orders.length === 0 && (
+                    <p className="text-center text-gray-400 py-8 font-semibold text-sm">No orders found</p>
+                  )}
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="amazon-table">
                     <thead>
                       <tr>
@@ -377,39 +449,219 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* ── Users Tab ─────────────────────────────────────── */}
-            {tab === 'users' && (
+            {/* ── Returns Tab ────────────────────────────────────── */}
+            {tab === 'returns' && (
               <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="font-black text-gray-950">All Users ({users.length})</h3>
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-black text-gray-950">Return & Exchange Requests ({returns.length})</h3>
+                  <button onClick={() => adminService.getAllReturns().then(r => setReturns(r.data.requests || []))} className="text-xs text-indigo-600 font-bold hover:text-indigo-800">Refresh</button>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="amazon-table">
-                    <thead>
-                      <tr>{['User', 'Email', 'Role', 'Joined'].map(h => <th key={h}>{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {users.map(u => (
-                        <tr key={u.id}>
-                          <td>
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black flex-shrink-0">
-                                {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : u.name?.[0]?.toUpperCase()}
+                {returns.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <RotateCcw className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-400 font-semibold text-sm">No return requests yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {returns.map(req => {
+                      const statusColors = { pending: 'bg-amber-50 text-amber-700 border-amber-200', evidence_submitted: 'bg-blue-50 text-blue-700 border-blue-200', approved: 'bg-emerald-50 text-emerald-700 border-emerald-200', rejected: 'bg-rose-50 text-rose-700 border-rose-200' };
+                      const isOpen = returnDetailId === req.id;
+                      return (
+                        <div key={req.id} className="p-4">
+                          <div className="flex items-center gap-3">
+                            <img src={req.product_image} alt={req.product_title} className="w-12 h-12 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-gray-800 truncate">{req.product_title}</p>
+                              <p className="text-xs text-gray-400 font-semibold">{req.user_name} · {req.user_email}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border capitalize ${statusColors[req.status] || 'bg-gray-100 text-gray-600'}`}>{req.status.replace('_', ' ')}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${req.type === 'return' ? 'bg-rose-50 text-rose-600' : 'bg-violet-50 text-violet-600'}`}>{req.type}</span>
                               </div>
-                              <span className="font-bold text-gray-800">{u.name}</span>
                             </div>
-                          </td>
-                          <td className="text-gray-500 font-semibold">{u.email}</td>
-                          <td>
-                            <span className={`badge ${u.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="text-gray-500 font-semibold whitespace-nowrap">{formatDate(u.created_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            <button onClick={() => setReturnDetailId(isOpen ? null : req.id)} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex-shrink-0">
+                              {isOpen ? 'Collapse' : 'View Details'}
+                            </button>
+                          </div>
+                          {isOpen && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                              <div>
+                                <p className="text-xs font-bold text-gray-500 mb-1">Customer's Reason</p>
+                                <p className="text-sm text-gray-700 font-medium">{req.reason || 'No reason provided'}</p>
+                              </div>
+                              {req.photo_urls?.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos</p>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {req.photo_urls.map((url, i) => (
+                                      <a key={i} href={url} target="_blank" rel="noreferrer">
+                                        <img src={url} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {req.video_url && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Video</p>
+                                  <video src={req.video_url} controls className="w-full max-h-40 rounded-xl" />
+                                </div>
+                              )}
+                              {req.admin_notes && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-500 mb-1">Admin Notes</p>
+                                  <p className="text-sm text-gray-700">{req.admin_notes}</p>
+                                </div>
+                              )}
+                              {req.status !== 'approved' && req.status !== 'rejected' && (
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    disabled={updatingReturnId === req.id}
+                                    onClick={async () => {
+                                      setUpdatingReturnId(req.id);
+                                      await adminService.updateReturnStatus(req.id, 'approved', '');
+                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
+                                      setUpdatingReturnId(null);
+                                      toast.success('Return approved');
+                                    }}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button
+                                    disabled={updatingReturnId === req.id}
+                                    onClick={async () => {
+                                      const notes = window.prompt('Reason for rejection (optional):') || '';
+                                      setUpdatingReturnId(req.id);
+                                      await adminService.updateReturnStatus(req.id, 'rejected', notes);
+                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected', admin_notes: notes } : r));
+                                      setUpdatingReturnId(null);
+                                      toast.success('Return rejected');
+                                    }}
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                  >
+                                    ✗ Reject
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Promotions Tab ─────────────────────────────────── */}
+            {tab === 'promotions' && (
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+                  <h3 className="font-black text-gray-950 mb-1">Set Sale Price</h3>
+                  <p className="text-xs text-gray-400 font-semibold mb-5">Create a promotional sale price for any product. This will appear as a discounted price on the storefront.</p>
+                  <div className="grid sm:grid-cols-3 gap-3 items-end">
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-bold text-gray-500 block mb-1.5">Select Product</label>
+                      <select
+                        value={promoProductId}
+                        onChange={e => {
+                          setPromoProductId(e.target.value);
+                          const p = products.find(x => String(x.id) === e.target.value);
+                          setPromoSalePrice(p?.sale_price ? String(p.sale_price) : '');
+                        }}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50"
+                      >
+                        <option value="">— Choose a product —</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.title} (₹{p.price}{p.sale_price ? ` → Sale: ₹${p.sale_price}` : ''})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 block mb-1.5">Sale Price (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 599"
+                        value={promoSalePrice}
+                        onChange={e => setPromoSalePrice(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50"
+                      />
+                    </div>
+                  </div>
+                  {promoProductId && (() => {
+                    const p = products.find(x => String(x.id) === promoProductId);
+                    if (!p) return null;
+                    const discount = promoSalePrice ? Math.round((1 - Number(promoSalePrice) / p.price) * 100) : 0;
+                    return (
+                      <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-indigo-800">{p.title}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-lg font-black text-indigo-900">₹{promoSalePrice || p.price}</span>
+                            {promoSalePrice && <span className="text-sm text-gray-400 line-through">₹{p.price}</span>}
+                            {discount > 0 && <span className="text-xs font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">{discount}% OFF</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              if (!promoProductId) return;
+                              setSavingPromo(true);
+                              try {
+                                await adminService.updateProduct(promoProductId, { sale_price: promoSalePrice ? Number(promoSalePrice) : null });
+                                setProducts(prev => prev.map(x => String(x.id) === promoProductId ? { ...x, sale_price: promoSalePrice ? Number(promoSalePrice) : null } : x));
+                                toast.success(promoSalePrice ? `Sale price set to ₹${promoSalePrice}` : 'Sale price removed');
+                              } catch { toast.error('Failed to update sale price'); }
+                              finally { setSavingPromo(false); }
+                            }}
+                            disabled={savingPromo}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors disabled:opacity-60 flex items-center gap-2"
+                          >
+                            {savingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            {promoSalePrice ? 'Apply Sale' : 'Remove Sale'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Products with active sale prices */}
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100">
+                    <h4 className="font-black text-gray-950 text-sm">Active Promotions</h4>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {products.filter(p => p.sale_price).length === 0 ? (
+                      <p className="text-center text-gray-400 text-sm py-8 font-semibold">No active promotions</p>
+                    ) : products.filter(p => p.sale_price).map(p => {
+                      const discount = Math.round((1 - p.sale_price / p.price) * 100);
+                      return (
+                        <div key={p.id} className="flex items-center gap-3 p-4">
+                          <img src={p.image_url} alt={p.title} className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-sm font-black text-gray-900">₹{p.sale_price}</span>
+                              <span className="text-xs text-gray-400 line-through">₹{p.price}</span>
+                              <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{discount}% OFF</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              await adminService.updateProduct(p.id, { sale_price: null });
+                              setProducts(prev => prev.map(x => x.id === p.id ? { ...x, sale_price: null } : x));
+                              toast.success('Sale price removed');
+                            }}
+                            className="text-xs text-rose-600 font-bold hover:text-rose-800 flex-shrink-0"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -417,37 +669,38 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+
       {/* ── Order Detail Modal ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedOrder && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setSelectedOrder(null)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[90vh] flex flex-col bg-white border border-gray-200 shadow-2xl"
+              className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col bg-white border border-gray-200 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b border-gray-150 bg-[#F9FAFB]">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 flex-shrink-0 border-b border-gray-150 bg-[#F9FAFB]">
                 <div>
-                  <h3 className="font-black text-lg text-gray-900">Order Details</h3>
-                  <p className="text-sm text-indigo-650 font-bold font-mono mt-0.5">#{selectedOrder.id}</p>
+                  <h3 className="font-black text-base sm:text-lg text-gray-900">Order Details</h3>
+                  <p className="text-xs sm:text-sm text-indigo-650 font-bold font-mono mt-0.5">#{selectedOrder.id}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-sm`}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className={`badge badge-${ORDER_STATUS[selectedOrder.status]?.color || 'info'} text-xs`}>
                     {ORDER_STATUS[selectedOrder.status]?.icon} {ORDER_STATUS[selectedOrder.status]?.label}
                   </span>
                   <button onClick={() => setSelectedOrder(null)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Modal Body */}
-              <div className="overflow-y-auto flex-1 p-6 space-y-5 bg-[#FAFBFD]">
+              <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#FAFBFD]">
                 {orderDetailLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-650" />
@@ -455,7 +708,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     {/* Info Grid */}
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Customer Info */}
                       <div className="rounded-2xl p-5 bg-white border border-gray-150 shadow-xs">
                         <h4 className="text-xs text-indigo-650 uppercase tracking-wider font-extrabold mb-3 flex items-center gap-2">
@@ -605,17 +858,17 @@ export default function AdminDashboard() {
 
       {/* Product Modal */}
       {productModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto bg-white border border-gray-100 shadow-xl"
+            className="w-full max-w-lg rounded-2xl p-4 sm:p-6 max-h-[92vh] overflow-y-auto bg-white border border-gray-100 shadow-xl"
           >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-gray-950">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h3 className="font-black text-base sm:text-lg text-gray-950">
                 {productModal === 'create' ? 'Add New Product' : 'Edit Product'}
               </h3>
-              <button onClick={() => setProductModal(null)} className="p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <button onClick={() => setProductModal(null)} className="p-1.5 rounded-lg hover:bg-gray-50 transition-colors">
                 <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
@@ -626,7 +879,7 @@ export default function AdminDashboard() {
               <textarea className="input resize-none text-sm" rows={3} placeholder="Description"
                 value={productForm.description || ''} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input className="input text-sm" type="number" placeholder="Price *" required value={productForm.price || ''}
                   onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} />
                 <input className="input text-sm" type="number" placeholder="Original Price" value={productForm.original_price || ''}
@@ -649,7 +902,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
                 {[
                   { label: 'Use Image URL', mode: 'url' },
                   { label: 'Upload Image',  mode: 'upload', icon: Upload },
@@ -691,6 +944,22 @@ export default function AdminDashboard() {
                 <span className="text-sm text-gray-500 font-bold">Featured product</span>
               </label>
 
+              {/* Return & Exchange toggle */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={productForm.return_exchange_available !== false}
+                  onChange={e => setProductForm(f => ({ ...f, return_exchange_available: e.target.checked }))}
+                  className="accent-emerald-500 w-4 h-4" />
+                <span className="text-sm text-gray-500 font-bold">Return &amp; Exchange Available</span>
+              </label>
+
+              {/* Sale Price */}
+              <div>
+                <input className="input text-sm" type="number" min="0" placeholder="Sale Price (leave empty for no sale)"
+                  value={productForm.sale_price || ''}
+                  onChange={e => setProductForm(f => ({ ...f, sale_price: e.target.value }))} />
+                <p className="text-[10px] text-gray-400 font-semibold mt-1">💡 Setting a sale price will show it as a discounted price on the storefront</p>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setProductModal(null)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold py-2.5 rounded-xl text-sm">
                   Cancel
@@ -725,27 +994,27 @@ function AdminProductList({ onEdit, onDelete }) {
     <div className="space-y-1">
       {products.map(p => (
         <div key={p.id}
-          className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+          className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
         >
-          <img src={p.image_url} alt={p.title} className="w-12 h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
+          <img src={p.image_url} alt={p.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-xs text-gray-400 font-bold">{p.category} · {formatPrice(p.price)}</p>
+            <p className="font-bold text-xs sm:text-sm text-gray-800 truncate">{p.title}</p>
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <p className="text-[10px] sm:text-xs text-gray-400 font-bold">{p.category} · {formatPrice(p.price)}</p>
               {Number(p.stock) > 0
-                ? <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full">In Stock ({p.stock})</span>
-                : <span className="text-[10px] text-rose-600 font-extrabold bg-rose-50 px-2 py-0.5 rounded-full">Out of Stock</span>
+                ? <span className="text-[9px] sm:text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-1.5 py-0.5 rounded-full">In Stock ({p.stock})</span>
+                : <span className="text-[9px] sm:text-[10px] text-rose-600 font-extrabold bg-rose-50 px-1.5 py-0.5 rounded-full">Out of Stock</span>
               }
             </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
             <button onClick={() => onEdit(p)}
-              className="p-2 rounded-xl text-indigo-650 hover:bg-gray-100 transition-colors" title="Edit">
+              className="p-1.5 sm:p-2 rounded-xl text-indigo-650 hover:bg-indigo-50 transition-colors" title="Edit">
               <Edit3 className="w-4 h-4" />
             </button>
             <button onClick={() => onDelete(p.id)}
-              className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors" title="Delete">
+              className="p-1.5 sm:p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors" title="Delete">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

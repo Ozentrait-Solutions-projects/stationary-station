@@ -12,8 +12,8 @@ const s3 = new S3Client({
   },
 });
 
-// ─── File Filter ─────────────────────────────────────────────────────────────
-const fileFilter = (req, file, cb) => {
+// ─── File Filter: Images only ─────────────────────────────────────────────────
+const imageFileFilter = (req, file, cb) => {
   const allowed = ['image/jpeg', 'image/png', 'image/webp'];
   if (!allowed.includes(file.mimetype)) {
     return cb(new Error('Only JPG, PNG, WEBP images are allowed'));
@@ -21,8 +21,17 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-// ─── S3 Storage ──────────────────────────────────────────────────────────────
-const storage = multerS3({
+// ─── File Filter: Images + Video ─────────────────────────────────────────────
+const evidenceFileFilter = (req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'];
+  if (!allowed.includes(file.mimetype)) {
+    return cb(new Error('Only images (JPG, PNG, WEBP) and videos (MP4, MOV, WEBM) are allowed'));
+  }
+  cb(null, true);
+};
+
+// ─── S3 Storage: Products ──────────────────────────────────────────────────
+const productStorage = multerS3({
   s3,
   bucket: process.env.AWS_S3_BUCKET_NAME,
   contentType: multerS3.AUTO_CONTENT_TYPE,
@@ -34,11 +43,32 @@ const storage = multerS3({
   },
 });
 
-// ─── Multer Instance ─────────────────────────────────────────────────────────
+// ─── S3 Storage: Return Evidence ──────────────────────────────────────────────
+const returnStorage = multerS3({
+  s3,
+  bucket: process.env.AWS_S3_BUCKET_NAME,
+  contentType: multerS3.AUTO_CONTENT_TYPE,
+  key: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const isVideo = ['video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'].includes(file.mimetype);
+    const prefix = isVideo ? 'returns/videos' : 'returns/photos';
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const safeExt = ext || (isVideo ? '.mp4' : '.jpg');
+    cb(null, `${prefix}/evidence-${unique}${safeExt}`);
+  },
+});
+
+// ─── Multer Instances ─────────────────────────────────────────────────────────
 const upload = multer({
-  storage,
-  fileFilter,
+  storage: productStorage,
+  fileFilter: imageFileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
-module.exports = { upload, s3 };
+const uploadEvidence = multer({
+  storage: returnStorage,
+  fileFilter: evidenceFileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB for videos
+});
+
+module.exports = { upload, uploadEvidence, s3 };

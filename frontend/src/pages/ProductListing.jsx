@@ -195,12 +195,12 @@ export default function ProductListing() {
           <div className="flex-1 min-w-0">
             {/* Toolbar */}
             <div
-              className="flex items-center justify-between gap-4 mb-4 px-4 py-3 rounded-2xl flex-wrap bg-white border border-gray-200 shadow-sm"
+              className="flex items-center justify-between gap-3 mb-4 px-3.5 sm:px-4 py-3 rounded-2xl flex-wrap bg-white border border-gray-200 shadow-sm"
             >
               <div>
-                <h1 className="font-display text-lg font-black text-gray-900">{pageTitle}</h1>
+                <h1 className="font-display text-base sm:text-lg font-black text-gray-900">{pageTitle}</h1>
                 {pagination && (
-                  <p className="text-xs text-gray-400 font-bold mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-bold mt-0.5">
                     {pagination.total.toLocaleString()} results
                     {(minPrice || maxPrice) && ` · ₹${minPrice}–₹${maxPrice}`}
                     {minRating && ` · ${minRating}★ & up`}
@@ -208,31 +208,31 @@ export default function ProductListing() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {/* Mobile Filter button */}
                 <button
                   onClick={() => setFiltersOpen(true)}
-                  className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                  className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                 >
-                  <SlidersHorizontal className="w-4 h-4" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Filters
                   {hasFilters && (
-                    <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">On</span>
+                    <span className="bg-indigo-600 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full">On</span>
                   )}
                 </button>
 
                 {/* Sort */}
-                <div className="flex items-center gap-2 text-sm text-gray-400 font-bold">
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-400 font-bold">
                   <span className="hidden sm:block">Sort by:</span>
                   <div className="relative">
                     <select
                       value={sort}
                       onChange={e => setFilter('sort', e.target.value)}
-                      className="appearance-none text-sm font-bold text-gray-700 pr-8 pl-4 py-2.5 rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white border border-gray-200"
+                      className="appearance-none text-xs sm:text-sm font-bold text-gray-700 pr-7 pl-3 py-1.5 sm:py-2 rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white border border-gray-200"
                     >
                       {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -268,7 +268,7 @@ export default function ProductListing() {
             )}
 
             {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
               {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
               {loading && Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={`sk-${i}`} />)}
             </div>
@@ -291,12 +291,12 @@ export default function ProductListing() {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setFiltersOpen(false)}
-              className="fixed inset-0 bg-black/40 z-50 lg:hidden backdrop-blur-xs"
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-xs"
             />
             <motion.div
               initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-              className="fixed left-0 top-0 bottom-0 w-80 z-50 overflow-y-auto bg-white border-r border-gray-100 shadow-2xl"
+              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] z-50 flex flex-col bg-white border-r border-gray-100 shadow-2xl"
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
                 <h3 className="font-black text-gray-900">Filters</h3>
@@ -305,7 +305,7 @@ export default function ProductListing() {
                 </button>
               </div>
 
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-4 overflow-y-auto flex-1 pb-[env(safe-area-inset-bottom,16px)]">
                 <FilterSection title="Department">
                   <ul className="space-y-1">
                     {CATEGORIES.map(cat => (

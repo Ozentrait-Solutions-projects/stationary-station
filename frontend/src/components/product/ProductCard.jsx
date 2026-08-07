@@ -56,7 +56,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
-      className="group relative product-card bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-300"
+      className="min-w-0 group relative product-card bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-300"
     >
       <Link to={`/products/${product.id}`} className="block">
 
@@ -84,7 +84,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             className={`absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-200
               ${wishlisted
                 ? 'bg-red-500 opacity-100 text-white'
-                : 'bg-white text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100'
+                : 'bg-white text-gray-500 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100'
               }`}
           >
             <Heart className={`w-3.5 h-3.5 ${wishlisted ? 'fill-current' : ''}`} />
@@ -96,7 +96,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
             className={`absolute top-10 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-200
               ${compared
                 ? 'bg-indigo-650 opacity-100 text-white'
-                : 'bg-white text-gray-500 hover:text-indigo-605 opacity-0 group-hover:opacity-100'
+                : 'bg-white text-gray-500 hover:text-indigo-605 opacity-100 lg:opacity-0 lg:group-hover:opacity-100'
               }`}
             title="Compare product"
           >
@@ -132,7 +132,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
           )}
 
           {/* Title */}
-          <h3 className={`font-bold text-gray-800 leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors duration-150 ${compact ? 'text-xs' : 'text-sm'}`}>
+          <h3 className={`font-bold text-gray-800 leading-snug line-clamp-2 break-words group-hover:text-indigo-600 transition-colors duration-150 ${compact ? 'text-xs' : 'text-sm'}`}>
             {product.title}
           </h3>
 

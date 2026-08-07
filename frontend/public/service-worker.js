@@ -1,68 +1,101 @@
-const CACHE_NAME = 'nexcart-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'nexcart-pwa-v1';
+const DYNAMIC_CACHE = 'nexcart-dynamic-v1';
+
+// Assets to pre-cache on install
+const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/favicon.ico',
   '/manifest.json',
-  '/logo192.png',
-  '/logo512.png'
+  '/favicon.png',
+  '/logo.png',
+  '/version.json'
 ];
 
-// Install event - Cache core static assets
+// Install Event
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
+        console.warn('Pre-cache error during SW install:', err);
+      });
     })
   );
-  self.skipWaiting();
 });
 
-// Activate event - Clean up old caches
+// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== CACHE_NAME && key !== DYNAMIC_CACHE) {
+            console.log('[SW] Removing old cache:', key);
+            return caches.delete(key);
           }
+          return null;
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch event - Cache-first with network fallback
+// Listen for message to force skipWaiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Fetch Event — Network-first for HTML / version API, Cache-first / Stale-while-revalidate for static assets
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
+  const url = new URL(request.url);
 
+  // Skip non-GET and API requests
+  if (request.method !== 'GET' || url.pathname.startsWith('/api') || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Network-first for index.html, version.json, manifest.json
+  if (
+    request.mode === 'navigate' ||
+    url.pathname === '/index.html' ||
+    url.pathname === '/version.json' ||
+    url.pathname === '/manifest.json'
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate / Cache-first for static JS, CSS, images
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        // Check if we received a valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
 
-        // Clone the response and cache it
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      }).catch(() => {
-        // Fallback for API or page requests when offline
-        if (event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('/index.html');
-        }
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });

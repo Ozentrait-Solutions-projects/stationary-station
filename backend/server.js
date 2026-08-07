@@ -37,13 +37,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ─── API Routes ──────────────────────────────────────────────────
-app.use('/api/auth',     require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/cart',     require('./routes/cart'));
-app.use('/api/wishlist', require('./routes/wishlist'));
-app.use('/api/orders',   require('./routes/orders'));
-app.use('/api/coupons',  require('./routes/coupons'));
-app.use('/api/admin',    require('./routes/admin'));
+app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/products',  require('./routes/products'));
+app.use('/api/cart',      require('./routes/cart'));
+app.use('/api/wishlist',  require('./routes/wishlist'));
+app.use('/api/orders',    require('./routes/orders'));
+app.use('/api/coupons',   require('./routes/coupons'));
+app.use('/api/admin',     require('./routes/admin'));
+app.use('/api/returns',   require('./routes/returns'));
+app.use('/api/addresses', require('./routes/addresses'));
 
 // ─── Root & Health Check ──────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -65,9 +67,23 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err.stack);
   const status = err.status || err.statusCode || 500;
+
+  let clientMessage = err.message || 'Internal Server Error';
+  if (
+    status >= 500 ||
+    clientMessage.includes('SELECT') ||
+    clientMessage.includes('INSERT') ||
+    clientMessage.includes('UPDATE') ||
+    clientMessage.includes('DELETE') ||
+    clientMessage.includes('postgres') ||
+    clientMessage.includes('relation') ||
+    clientMessage.includes('column')
+  ) {
+    clientMessage = "Something went wrong on our end. Please try again in a moment.";
+  }
+
   res.status(status).json({
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    message: clientMessage,
   });
 });
 

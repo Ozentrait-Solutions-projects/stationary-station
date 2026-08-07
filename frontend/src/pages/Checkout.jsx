@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, CreditCard, Tag, CheckCircle2, Loader2, ChevronRight, Shield, Truck, Zap, Navigation } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -19,9 +19,29 @@ const PAYMENT_METHODS = [
 const STEPS = ['Address', 'Payment', 'Review'];
 
 export default function Checkout() {
-  const { cart, cartTotal } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const buyNowItem = location.state?.buyNowItem;
+  const isBuyNow   = Boolean(buyNowItem);
+
+  const itemsToCheckout = isBuyNow
+    ? [{
+        id: `buynow-${buyNowItem.product.id}`,
+        product_id: buyNowItem.product.id,
+        title: buyNowItem.product.title,
+        price: buyNowItem.product.price,
+        image_url: buyNowItem.product.image_url,
+        quantity: buyNowItem.quantity,
+        stock: buyNowItem.product.stock
+      }]
+    : cart;
+
+  const checkoutSubtotal = isBuyNow
+    ? (buyNowItem.product.price * buyNowItem.quantity)
+    : cartTotal;
 
   const [step, setStep]                     = useState(1);
   const [placing, setPlacing]               = useState(false);
@@ -37,13 +57,13 @@ export default function Checkout() {
   });
 
   const discount = couponResult?.discount_amount || 0;
-  const final    = Math.max(0, cartTotal - discount);
+  const final    = Math.max(0, checkoutSubtotal - discount);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
     try {
-      const res = await couponService.validate(couponCode, cartTotal);
+      const res = await couponService.validate(couponCode, checkoutSubtotal);
       setCouponResult(res.data);
       toast.success(res.data.message);
     } catch (err) {
@@ -98,11 +118,18 @@ export default function Checkout() {
     }
     setPlacing(true);
     try {
-      const res = await orderService.createOrder({
+      const payload = {
         shipping_address: address,
         coupon_code: couponCode || null,
         payment_method: paymentMethod,
-      });
+      };
+      if (isBuyNow) {
+        payload.items = [{ product_id: buyNowItem.product.id, quantity: buyNowItem.quantity }];
+      }
+      const res = await orderService.createOrder(payload);
+      if (!isBuyNow) {
+        clearCart();
+      }
       navigate(`/order-success/${res.data.order.id}`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to place order. Please try again.');
@@ -110,7 +137,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] page-enter">
+    <div className="min-h-[100dvh] bg-[#FAFBFD] page-enter pb-[calc(100px+env(safe-area-inset-bottom))] lg:pb-12">
       <div className="nexcart-container py-6 max-w-5xl">
 
         {/* Logo header */}
@@ -130,25 +157,25 @@ export default function Checkout() {
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-6 sm:mb-8">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1 last:flex-none">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 flex-shrink-0"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-300 flex-shrink-0"
                   style={{
                     backgroundColor: step > i + 1 ? '#10B981' : step === i + 1 ? '#6366F1' : '#F3F4F6',
                     color: step > i + 1 || step === i + 1 ? '#FFFFFF' : '#9CA3AF',
                   }}
                 >
-                  {step > i + 1 ? <CheckCircle2 className="w-4 h-4 text-white" /> : i + 1}
+                  {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /> : i + 1}
                 </div>
-                <span className={`text-sm font-bold hidden sm:block ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-bold ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
                   {s}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-3" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
+                <div className="flex-1 h-0.5 mx-2 sm:mx-3" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
               )}
             </div>
           ))}
@@ -210,7 +237,7 @@ export default function Checkout() {
                         <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
                         {[
                           { key: 'full_name',    placeholder: `${t('fullName')} *`,             span: false },
                           { key: 'phone',        placeholder: `${t('phone')} *`,                 span: false },
@@ -365,7 +392,7 @@ export default function Checkout() {
                   </div>
                 </div>
                 <div className="p-5 space-y-3">
-                  {cart.map(item => (
+                  {itemsToCheckout.map(item => (
                     <div key={item.id} className="flex items-center gap-3 py-3 border-b border-gray-50">
                       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
                         <img src={item.image_url} alt={item.title} className="w-full h-full object-cover"
@@ -388,12 +415,12 @@ export default function Checkout() {
                     whileTap={{ scale: 0.98 }}
                     onClick={placeOrder}
                     disabled={placing}
-                    className="w-full py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70"
+                    className="w-full py-3.5 rounded-xl text-base font-bold hidden lg:flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70"
                   >
                     {placing ? (
                       <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order…</>
                     ) : (
-                      <>🎉 Place Your Order</>
+                      <>🎉 Place Your Order ({formatPrice(final)})</>
                     )}
                   </motion.button>
 
@@ -408,25 +435,12 @@ export default function Checkout() {
 
           {/* ── Order Summary Sidebar ────────────────────────────────── */}
           <div>
-            <div className="rounded-2xl p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
-              {/* Place order button at top for final step */}
-              {step === 3 && (
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={placeOrder}
-                  disabled={placing}
-                  className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100"
-                >
-                  {placing ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : ''}
-                  {placing ? 'Placing…' : 'Place Order'}
-                </motion.button>
-              )}
-
+            <div className="rounded-2xl p-4 sm:p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-905">Order Summary</h3>
 
               {/* Items preview */}
               <div className="space-y-2 max-h-40 overflow-y-auto no-scrollbar">
-                {cart.map(item => (
+                {itemsToCheckout.map(item => (
                   <div key={item.id} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-b-0">
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
                       <img src={item.image_url} alt="" className="w-full h-full object-cover"
@@ -446,7 +460,7 @@ export default function Checkout() {
               {/* Price breakdown */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-500 font-medium">
-                  <span>Subtotal</span><span>{formatPrice(cartTotal)}</span>
+                  <span>Subtotal</span><span>{formatPrice(checkoutSubtotal)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-bold">
@@ -469,7 +483,7 @@ export default function Checkout() {
               {!couponResult ? (
                 <div>
                   <div className="flex gap-2">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-0">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-450" />
                       <input
                         className="input pl-9 text-xs py-2 bg-gray-50 border border-gray-200"
@@ -482,7 +496,7 @@ export default function Checkout() {
                     <button
                       onClick={applyCoupon}
                       disabled={couponLoading}
-                      className="border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-xs px-4 rounded-xl whitespace-nowrap transition-colors"
+                      className="border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-xs px-4 rounded-xl whitespace-nowrap transition-colors flex-shrink-0"
                     >
                       {couponLoading ? '…' : 'Apply'}
                     </button>
@@ -510,6 +524,24 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Action Bar for Step 3 */}
+      {step === 3 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Amount</p>
+            <p className="text-base font-black text-gray-900">{formatPrice(final)}</p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={placeOrder}
+            disabled={placing}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-[#6366F1] text-white flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-60"
+          >
+            {placing ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : '🎉 Place Order'}
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 }

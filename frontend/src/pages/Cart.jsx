@@ -84,11 +84,11 @@ export default function CartPage() {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06 }}
-                      className="px-5 py-4 flex gap-4"
+                      className="px-3.5 sm:px-5 py-3.5 sm:py-4 flex gap-3 sm:gap-4"
                     >
                       {/* Image */}
                       <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
-                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                           <img
                             src={item.image_url}
                             alt={item.title}
@@ -184,7 +184,7 @@ export default function CartPage() {
 
           {/* ── Order Summary ──────────────────────────────────────── */}
           <div>
-            <div className="rounded-2xl p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
+            <div className="rounded-2xl p-4 sm:p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
 
               {/* Free delivery notice */}
               <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-100">

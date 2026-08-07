@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, Search, Menu, X, User,
   LogOut, Package, LayoutDashboard, ChevronDown,
-  ChevronRight, ShoppingBag, Crown,
+  ChevronRight, ShoppingBag, Crown, Mic,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -12,6 +12,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import VoiceSearchModal from '../common/VoiceSearchModal';
 
 
 
@@ -39,6 +40,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const searchRef = useRef(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const wishlistCount = wishlist.length || 0;
@@ -89,7 +91,9 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 transition-all duration-200 ${scrolled ? 'shadow-md' : ''}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 transition-all duration-200 ${scrolled ? 'shadow-md' : ''}`}
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         
         {/* Top Navbar */}
         <div className="nexcart-container">
@@ -139,10 +143,20 @@ export default function Navbar() {
                   className="flex-1 h-full px-4 bg-transparent text-gray-800 text-sm focus:outline-none placeholder-gray-400 font-medium"
                 />
                 
+                {/* Mic button */}
+                <button
+                  type="button"
+                  onClick={() => setVoiceModalOpen(true)}
+                  title="Search by voice"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 mr-1 flex-shrink-0"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+
                 {/* Search button */}
                 <button
                   type="submit"
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm"
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm flex-shrink-0"
                 >
                   <Search className="w-4 h-4" />
                 </button>
@@ -354,7 +368,8 @@ export default function Navbar() {
                 {/* Mobile Drawer Trigger */}
                 <button
                   onClick={() => setMobileOpen(!mobileOpen)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  className="w-10 h-10 min-w-[40px] rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                  aria-label="Toggle menu"
                 >
                   {mobileOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
                 </button>
@@ -373,8 +388,16 @@ export default function Navbar() {
                   className="flex-1 h-full px-3 bg-transparent text-gray-800 text-xs focus:outline-none placeholder-gray-400 font-medium"
                 />
                 <button
+                  type="button"
+                  onClick={() => setVoiceModalOpen(true)}
+                  title="Search by voice"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 mr-1 flex-shrink-0"
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                </button>
+                <button
                   type="submit"
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm"
+                  className="w-8 h-8 rounded-full flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] transition-colors duration-150 text-white shadow-sm flex-shrink-0"
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
@@ -416,8 +439,8 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Sub Navigation Bar */}
-        <div className="border-t border-gray-100 bg-white">
+        {/* Sub Navigation Bar - Desktop only */}
+        <div className="hidden lg:block border-t border-gray-100 bg-white">
           <div className="nexcart-container">
             <div className="flex items-center justify-between h-14">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
@@ -446,7 +469,7 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="hidden md:flex flex-shrink-0">
+              <div className="flex flex-shrink-0">
                 <Link
                   to="/products?featured=true"
                   className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-pink-500 to-[#8B5CF6] text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200"
@@ -468,31 +491,44 @@ export default function Navbar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileOpen(false)}
-                className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-                style={{ top: '80px' }}
+                className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs"
               />
               <motion.div
                 initial={{ x: '-100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed left-0 top-20 bottom-0 w-80 bg-white z-50 overflow-y-auto lg:hidden border-r border-gray-100 shadow-2xl"
+                className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 overflow-y-auto lg:hidden border-r border-gray-100 shadow-2xl flex flex-col"
               >
-                <div className="p-6 border-b border-gray-100 bg-[#F9FAFB]">
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
+                  <div className="flex items-center gap-2">
+                    <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 6H13.5L22.5 30H15L6 6Z" fill="url(#nexLogoG1)" />
+                      <path d="M22.5 30H30V6H22.5V30Z" fill="url(#nexLogoG2)" />
+                      <path d="M6 6V18L13.5 30L22.5 30L6 6Z" fill="url(#nexLogoG3)" />
+                    </svg>
+                    <span className="font-display font-extrabold text-gray-900 text-base">NexCart</span>
+                  </div>
+                  <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-5 border-b border-gray-100 bg-[#F9FAFB]">
                   {user ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                      <div className="w-11 h-11 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
                         {user.name?.[0]?.toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">Hello, {user.name}</p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-800 text-sm truncate">Hello, {user.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <p className="text-gray-800 font-semibold text-sm mb-1">Welcome to NexCart</p>
-                      <Link to="/login" className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-center py-2.5 rounded-xl text-xs font-bold transition-colors">
+                      <p className="text-gray-800 font-semibold text-sm mb-0.5">Welcome to NexCart</p>
+                      <Link to="/login" onClick={() => setMobileOpen(false)} className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-center py-2.5 rounded-xl text-xs font-bold transition-colors">
                         Sign In
                       </Link>
                     </div>
@@ -557,7 +593,21 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      <div className="h-32 lg:h-[136px]" />
+      <div className="h-[92px] lg:h-[136px]" />
+
+      {/* Voice Search Modal */}
+      <VoiceSearchModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        onSearch={(query) => {
+          if (!query || !query.trim()) return;
+          const params = new URLSearchParams({ search: query.trim() });
+          navigate(`/products?${params.toString()}`);
+          setSearchQuery('');
+          setSuggestions([]);
+          setSearchFocus(false);
+        }}
+      />
     </>
   );
 }

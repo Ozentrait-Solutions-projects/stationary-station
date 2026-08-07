@@ -1,5 +1,5 @@
-import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -13,6 +13,7 @@ import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 import CompareBar from './components/product/CompareBar';
 import InstallPrompt from './components/layout/InstallPrompt';
+import { useAutoUpdate } from './hooks/useAutoUpdate';
 
 // Lazy-load pages for code splitting
 const Home           = lazy(() => import('./pages/Home'));
@@ -48,6 +49,15 @@ const PageLoader = () => (
   </div>
 );
 
+// Scroll to top on every route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
+
 // Protected route
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -65,10 +75,12 @@ function AdminRoute({ children }) {
 }
 
 function AppLayout() {
+  useAutoUpdate();
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F9FAFB', color: '#374151' }}>
+    <div className="min-h-[100dvh] flex flex-col w-full max-w-full overflow-x-hidden" style={{ backgroundColor: '#FAFBFD', color: '#374151' }}>
+      <ScrollToTop />
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden pb-[env(safe-area-inset-bottom)]">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"                    element={<Home />} />
