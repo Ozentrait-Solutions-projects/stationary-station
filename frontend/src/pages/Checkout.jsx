@@ -415,7 +415,7 @@ export default function Checkout() {
                     whileTap={{ scale: 0.98 }}
                     onClick={placeOrder}
                     disabled={placing}
-                    className="w-full py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70"
+                    className="w-full py-3.5 rounded-xl text-base font-bold hidden lg:flex items-center justify-center gap-2 transition-all bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-indigo-100 disabled:opacity-70"
                   >
                     {placing ? (
                       <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order…</>
@@ -435,7 +435,7 @@ export default function Checkout() {
 
           {/* ── Order Summary Sidebar ────────────────────────────────── */}
           <div>
-            <div className="rounded-2xl p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
+            <div className="rounded-2xl p-4 sm:p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-905">Order Summary</h3>
 
               {/* Items preview */}
@@ -483,7 +483,7 @@ export default function Checkout() {
               {!couponResult ? (
                 <div>
                   <div className="flex gap-2">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-0">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-450" />
                       <input
                         className="input pl-9 text-xs py-2 bg-gray-50 border border-gray-200"
@@ -496,7 +496,7 @@ export default function Checkout() {
                     <button
                       onClick={applyCoupon}
                       disabled={couponLoading}
-                      className="border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-xs px-4 rounded-xl whitespace-nowrap transition-colors"
+                      className="border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-xs px-4 rounded-xl whitespace-nowrap transition-colors flex-shrink-0"
                     >
                       {couponLoading ? '…' : 'Apply'}
                     </button>

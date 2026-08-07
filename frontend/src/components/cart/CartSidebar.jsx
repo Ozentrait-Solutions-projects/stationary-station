@@ -151,7 +151,7 @@ export default function CartSidebar() {
 
             {/* Footer */}
             {cart.length > 0 && (
-              <div className="p-4 space-y-3 border-t border-gray-100 bg-white shadow-lg">
+              <div className="p-4 pb-[max(16px,env(safe-area-inset-bottom))] space-y-3 border-t border-gray-100 bg-white shadow-lg">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500 font-medium">Subtotal ({totalItems} items)</span>
                   <span className="font-black text-gray-900 text-base">{formatPrice(cartTotal)}</span>

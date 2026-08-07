@@ -184,7 +184,7 @@ export default function CartPage() {
 
           {/* ── Order Summary ──────────────────────────────────────── */}
           <div>
-            <div className="rounded-2xl p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
+            <div className="rounded-2xl p-4 sm:p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
 
               {/* Free delivery notice */}
               <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
