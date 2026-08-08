@@ -30,12 +30,13 @@ export default function AdminDashboard() {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab]           = useState('dashboard');
-  const [data, setData]         = useState(null);
-  const [orders, setOrders]     = useState([]);
-  const [returns, setReturns]   = useState([]);
-  const [products, setProducts] = useState([]);
-  const [saving, setSaving]     = useState(false);
-  const [imageMode, setImageMode]     = useState('url');
+  const [data, setData]            = useState(null);
+  const [orders, setOrders]        = useState([]);
+  const [returns, setReturns]      = useState([]);
+  const [products, setProducts]    = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [saving, setSaving]        = useState(false);
+  const [imageMode, setImageMode]  = useState('url');
   const [productImageFile, setProductImageFile] = useState(null);
   const [productImagePreview, setProductImagePreview] = useState('');
   const [productModal, setProductModal] = useState(null);
@@ -66,6 +67,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setLoading(true);
+    setProductsLoading(true);
     setDashboardError(false);
     try {
       const [dash, ord] = await Promise.all([
@@ -74,7 +76,7 @@ export default function AdminDashboard() {
       ]);
       setData(dash.data);
       setOrders(ord.data.orders || []);
-      // Load products for promotions tab
+      // Load products for Promotions and Admin Products tab
       const prodRes = await api.get('/products?limit=100');
       setProducts(prodRes.data.products || []);
     } catch (err) {
@@ -82,6 +84,7 @@ export default function AdminDashboard() {
       toast.error(err.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
+      setProductsLoading(false);
     }
     // Load returns in background
     adminService.getAllReturns().then(res => setReturns(res.data.requests || [])).catch(() => {});
@@ -463,7 +466,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
                   <div className="p-4">
-                    <AdminProductList onEdit={openProductModal} onDelete={deleteProduct} />
+                    <AdminProductList products={products} loading={productsLoading} onEdit={openProductModal} onDelete={deleteProduct} />
                   </div>
                 </div>
               </div>
@@ -1189,18 +1192,16 @@ export default function AdminDashboard() {
   );
 }
 
-function AdminProductList({ onEdit, onDelete }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-
-  useEffect(() => {
-    api.get('/products?limit=50')
-      .then(res => setProducts(res.data.products || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
+function AdminProductList({ products, loading, onEdit, onDelete }) {
   if (loading) return <div className="skeleton h-32 rounded-2xl animate-pulse" />;
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="py-14 text-center text-gray-400 font-semibold text-sm">
+        No products found. Add a new product to get started.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
