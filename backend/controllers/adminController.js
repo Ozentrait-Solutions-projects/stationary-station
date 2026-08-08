@@ -411,4 +411,4 @@ const updateReturnStatus = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct, getReturnRequests, updateReturnStatus };
+module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct, getReturnRequests, getAllReturnRequests: getReturnRequests, updateReturnStatus };
