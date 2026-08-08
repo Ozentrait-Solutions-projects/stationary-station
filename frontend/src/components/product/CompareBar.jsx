@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeftRight, Trash2 } from 'lucide-react';
 import { useCompare } from '../../context/CompareContext';
 import { formatPrice } from '../../utils/formatters';
+import { resolveMediaUrl } from '../../utils/mediaUtils';
 
 export default function CompareBar() {
   const { comparedProducts, removeFromCompare, clearCompare } = useCompare();
@@ -40,7 +41,7 @@ export default function CompareBar() {
               className="relative flex items-center gap-2 p-1.5 pr-3 bg-gray-50 border border-gray-100 rounded-xl max-w-full"
             >
               <img
-                src={product.image_url}
+                src={resolveMediaUrl(product.image_url)}
                 alt={product.title}
                 className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-gray-100 flex-shrink-0"
                 onError={(e) => {

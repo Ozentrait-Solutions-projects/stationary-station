@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { X, ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/formatters';
+import { resolveMediaUrl } from '../../utils/mediaUtils';
 
 export default function CartSidebar() {
   const {
@@ -94,7 +95,7 @@ export default function CartSidebar() {
                       <Link to={`/products/${item.product_id}`} onClick={() => setSidebarOpen(false)} className="flex-shrink-0">
                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50">
                           <img
-                            src={item.image_url}
+                            src={resolveMediaUrl(item.image_url)}
                             alt={item.title}
                             className="w-full h-full object-cover hover:opacity-80 transition-opacity"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=64'; }}

@@ -15,6 +15,7 @@ import { useCompare } from '../context/CompareContext';
 import { formatPrice, discountPercent, formatDate } from '../utils/formatters';
 import ProductCard from '../components/product/ProductCard';
 import { normalizeStock } from '../utils/stock';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -90,7 +91,8 @@ export default function ProductDetail() {
     }
   }, [id, user, navigate]);
 
-  const images    = product?.images?.length ? product.images : [product?.image_url].filter(Boolean);
+  const rawImages = product?.images?.length ? product.images : [product?.image_url].filter(Boolean);
+  const images    = rawImages.map(resolveMediaUrl);
   const stock     = normalizeStock(product?.stock, 1);
   const wishlisted = isWishlisted(product?.id);
   const discount   = discountPercent(product?.original_price, product?.price);

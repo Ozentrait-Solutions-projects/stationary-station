@@ -42,10 +42,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ─── Static Files: serve uploaded images from /uploads ───────────
-app.use('/uploads', express.static(require('path').join(__dirname, 'uploads'), {
-  maxAge: '30d',
-  etag: true,
-}));
+const os = require('os');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const UPLOAD_DIR_LOCAL = require('path').join(__dirname, 'uploads');
+const UPLOAD_DIR_TMP = require('path').join(os.tmpdir(), 'uploads');
+
+app.use('/uploads', express.static(UPLOAD_DIR_LOCAL, { maxAge: '30d', etag: true }));
+if (isServerless) {
+  app.use('/uploads', express.static(UPLOAD_DIR_TMP, { maxAge: '30d', etag: true }));
+}
 
 
 // ─── API Routes ──────────────────────────────────────────────────

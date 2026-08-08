@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Shield, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice, discountPercent } from '../utils/formatters';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 
 export default function CartPage() {
   const { cart, cartTotal, cartLoading, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -90,7 +91,7 @@ export default function CartPage() {
                       <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                           <img
-                            src={item.image_url}
+                            src={resolveMediaUrl(item.image_url)}
                             alt={item.title}
                             className="w-full h-full object-cover hover:opacity-80 transition-opacity"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=96'; }}

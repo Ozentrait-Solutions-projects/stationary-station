@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { orderService, returnService } from '../services/productService';
 import { formatPrice, formatDate, ORDER_STATUS } from '../utils/formatters';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import toast from 'react-hot-toast';
 
 const STATUS_PROGRESS = {
@@ -571,7 +572,7 @@ export default function Orders() {
                             {/* Thumbnail */}
                             <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-200/80 bg-gray-50 flex-shrink-0 shadow-2xs">
                               <img
-                                src={item.image_url}
+                                src={resolveMediaUrl(item.image_url)}
                                 alt={item.title}
                                 className="w-full h-full object-cover"
                                 onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=120'; }}

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { orderService, couponService } from '../services/productService';
 import { formatPrice } from '../utils/formatters';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import { reverseGeocodeLocation, formatDetectedLocation } from '../utils/location';
 import toast from 'react-hot-toast';
 
@@ -422,7 +423,7 @@ export default function Checkout() {
                   {itemsToCheckout.map(item => (
                     <div key={item.id} className="flex items-start gap-3 py-3 border-b border-gray-50">
                       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
-                        <img src={item.image_url} alt={item.title} className="w-full h-full object-cover"
+                        <img src={resolveMediaUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover"
                           onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=56'; }} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -470,7 +471,7 @@ export default function Checkout() {
                 {itemsToCheckout.map(item => (
                   <div key={item.id} className="flex items-start gap-2 py-1.5 border-b border-gray-50 last:border-b-0">
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
-                      <img src={item.image_url} alt="" className="w-full h-full object-cover"
+                      <img src={resolveMediaUrl(item.image_url)} alt="" className="w-full h-full object-cover"
                         onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                     </div>
                     <div className="flex-1 min-w-0">

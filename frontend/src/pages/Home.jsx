@@ -13,6 +13,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/formatters';
+import { resolveMediaUrl } from '../utils/mediaUtils';
 import toast from 'react-hot-toast';
 
 // ── Animated counter ──────────────────────────────────────────────
@@ -453,11 +454,11 @@ export default function Home() {
                     {/* Image */}
                     <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
                       <img
-                        src={product.image_url}
+                        src={resolveMediaUrl(product.image_url)}
                         alt={product.title}
                         loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-400"
-                        onError={e => { e.target.src = 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=300&q=75'; }}
+                        onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=300&q=75'; }}
                       />
                     </div>
                     {/* Brand */}

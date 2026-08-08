@@ -117,15 +117,22 @@ export default function AdminDashboard() {
 
   const openProductModal = (product = null) => {
     if (product) {
-      setProductForm({ ...product, images: product.images?.join(', ') || '', tags: product.tags?.join(', ') || '', sale_price: product.sale_price || '', return_exchange_available: product.return_exchange_available !== false });
+      const isUpload = product.image_url && product.image_url.startsWith('/uploads/');
+      setProductForm({
+        ...product,
+        images: Array.isArray(product.images) ? product.images.join(', ') : (product.images || ''),
+        tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || ''),
+        sale_price: product.sale_price || '',
+        return_exchange_available: product.return_exchange_available !== false
+      });
       setProductModal('edit');
-      setImageMode('url');
+      setImageMode(isUpload ? 'upload' : (product.image_url ? 'url' : 'upload'));
       setProductImageFile(null);
-      setProductImagePreview(product.image_url || '');
+      setProductImagePreview(resolveMediaUrl(product.image_url || ''));
     } else {
-      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'1', image_url:'', images:'', tags:'', is_featured:false, sale_price:'', return_exchange_available:true });
+      setProductForm({ title:'', description:'', price:'', original_price:'', category:'', brand:'', stock:'10', image_url:'', images:'', tags:'', is_featured:false, sale_price:'', return_exchange_available:true });
       setProductModal('create');
-      setImageMode('url');
+      setImageMode('upload');
       setProductImageFile(null);
       setProductImagePreview('');
     }
@@ -133,7 +140,11 @@ export default function AdminDashboard() {
 
   const handleProductImageSelect = (e) => {
     const file = e.target.files?.[0];
-    if (!file) { setProductImageFile(null); setProductImagePreview(productForm.image_url || ''); return; }
+    if (!file) {
+      setProductImageFile(null);
+      setProductImagePreview(resolveMediaUrl(productForm.image_url || ''));
+      return;
+    }
     setProductImageFile(file);
     setProductImagePreview(URL.createObjectURL(file));
   };
@@ -154,28 +165,47 @@ export default function AdminDashboard() {
 
       if (imageMode === 'upload' && productImageFile) {
         const formData = new FormData();
-        Object.entries({ title: productForm.title, description: productForm.description,
-          price: String(Number(productForm.price)), original_price: productForm.original_price ? String(Number(productForm.original_price)) : '',
-          category: productForm.category, brand: productForm.brand, stock: String(stockNum),
-          images: JSON.stringify(imagesArray), tags: JSON.stringify(tagsArray), is_featured: String(!!productForm.is_featured),
+        Object.entries({
+          title: productForm.title,
+          description: productForm.description || '',
+          price: String(Number(productForm.price)),
+          original_price: productForm.original_price ? String(Number(productForm.original_price)) : '',
+          category: productForm.category,
+          brand: productForm.brand || '',
+          stock: String(stockNum),
+          images: JSON.stringify(imagesArray),
+          tags: JSON.stringify(tagsArray),
+          is_featured: String(!!productForm.is_featured),
           sale_price: productForm.sale_price ? String(Number(productForm.sale_price)) : '',
           return_exchange_available: String(productForm.return_exchange_available !== false),
         }).forEach(([k, v]) => formData.append(k, v));
         formData.append('image', productImageFile);
         productModal === 'create' ? await adminService.createProduct(formData) : await adminService.updateProduct(productForm.id, formData);
         toast.success(productModal === 'create' ? 'Product created!' : 'Product updated!');
-        setProductModal(null); loadData(); return;
+        setProductModal(null);
+        loadData();
+        return;
       }
 
-      const payload = { ...productForm, price: Number(productForm.price), original_price: Number(productForm.original_price)||null, stock: stockNum, images: imagesArray, tags: tagsArray,
+      const payload = {
+        ...productForm,
+        price: Number(productForm.price),
+        original_price: productForm.original_price ? Number(productForm.original_price) : null,
+        stock: stockNum,
+        images: imagesArray,
+        tags: tagsArray,
         sale_price: productForm.sale_price ? Number(productForm.sale_price) : null,
         return_exchange_available: productForm.return_exchange_available !== false,
       };
       productModal === 'create' ? await adminService.createProduct(payload) : await adminService.updateProduct(productForm.id, payload);
       toast.success(productModal === 'create' ? 'Product created!' : 'Product updated!');
-      setProductModal(null); loadData();
-    } catch (err) { toast.error(err.response?.data?.message || 'Save failed'); }
-    finally { setSaving(false); }
+      setProductModal(null);
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteProduct = async (id) => {
@@ -330,7 +360,7 @@ export default function AdminDashboard() {
                       {(data?.topProducts || []).map((p, i) => (
                         <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-b-0">
                           <span className="font-bold text-gray-400 text-xs sm:text-sm w-4 sm:w-5">#{i + 1}</span>
-                          <img src={p.image_url} alt={p.title} className="w-9 h-9 sm:w-10 sm:h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
+                          <img src={resolveMediaUrl(p.image_url)} alt={p.title} className="w-9 h-9 sm:w-10 sm:h-10 object-cover rounded-lg border border-gray-100 flex-shrink-0"
                             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs sm:text-sm font-bold text-gray-805 truncate">{p.title}</p>
@@ -732,7 +762,7 @@ export default function AdminDashboard() {
                       const discount = Math.round((1 - p.sale_price / p.price) * 100);
                       return (
                         <div key={p.id} className="flex items-center gap-3 p-4">
-                          <img src={p.image_url} alt={p.title} className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
+                          <img src={resolveMediaUrl(p.image_url)} alt={p.title} className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm text-gray-800 truncate">{p.title}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -924,7 +954,7 @@ export default function AdminDashboard() {
                         {(selectedOrder.items || []).map(item => (
                           <div key={item.id} className="flex items-center gap-4 p-4">
                             <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 p-1 flex items-center justify-center">
-                              <img src={item.image_url} alt={item.title} className="w-full h-full object-contain"
+                              <img src={resolveMediaUrl(item.image_url)} alt={item.title} className="w-full h-full object-contain"
                                 onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=56'; }} />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1001,10 +1031,19 @@ export default function AdminDashboard() {
 
               <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
                 {[
-                  { label: 'Use Image URL', mode: 'url' },
                   { label: 'Upload Image',  mode: 'upload', icon: Upload },
+                  { label: 'Use Image URL', mode: 'url' },
                 ].map(opt => (
-                  <button key={opt.mode} type="button" onClick={() => setImageMode(opt.mode)}
+                  <button key={opt.mode} type="button" onClick={() => {
+                    setImageMode(opt.mode);
+                    if (opt.mode === 'url') {
+                      setProductImagePreview(resolveMediaUrl(productForm.image_url || ''));
+                    } else if (productImageFile) {
+                      setProductImagePreview(URL.createObjectURL(productImageFile));
+                    } else {
+                      setProductImagePreview(resolveMediaUrl(productForm.image_url || ''));
+                    }
+                  }}
                     className={`text-sm rounded-xl px-3 py-2 border transition-colors flex items-center justify-center gap-2 ${
                       imageMode === opt.mode
                         ? 'border-indigo-600 text-indigo-650 font-bold bg-indigo-50/30'
@@ -1018,16 +1057,39 @@ export default function AdminDashboard() {
               </div>
 
               {imageMode === 'url' ? (
-                <input className="input text-sm" placeholder="Main Image URL" value={productForm.image_url || ''}
-                  onChange={e => setProductForm(f => ({ ...f, image_url: e.target.value }))} />
+                <input
+                  className="input text-sm"
+                  placeholder="Main Image URL (e.g. https://... or /uploads/...)"
+                  value={productForm.image_url || ''}
+                  onChange={e => {
+                    const url = e.target.value;
+                    setProductForm(f => ({ ...f, image_url: url }));
+                    setProductImagePreview(resolveMediaUrl(url));
+                  }}
+                />
               ) : (
                 <div className="space-y-2">
                   <input type="file" accept="image/png,image/jpeg,image/webp" className="input text-sm" onChange={handleProductImageSelect} />
-                  {productImagePreview && (
-                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-gray-150" />
-                  )}
                 </div>
               )}
+
+              {/* Universal Image Preview */}
+              {productImagePreview ? (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-150 rounded-xl">
+                  <img
+                    src={productImagePreview}
+                    alt="Product Preview"
+                    className="w-16 h-16 rounded-lg object-contain bg-white border border-gray-200 flex-shrink-0"
+                    onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=80'; }}
+                  />
+                  <div className="text-xs text-gray-500 font-semibold min-w-0">
+                    <p className="font-bold text-gray-900 text-xs">Image Preview</p>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                      {productImageFile ? `Selected File: ${productImageFile.name}` : (productForm.image_url || 'Previewing image')}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
 
               <input className="input text-sm" placeholder="Extra images (comma-separated URLs)" value={productForm.images || ''}
                 onChange={e => setProductForm(f => ({ ...f, images: e.target.value }))} />
@@ -1209,7 +1271,7 @@ function AdminProductList({ products, loading, onEdit, onDelete }) {
         <div key={p.id}
           className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
         >
-          <img src={p.image_url} alt={p.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
+          <img src={resolveMediaUrl(p.image_url)} alt={p.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain p-1 border border-gray-100 rounded-lg bg-white flex-shrink-0"
             onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
           <div className="flex-1 min-w-0">
             <p className="font-bold text-xs sm:text-sm text-gray-800 truncate">{p.title}</p>

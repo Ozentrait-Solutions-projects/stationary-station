@@ -9,6 +9,7 @@ import { formatPrice, discountPercent } from '../../utils/formatters';
 import { useLanguage } from '../../context/LanguageContext';
 import { normalizeStock } from '../../utils/stock';
 import { useCompare } from '../../context/CompareContext';
+import { resolveMediaUrl } from '../../utils/mediaUtils';
 
 export default function ProductCard({ product, index = 0, compact = false }) {
   const { addToCart } = useCart();
@@ -105,7 +106,7 @@ export default function ProductCard({ product, index = 0, compact = false }) {
 
           {/* Product Image */}
           <img
-            src={product.image_url}
+            src={resolveMediaUrl(product.image_url)}
             alt={product.title}
             loading="lazy"
             className="w-full h-full object-contain p-2.5 transition-transform duration-500 group-hover:scale-105"

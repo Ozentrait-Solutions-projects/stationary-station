@@ -12,6 +12,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import { resolveMediaUrl } from '../../utils/mediaUtils';
 import VoiceSearchModal from '../common/VoiceSearchModal';
 
 
@@ -182,7 +183,7 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 hover:bg-[#EEF2FF] transition-colors duration-100"
                       >
                         <img
-                          src={s.image_url} alt={s.title}
+                          src={resolveMediaUrl(s.image_url)} alt={s.title}
                           className="w-10 h-10 object-cover rounded-lg flex-shrink-0 border border-gray-100"
                           onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }}
                         />
@@ -423,7 +424,7 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#EEF2FF] transition-colors duration-100"
                       >
                         <img
-                          src={s.image_url} alt={s.title}
+                          src={resolveMediaUrl(s.image_url)} alt={s.title}
                           className="w-8 h-8 object-cover rounded-lg flex-shrink-0 border border-gray-100"
                           onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }}
                         />
