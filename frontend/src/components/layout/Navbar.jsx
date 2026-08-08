@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, Search, Menu, X, User,
   LogOut, Package, LayoutDashboard, ChevronDown,
-  ChevronRight, ShoppingBag, Crown, Mic,
+  ChevronRight, ShoppingBag, Mic,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
