@@ -18,7 +18,9 @@ const sendOTP = async (req, res, next) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    const cleanEmail = email.trim().toLowerCase();
+
+    const existing = await db.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [cleanEmail]);
     if (existing.rows.length) {
       return res.status(409).json({ message: 'Email already registered' });
     }
@@ -31,11 +33,20 @@ const sendOTP = async (req, res, next) => {
        VALUES ($1, $2, $3)
        ON CONFLICT (email)
        DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = NOW()`,
-      [email.toLowerCase(), otp, expiresAt]
+      [cleanEmail, otp, expiresAt]
     );
 
-    await sendOTPEmail(email.toLowerCase(), otp);
-    res.json({ message: 'Verification code sent successfully!' });
+    const emailResult = await sendOTPEmail(cleanEmail, otp);
+    const isMicrosoft = /@(outlook|hotmail|live|msn)\./i.test(cleanEmail);
+
+    let message = 'Verification code sent successfully!';
+    if (isMicrosoft) {
+      message = 'Verification code sent! For Microsoft (Outlook/Hotmail) accounts, please check your Spam/Junk folder if not received in 1 minute.';
+    }
+
+    const devOtpHint = (process.env.NODE_ENV !== 'production' || emailResult?.fallback) ? otp : undefined;
+
+    res.json({ message, devOtp: devOtpHint });
   } catch (err) {
     next(err);
   }
@@ -186,7 +197,9 @@ const forgotPassword = async (req, res, next) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    const cleanEmail = email.trim().toLowerCase();
+
+    const existing = await db.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [cleanEmail]);
     if (!existing.rows.length) {
       return res.status(404).json({ message: 'No user registered with this email address' });
     }
@@ -199,11 +212,20 @@ const forgotPassword = async (req, res, next) => {
        VALUES ($1, $2, $3)
        ON CONFLICT (email)
        DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = NOW()`,
-      [email.toLowerCase(), otp, expiresAt]
+      [cleanEmail, otp, expiresAt]
     );
 
-    await sendResetPasswordEmail(email.toLowerCase(), otp);
-    res.json({ message: 'Password reset code sent successfully!' });
+    const emailResult = await sendResetPasswordEmail(cleanEmail, otp);
+    const isMicrosoft = /@(outlook|hotmail|live|msn)\./i.test(cleanEmail);
+
+    let message = 'Password reset code sent successfully!';
+    if (isMicrosoft) {
+      message = 'Password reset code sent! For Microsoft (Outlook/Hotmail) accounts, please check your Spam/Junk folder if not received in 1 minute.';
+    }
+
+    const devOtpHint = (process.env.NODE_ENV !== 'production' || emailResult?.fallback) ? otp : undefined;
+
+    res.json({ message, devOtp: devOtpHint });
   } catch (err) {
     next(err);
   }

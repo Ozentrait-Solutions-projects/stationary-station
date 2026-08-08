@@ -14,79 +14,176 @@ const transporter = nodemailer.createTransport({
  * @param {string} email 
  * @param {string} otp 
  */
+/**
+ * Send an OTP to user's email with multi-provider fallback (Resend API -> Nodemailer SMTP -> Console)
+ * @param {string} email 
+ * @param {string} otp 
+ */
 const sendOTPEmail = async (email, otp) => {
-  const mailOptions = {
-    from: `"NexCart Support" <${process.env.SMTP_USER || 'no-reply@nexcart.com'}>`,
-    to: email,
-    subject: 'NexCart Email Verification Code',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #6366F1; margin: 0;">NexCart</h2>
-          <p style="color: #6b7280; font-size: 14px; margin-top: 5px;">Your Email Verification Code</p>
-        </div>
-        <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px;">
-          <p style="font-size: 14px; color: #4b5563; margin-top: 0;">Please use the following verification code to complete your signup process. This code is valid for 10 minutes.</p>
-          <h1 style="font-size: 36px; letter-spacing: 5px; color: #111827; margin: 10px 0; font-weight: 800;">${otp}</h1>
-        </div>
-        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 30px;">
-          If you did not request this code, please ignore this email.
-        </p>
+  const textContent = `Your NexCart verification code is: ${otp}\n\nUse this code to verify your email address. This code is valid for 10 minutes.\n\nIf you did not request this code, please ignore this email.`;
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #6366F1; margin: 0;">NexCart</h2>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 5px;">Your Email Verification Code</p>
       </div>
-    `
-  };
+      <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px;">
+        <p style="font-size: 14px; color: #4b5563; margin-top: 0;">Please use the verification code below to complete your signup process. Valid for 10 minutes.</p>
+        <h1 style="font-size: 36px; letter-spacing: 5px; color: #111827; margin: 10px 0; font-weight: 800;">${otp}</h1>
+      </div>
+      <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 30px;">
+        If you did not request this code, please ignore this email.
+      </p>
+    </div>
+  `;
 
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('\n----------------------------------------');
-    console.log(`[MOCK EMAIL SERVICE] To: ${email}`);
-    console.log(`[MOCK EMAIL SERVICE] OTP: ${otp}`);
-    console.log('To send real emails, set SMTP_USER and SMTP_PASS in backend/.env');
-    console.log('----------------------------------------\n');
-    return true;
+  // Provider 1: Resend API (if configured)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromEmail = (process.env.RESEND_FROM_EMAIL || '').trim() || 'onboarding@resend.dev';
+      const fromName = (process.env.RESEND_FROM_NAME || 'NexCart Support').trim();
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+        },
+        body: JSON.stringify({
+          from: `${fromName} <${fromEmail}>`,
+          to: [email],
+          subject: `Your NexCart Verification Code is ${otp}`,
+          html: htmlContent,
+          text: textContent,
+        }),
+      });
+
+      const resData = await response.json().catch(() => ({}));
+      if (response.ok) {
+        console.log(`✅ [Resend] OTP email sent successfully to ${email} (ID: ${resData.id})`);
+        return { success: true, provider: 'resend', id: resData.id };
+      }
+      console.warn(`⚠️ [Resend] API notice (${response.status}): ${resData.message || resData.error?.message || 'Will attempt SMTP fallback'}`);
+    } catch (resendErr) {
+      console.warn('⚠️ [Resend] API request error:', resendErr.message);
+    }
   }
 
-  try {
-    return await transporter.sendMail(mailOptions);
-  } catch (smtpErr) {
-    console.error(`⚠️ SMTP delivery error for ${email}:`, smtpErr.message);
-    console.log(`[MOCK OTP FALLBACK] OTP Code: ${otp}`);
-    return true; // Return true so registration proceeds safely
+  // Provider 2: Nodemailer (Gmail SMTP)
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const mailOptions = {
+        from: `"NexCart Support" <${process.env.SMTP_USER}>`,
+        replyTo: process.env.SMTP_USER,
+        to: email,
+        subject: `Your NexCart Verification Code is ${otp}`,
+        text: textContent,
+        html: htmlContent,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'High',
+        },
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ [Nodemailer] OTP email delivered to ${email} (MessageId: ${info.messageId})`);
+      return { success: true, provider: 'nodemailer', id: info.messageId };
+    } catch (smtpErr) {
+      console.error(`⚠️ [Nodemailer] SMTP delivery error for ${email}:`, smtpErr.message);
+    }
   }
+
+  // Fallback: Console Mock Logger
+  console.log('\n----------------------------------------');
+  console.log(`[MOCK EMAIL SERVICE] Destination: ${email}`);
+  console.log(`[MOCK EMAIL SERVICE] OTP Code: ${otp}`);
+  console.log('To send real emails, verify RESEND_API_KEY or set valid SMTP_USER/SMTP_PASS in backend/.env');
+  console.log('----------------------------------------\n');
+  return { success: true, provider: 'mock', fallback: true, otp };
 };
 
-
 const sendResetPasswordEmail = async (email, otp) => {
-  const mailOptions = {
-    from: `"NexCart Support" <${process.env.SMTP_USER || 'no-reply@nexcart.com'}>`,
-    to: email,
-    subject: 'NexCart Password Reset Verification Code',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #6366F1; margin: 0;">NexCart</h2>
-          <p style="color: #6b7280; font-size: 14px; margin-top: 5px;">Password Reset Request</p>
-        </div>
-        <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px;">
-          <p style="font-size: 14px; color: #4b5563; margin-top: 0;">You requested to reset your password. Please use the verification code below to reset it. This code is valid for 10 minutes.</p>
-          <h1 style="font-size: 36px; letter-spacing: 5px; color: #111827; margin: 10px 0; font-weight: 800;">${otp}</h1>
-        </div>
-        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 30px;">
-          If you did not request a password reset, please ignore this email.
-        </p>
-      </div>
-    `
-  };
+  const textContent = `Your NexCart password reset verification code is: ${otp}\n\nUse this code to reset your password. Valid for 10 minutes.`;
 
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('\n----------------------------------------');
-    console.log(`[MOCK EMAIL SERVICE] To: ${email}`);
-    console.log(`[MOCK EMAIL SERVICE] Reset Password OTP: ${otp}`);
-    console.log('To send real emails, set SMTP_USER and SMTP_PASS in backend/.env');
-    console.log('----------------------------------------\n');
-    return true;
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #6366F1; margin: 0;">NexCart</h2>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 5px;">Password Reset Request</p>
+      </div>
+      <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px;">
+        <p style="font-size: 14px; color: #4b5563; margin-top: 0;">You requested to reset your password. Use the verification code below. Valid for 10 minutes.</p>
+        <h1 style="font-size: 36px; letter-spacing: 5px; color: #111827; margin: 10px 0; font-weight: 800;">${otp}</h1>
+      </div>
+      <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 30px;">
+        If you did not request a password reset, please ignore this email.
+      </p>
+    </div>
+  `;
+
+  // Provider 1: Resend API
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromEmail = (process.env.RESEND_FROM_EMAIL || '').trim() || 'onboarding@resend.dev';
+      const fromName = (process.env.RESEND_FROM_NAME || 'NexCart Support').trim();
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+        },
+        body: JSON.stringify({
+          from: `${fromName} <${fromEmail}>`,
+          to: [email],
+          subject: `Your NexCart Password Reset Code is ${otp}`,
+          html: htmlContent,
+          text: textContent,
+        }),
+      });
+
+      const resData = await response.json().catch(() => ({}));
+      if (response.ok) {
+        console.log(`✅ [Resend] Password Reset OTP sent to ${email} (ID: ${resData.id})`);
+        return { success: true, provider: 'resend', id: resData.id };
+      }
+    } catch (err) {
+      console.warn('⚠️ [Resend] API request error:', err.message);
+    }
   }
 
-  return transporter.sendMail(mailOptions);
+  // Provider 2: Nodemailer
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const mailOptions = {
+        from: `"NexCart Support" <${process.env.SMTP_USER}>`,
+        replyTo: process.env.SMTP_USER,
+        to: email,
+        subject: `Your NexCart Password Reset Code is ${otp}`,
+        text: textContent,
+        html: htmlContent,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'High',
+        },
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ [Nodemailer] Reset OTP delivered to ${email} (MessageId: ${info.messageId})`);
+      return { success: true, provider: 'nodemailer', id: info.messageId };
+    } catch (smtpErr) {
+      console.error(`⚠️ [Nodemailer] SMTP delivery error for ${email}:`, smtpErr.message);
+    }
+  }
+
+  console.log('\n----------------------------------------');
+  console.log(`[MOCK EMAIL SERVICE] To: ${email}`);
+  console.log(`[MOCK EMAIL SERVICE] Reset Password OTP: ${otp}`);
+  console.log('----------------------------------------\n');
+  return { success: true, provider: 'mock', fallback: true, otp };
 };
 
 const sendOrderSuccessEmail = async (email, order) => {

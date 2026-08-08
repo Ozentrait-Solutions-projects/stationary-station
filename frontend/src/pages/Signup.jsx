@@ -27,10 +27,14 @@ export default function Signup() {
     
     setSendingOtp(true);
     try {
-      await sendOTP(form.email);
+      const resData = await sendOTP(form.email);
       setVerificationCode('');
       setStep(2);
-      toast.success('Verification code sent to your email!');
+      if (resData?.devOtp) {
+        toast.success(`Code sent! Dev OTP: ${resData.devOtp}`, { duration: 8000 });
+      } else {
+        toast.success(resData?.message || 'Verification code sent to your email!');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send verification code. Please check your email.');
     } finally {
@@ -57,9 +61,13 @@ export default function Signup() {
     setError('');
     setSendingOtp(true);
     try {
-      await sendOTP(form.email);
+      const resData = await sendOTP(form.email);
       setVerificationCode('');
-      toast.success('New verification code sent to your email!');
+      if (resData?.devOtp) {
+        toast.success(`New code sent! Dev OTP: ${resData.devOtp}`, { duration: 8000 });
+      } else {
+        toast.success(resData?.message || 'New verification code sent to your email!');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend code');
     } finally {
@@ -253,6 +261,14 @@ export default function Signup() {
                 <p className="text-center text-xs text-gray-450 font-bold mt-2.5 bg-gray-50 border border-gray-100 rounded-xl py-2">
                   Code sent to <span className="text-indigo-650 font-black">{form.email}</span>
                 </p>
+                {/@(outlook|hotmail|live|msn)\./i.test(form.email) && (
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 font-semibold space-y-1">
+                    <p className="font-bold text-amber-950">📧 Outlook/Hotmail Email Notice</p>
+                    <p className="text-[11px] text-amber-800 font-normal leading-relaxed">
+                      If the verification code doesn't land in your Inbox within 1 minute, please check your <strong>Junk / Spam folder</strong>.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <motion.button
