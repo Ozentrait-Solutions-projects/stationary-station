@@ -157,25 +157,25 @@ export default function Checkout() {
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center mb-6 sm:mb-8">
+        <div className="checkout-stepper mb-6 sm:mb-8">
           {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center flex-1 last:flex-none">
-              <div className="flex items-center gap-1.5 sm:gap-2">
+            <div key={s} className="checkout-stepper-step">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <div
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-300 flex-shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 flex-shrink-0"
                   style={{
                     backgroundColor: step > i + 1 ? '#10B981' : step === i + 1 ? '#6366F1' : '#F3F4F6',
                     color: step > i + 1 || step === i + 1 ? '#FFFFFF' : '#9CA3AF',
                   }}
                 >
-                  {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /> : i + 1}
+                  {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 text-white" /> : i + 1}
                 </div>
-                <span className={`text-xs sm:text-sm font-bold ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <span className={`checkout-step-label ${step === i + 1 ? 'text-[#6366F1]' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
                   {s}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 sm:mx-3" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
+                <div className="checkout-stepper-connector" style={{ backgroundColor: step > i + 1 ? '#10B981' : '#E5E7EB' }} />
               )}
             </div>
           ))}
@@ -334,7 +334,7 @@ export default function Checkout() {
                         <motion.div
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center gap-3 p-3 rounded-lg mb-3"
+                          className="flex items-start gap-3 p-3 rounded-lg mb-3"
                           style={{
                             background: 'linear-gradient(135deg, rgba(39,174,96,0.12), rgba(6,125,98,0.12))',
                             border: '1px solid rgba(39,174,96,0.3)',
@@ -343,16 +343,16 @@ export default function Checkout() {
                           <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
                             <Zap className="w-4 h-4 text-green-400" />
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-green-400">⚡ Pay Now for Faster Delivery!</p>
-                            <p className="text-xs text-green-300/80 mt-0.5">Online payments get priority processing — delivered up to 1 day faster.</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-green-400 break-words">⚡ Pay Now for Faster Delivery!</p>
+                            <p className="text-xs text-green-300/80 mt-0.5 break-words">Online payments get priority processing — delivered up to 1 day faster.</p>
                           </div>
                         </motion.div>
 
                         {PAYMENT_METHODS.map(pm => (
                           <label
                             key={pm.id}
-                            className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border ${
+                            className={`payment-method-label ${
                               paymentMethod === pm.id
                                 ? 'border-[#6366F1] bg-indigo-50/20'
                                 : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -362,26 +362,26 @@ export default function Checkout() {
                               type="radio" name="payment" value={pm.id}
                               checked={paymentMethod === pm.id}
                               onChange={e => setPaymentMethod(e.target.value)}
-                              className="accent-[#6366F1]"
+                              className="accent-[#6366F1] flex-shrink-0 mt-0.5"
                             />
-                            <span className="text-xl">{pm.icon}</span>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
+                            <span className="text-xl flex-shrink-0">{pm.icon}</span>
+                            <div className="pm-info">
+                              <div className="pm-title-row">
                                 <p className="font-bold text-sm text-gray-800">{pm.label}</p>
                                 {pm.online && (
-                                  <span className="flex items-center gap-0.5 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100/50">
+                                  <span className="flex items-center gap-0.5 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100/50 flex-shrink-0">
                                     <Zap className="w-2.5 h-2.5" />
                                     Faster
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-400 font-semibold mt-0.5">{pm.desc}</p>
+                              <p className="text-xs text-gray-400 font-semibold mt-0.5 break-words">{pm.desc}</p>
                             </div>
                           </label>
                         ))}
                         <button
                           onClick={() => setStep(3)}
-                          className="mt-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                          className="mt-2 w-full sm:w-auto bg-[#6366F1] hover:bg-[#4F46E5] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2"
                         >
                           Continue <ChevronRight className="w-4 h-4" />
                         </button>
@@ -420,13 +420,13 @@ export default function Checkout() {
                 </div>
                 <div className="p-5 space-y-3">
                   {itemsToCheckout.map(item => (
-                    <div key={item.id} className="flex items-center gap-3 py-3 border-b border-gray-50">
+                    <div key={item.id} className="flex items-start gap-3 py-3 border-b border-gray-50">
                       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
                         <img src={item.image_url} alt={item.title} className="w-full h-full object-cover"
                           onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=56'; }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-850 truncate">{item.title}</p>
+                        <p className="text-sm font-semibold text-gray-850 line-clamp-2 break-words">{item.title}</p>
                         <p className="text-xs text-gray-400 font-bold">Qty: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-black text-gray-900 flex-shrink-0">{formatPrice(item.price * item.quantity)}</p>
@@ -451,9 +451,9 @@ export default function Checkout() {
                     )}
                   </motion.button>
 
-                  <p className="text-[10px] text-center text-gray-400 font-bold">
+                  <p className="text-[10px] text-center text-gray-400 font-bold break-words px-2">
                     By placing your order, you agree to NexCart's{' '}
-                    <span className="text-indigo-650 underline cursor-pointer">Terms & Conditions</span>.
+                    <span className="text-indigo-650 underline cursor-pointer">Terms &amp; Conditions</span>.
                   </p>
                 </div>
               </motion.div>
@@ -461,23 +461,23 @@ export default function Checkout() {
           </div>
 
           {/* ── Order Summary Sidebar ────────────────────────────────── */}
-          <div>
-            <div className="rounded-2xl p-4 sm:p-5 sticky top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
+          <div className="order-last lg:order-none">
+            <div className="rounded-2xl p-4 sm:p-5 lg:sticky lg:top-28 space-y-4 bg-white border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-905">Order Summary</h3>
 
               {/* Items preview */}
-              <div className="space-y-2 max-h-40 overflow-y-auto no-scrollbar">
+              <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
                 {itemsToCheckout.map(item => (
-                  <div key={item.id} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-b-0">
+                  <div key={item.id} className="flex items-start gap-2 py-1.5 border-b border-gray-50 last:border-b-0">
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
                       <img src={item.image_url} alt="" className="w-full h-full object-cover"
                         onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40'; }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 font-semibold truncate">{item.title}</p>
+                      <p className="text-xs text-gray-500 font-semibold line-clamp-2 break-words">{item.title}</p>
                       <p className="text-xs text-gray-400 font-bold">×{item.quantity}</p>
                     </div>
-                    <span className="text-xs font-bold text-gray-800">{formatPrice(item.price * item.quantity)}</span>
+                    <span className="text-xs font-bold text-gray-800 flex-shrink-0">{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>

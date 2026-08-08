@@ -19,7 +19,17 @@
     --scrollbar-track: rgba(243,244,246,0.8);
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Images & media never force their container wider */
+  img, video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
   html, body {
     scroll-behavior: smooth;
     overflow-x: hidden;
@@ -283,7 +293,20 @@
 
   /* ── Container ────────────────────────────────────────────────── */
   .nexcart-container {
-    @apply w-full max-w-[1400px] mx-auto px-3.5 sm:px-6 lg:px-8;
+    /* min-width 0 prevents overflow inside flex/grid parents         */
+    /* px: 12px on 320px phones, scales up to 32px on desktop         */
+    width: 100%;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(12px, 3.5vw, 32px);
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  @media (min-width: 640px) {
+    .nexcart-container { padding-inline: clamp(20px, 5vw, 32px); }
+  }
+  @media (min-width: 1024px) {
+    .nexcart-container { padding-inline: 32px; }
   }
 
   /* ── Responsive Card — Unified design token for all cards ──────── */
@@ -475,4 +498,173 @@
   .hover\:bg-white\/5:hover  { background-color: rgba(255,255,255,0.05); }
   .hover\:bg-white\/10:hover { background-color: rgba(255,255,255,0.10); }
   .hover\:bg-white\/15:hover { background-color: rgba(255,255,255,0.15); }
+
+  /* ── Admin Tab Navigation — horizontally scrollable on mobile ─── */
+  /*
+   * Root cause of admin tab overflow:
+   *   min-w-[90px] × 5 tabs = 450px minimum on a 360px screen.
+   * Solution: Remove min-width, rely on overflow-x: auto on the
+   * parent container. Tabs shrink to their content width.
+   */
+  .admin-tabs-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(243,244,246,0.8);
+    border-radius: 1rem;
+    border: 1px solid rgba(229,231,235,0.5);
+    /* Only the tab bar scrolls — never the full page */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .admin-tabs-scroll::-webkit-scrollbar { display: none; }
+
+  /* Each admin tab button */
+  .admin-tab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;         /* Never shrink below content width */
+    padding: 8px 10px;
+    border-radius: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: #6B7280;
+  }
+  @media (min-width: 380px) {
+    .admin-tab-btn { padding: 8px 12px; font-size: 0.75rem; }
+  }
+  .admin-tab-btn.active {
+    color: #FFFFFF;
+    background-color: #6366F1;
+    box-shadow: 0 1px 3px rgba(99,102,241,0.3);
+  }
+  .admin-tab-btn:not(.active):hover { color: #111827; }
+
+  /* ── Admin Stat Cards — 2×2 on mobile, 4-col on xl ─────────────── */
+  /*
+   * Root cause of huge cards on mobile:
+   *   flex flex-col = 4 full-width cards, each 150px+ tall = 600px.
+   * Solution: Always use a 2-column grid on mobile.
+   */
+  .admin-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (min-width: 1280px) {
+    .admin-stat-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+
+  /* Individual stat card — compact on mobile */
+  .admin-stat-card {
+    border-radius: 1rem;
+    padding: clamp(10px, 2.5vw, 20px);
+    color: #FFFFFF;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 90px;
+  }
+  @media (min-width: 640px) {
+    .admin-stat-card { min-height: 110px; }
+  }
+  @media (min-width: 1280px) {
+    .admin-stat-card { min-height: 130px; }
+  }
+
+  .admin-stat-value {
+    font-size: clamp(0.95rem, 4vw, 1.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    font-family: 'Outfit', ui-sans-serif;
+    /* Never overflow the card */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .admin-stat-label {
+    font-size: clamp(0.6rem, 2vw, 0.75rem);
+    opacity: 0.85;
+    font-weight: 600;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Checkout Stepper — responsive ─────────────────────────────── */
+  /*
+   * Root cause: fixed gap between step circles + labels
+   * too wide for 320px viewports.
+   */
+  .checkout-stepper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+  .checkout-stepper-step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+  .checkout-stepper-step:last-child { flex: none; }
+  .checkout-step-label {
+    font-size: clamp(0.65rem, 2.5vw, 0.875rem);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60px;
+  }
+  @media (min-width: 380px) {
+    .checkout-step-label { max-width: none; }
+  }
+  .checkout-stepper-connector {
+    flex: 1;
+    height: 2px;
+    margin: 0 4px;
+  }
+  @media (min-width: 380px) {
+    .checkout-stepper-connector { margin: 0 8px; }
+  }
+
+  /* ── Payment Method Card — wrap on tiny screens ─────────────────── */
+  .payment-method-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  .payment-method-label .pm-info {
+    flex: 1;
+    min-width: 0;  /* Critical: flex child must declare this */
+  }
+  .payment-method-label .pm-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
 }

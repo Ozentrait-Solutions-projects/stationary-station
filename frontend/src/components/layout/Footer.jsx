@@ -111,22 +111,22 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm text-gray-500 font-medium justify-center md:justify-start">
             <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-[#6366F1]" />
+              <Phone className="w-4 h-4 text-[#6366F1] flex-shrink-0" />
               <span>1800-123-4567</span>
             </div>
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-[#6366F1]" />
-              <span>support@nexcart.com</span>
+              <Mail className="w-4 h-4 text-[#6366F1] flex-shrink-0" />
+              <span className="break-all">support@nexcart.com</span>
             </div>
           </div>
         </div>
 
         {/* Payment Methods */}
-        <div className="mt-6 flex flex-wrap items-center gap-4">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-gray-500 text-sm font-semibold">
-            <Shield className="w-4 h-4 text-emerald-500" />
+            <Shield className="w-4 h-4 text-emerald-500 flex-shrink-0" />
             <span>Secure Payments</span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

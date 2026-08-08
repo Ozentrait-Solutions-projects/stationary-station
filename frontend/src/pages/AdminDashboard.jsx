@@ -199,17 +199,15 @@ export default function AdminDashboard() {
         </div>
 
         {/* Mobile Tabs Bar */}
-        <div className="lg:hidden flex gap-1.5 overflow-x-auto no-scrollbar mb-5 p-1 bg-gray-100/80 rounded-2xl border border-gray-200/50">
+        <div className="lg:hidden admin-tabs-scroll mb-5">
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                tab === t.id
-                  ? 'text-white bg-[#6366F1] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 bg-transparent'
-              }`}
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`admin-tab-btn ${tab === t.id ? 'active' : ''}`}
             >
               <t.icon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="whitespace-nowrap">{t.label}</span>
+              <span>{t.label}</span>
             </button>
           ))}
         </div>
@@ -236,28 +234,28 @@ export default function AdminDashboard() {
             {tab === 'dashboard' && (
               <div className="space-y-5">
                 {/* Stat Cards */}
-                <div className="flex flex-col sm:grid sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+                <div className="admin-stat-grid">
                   {loading
-                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-24 sm:h-28 rounded-2xl animate-pulse" />)
+                    ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton rounded-2xl animate-pulse" style={{minHeight: '90px'}} />)
                     : STAT_CARDS.map((card, i) => (
                         <motion.div key={card.label}
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="rounded-2xl p-3.5 sm:p-5 text-white overflow-hidden relative shadow-sm flex flex-col justify-between"
+                          className="admin-stat-card shadow-sm"
                           style={{ background: card.gradient }}
                         >
-                          <div className="flex items-start justify-between mb-2 sm:mb-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                              <card.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          <div className="flex items-start justify-between">
+                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                              <card.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                             </div>
-                            <span className="text-[9px] sm:text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:py-1 rounded-full flex items-center gap-0.5 flex-shrink-0">
-                              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {card.change}
+                            <span className="text-[9px] sm:text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0">
+                              <ArrowUpRight className="w-2.5 h-2.5" /> {card.change}
                             </span>
                           </div>
                           <div>
-                            <p className="font-display text-lg sm:text-2xl font-black truncate">{card.value}</p>
-                            <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 font-semibold truncate">{card.label}</p>
+                            <p className="admin-stat-value">{card.value}</p>
+                            <p className="admin-stat-label">{card.label}</p>
                           </div>
                         </motion.div>
                       ))
@@ -477,17 +475,18 @@ export default function AdminDashboard() {
                       const isOpen = returnDetailId === req.id;
                       return (
                         <div key={req.id} className="p-4">
-                          <div className="flex items-center gap-3">
-                            <img src={req.product_image} alt={req.product_title} className="w-12 h-12 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
+                          <div className="flex items-start gap-3">
+                            <img src={req.product_image} alt={req.product_title} className="w-11 h-11 rounded-xl object-cover border border-gray-100 flex-shrink-0" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=48'; }} />
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm text-gray-800 truncate">{req.product_title}</p>
-                              <p className="text-xs text-gray-400 font-semibold">{req.user_name} · {req.user_email}</p>
-                              <div className="flex items-center gap-2 mt-1">
+                              <p className="font-bold text-sm text-gray-800 line-clamp-2 break-words">{req.product_title}</p>
+                              <p className="text-xs text-gray-400 font-semibold break-all">{req.user_name}</p>
+                              <p className="text-xs text-gray-400 font-semibold break-all">{req.user_email}</p>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border capitalize ${statusColors[req.status] || 'bg-gray-100 text-gray-600'}`}>{req.status.replace('_', ' ')}</span>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${req.type === 'return' ? 'bg-rose-50 text-rose-600' : 'bg-violet-50 text-violet-600'}`}>{req.type}</span>
                               </div>
                             </div>
-                            <button onClick={() => setReturnDetailId(isOpen ? null : req.id)} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex-shrink-0">
+                            <button onClick={() => setReturnDetailId(isOpen ? null : req.id)} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex-shrink-0 whitespace-nowrap">
                               {isOpen ? 'Collapse' : 'View Details'}
                             </button>
                           </div>

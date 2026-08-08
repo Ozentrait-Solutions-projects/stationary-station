@@ -343,7 +343,7 @@ export default function Navbar() {
               </Link>
 
               {/* Actions */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {/* Wishlist */}
                 <Link to="/wishlist" className="relative text-gray-600 hover:text-indigo-600">
                   <Heart className="w-5.5 h-5.5 stroke-[2]" />
@@ -595,7 +595,9 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      <div className="h-[92px] lg:h-[136px]" />
+      {/* Spacer: mobile = ~88px (logo-row ≈ 56px + search ≈ 52px = ~108px with gaps/padding)
+           On lg+ the spacer accounts for 80px navbar + 56px sub-nav = 136px */}
+      <div className="h-[108px] lg:h-[136px]" />
 
       {/* Voice Search Modal */}
       <VoiceSearchModal
