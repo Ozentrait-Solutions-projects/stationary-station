@@ -90,6 +90,10 @@ const initDbTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_return_requests_order   ON return_requests(order_id);
       CREATE INDEX IF NOT EXISTS idx_return_requests_status  ON return_requests(status);
       CREATE INDEX IF NOT EXISTS idx_user_addresses_user     ON user_addresses(user_id);
+      CREATE INDEX IF NOT EXISTS idx_orders_user             ON orders(user_id);
+      CREATE INDEX IF NOT EXISTS idx_orders_status           ON orders(status);
+      CREATE INDEX IF NOT EXISTS idx_products_category        ON products(category);
+      CREATE INDEX IF NOT EXISTS idx_products_featured        ON products(is_featured);
     `);
   } catch (err) {
     console.warn('⚠️ DB table auto-init warning:', err.message);

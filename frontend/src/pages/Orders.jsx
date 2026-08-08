@@ -33,10 +33,29 @@ function ReturnModal({ order, item, onClose, onSuccess }) {
   const [uploading, setUploading] = useState(false);
 
   const handlePhotoSelect = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3 - photos.length);
-    if (!files.length) return;
-    setPhotos(prev => [...prev, ...files].slice(0, 3));
-    files.forEach(file => {
+    const rawFiles = Array.from(e.target.files);
+    if (!rawFiles.length) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const validFiles = [];
+
+    for (const f of rawFiles) {
+      if (!allowed.includes(f.type)) {
+        toast.error(`"${f.name}" is not a supported image format (JPG, PNG, WEBP allowed).`);
+        continue;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        toast.error(`"${f.name}" exceeds maximum image size limit of 10MB.`);
+        continue;
+      }
+      validFiles.push(f);
+    }
+
+    if (!validFiles.length) return;
+
+    const filesToUse = validFiles.slice(0, 3 - photos.length);
+    setPhotos(prev => [...prev, ...filesToUse].slice(0, 3));
+    filesToUse.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => setPhotoPreviews(prev => [...prev, reader.result].slice(0, 3));
       reader.readAsDataURL(file);
@@ -51,6 +70,15 @@ function ReturnModal({ order, item, onClose, onSuccess }) {
   const handleVideoSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const allowed = ['video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'];
+    if (!allowed.includes(file.type)) {
+      return toast.error('Video format is not supported. Please upload MP4, MOV, or WEBM video.');
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      return toast.error('Video file size is too large. Maximum allowed size is 50MB.');
+    }
+
     setVideo(file);
     setVideoPreview(URL.createObjectURL(file));
   };
@@ -249,15 +277,23 @@ function ReturnModal({ order, item, onClose, onSuccess }) {
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [returnModal, setReturnModal] = useState(null); // { order, item }
 
   const fetchOrders = () => {
     setLoading(true);
+    setHasError(false);
     orderService.getMyOrders()
-      .then(res => setOrders(res.data.orders || []))
-      .catch(console.error)
+      .then(res => {
+        setOrders(res.data.orders || []);
+      })
+      .catch(err => {
+        console.error(err);
+        setHasError(true);
+        toast.error('Unable to load your orders. Please try again.');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -319,6 +355,18 @@ export default function Orders() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : hasError ? (
+          <div className="rounded-2xl p-8 bg-white border border-rose-100 shadow-sm text-center space-y-3">
+            <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
+            <h3 className="font-bold text-gray-900 text-base">Unable to load orders</h3>
+            <p className="text-xs text-gray-400 font-semibold max-w-sm mx-auto">We encountered an issue fetching your order history. Please click Retry below to load your data.</p>
+            <button
+              onClick={fetchOrders}
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+            >
+              Retry Loading Orders
+            </button>
           </div>
         ) : orders.length === 0 ? (
           <div className="rounded-2xl py-20 text-center bg-white border border-gray-100 shadow-sm">

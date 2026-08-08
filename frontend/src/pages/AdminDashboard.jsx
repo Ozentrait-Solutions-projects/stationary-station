@@ -15,16 +15,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { resolveMediaUrl, formatEvidenceItems } from '../utils/mediaUtils';
 import toast from 'react-hot-toast';
-
-const resolveMediaUrl = (url) => {
-  if (!url) return url;
-  if (/^(https?:|blob:|data:)/i.test(url)) return url;
-
-  const apiBase = api.defaults.baseURL || 'http://localhost:5000/api';
-  const origin = apiBase.replace(/\/api\/?$/, '');
-  return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
-};
 
 const TABS = [
   { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
@@ -60,6 +52,8 @@ export default function AdminDashboard() {
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [rejectionSubmitting, setRejectionSubmitting] = useState(false);
   const [lightboxMedia, setLightboxMedia] = useState(null);
+  const [brokenMediaUrls, setBrokenMediaUrls] = useState({});
+  const [dashboardError, setDashboardError] = useState(false);
 
   // Order detail modal
   const [selectedOrder, setSelectedOrder]     = useState(null);
@@ -72,6 +66,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setLoading(true);
+    setDashboardError(false);
     try {
       const [dash, ord] = await Promise.all([
         adminService.getDashboard(),
@@ -82,8 +77,12 @@ export default function AdminDashboard() {
       // Load products for promotions tab
       const prodRes = await api.get('/products?limit=100');
       setProducts(prodRes.data.products || []);
-    } catch { toast.error('Failed to load dashboard'); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setDashboardError(true);
+      toast.error(err.response?.data?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
     // Load returns in background
     adminService.getAllReturns().then(res => setReturns(res.data.requests || [])).catch(() => {});
   };
@@ -239,6 +238,14 @@ export default function AdminDashboard() {
             {/* ── Dashboard Tab ─────────────────────────────────── */}
             {tab === 'dashboard' && (
               <div className="space-y-5">
+                {dashboardError && (
+                  <div className="rounded-2xl p-6 bg-white border border-rose-100 shadow-sm text-center space-y-3">
+                    <p className="font-bold text-gray-900 text-sm">Unable to load dashboard data.</p>
+                    <button onClick={loadData} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors">
+                      Retry Loading
+                    </button>
+                  </div>
+                )}
                 {/* Stat Cards */}
                 <div className="admin-stat-grid">
                   {loading
@@ -502,37 +509,72 @@ export default function AdminDashboard() {
                                 <p className="text-xs font-bold text-gray-500 mb-1">Customer's Reason</p>
                                 <p className="text-sm text-gray-700 font-medium">{req.reason || 'No reason provided'}</p>
                               </div>
-                              {req.photo_urls?.length > 0 && (
-                                <div>
-                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos (Click to preview)</p>
-                                  <div className="flex gap-2 flex-wrap">
-                                    {req.photo_urls.map((url, i) => (
-                                      <button
-                                        key={i}
-                                        type="button"
-                                        onClick={() => setLightboxMedia({ url: resolveMediaUrl(url), type: 'image' })}
-                                        className="relative group focus:outline-none"
-                                      >
-                                        <img src={resolveMediaUrl(url)} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 group-hover:opacity-85 transition-opacity" />
-                                        <span className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 rounded-xl flex items-center justify-center text-white text-[10px] font-bold transition-opacity">Zoom</span>
-                                      </button>
-                                    ))}
+                              {(() => {
+                                const items = req.evidence || formatEvidenceItems(req.photo_urls, req.video_url);
+                                if (!items.length) return (
+                                  <div className="p-3 bg-gray-100 rounded-xl text-xs text-gray-500 font-semibold">
+                                    No evidence files uploaded for this request.
                                   </div>
-                                </div>
-                              )}
-                              {req.video_url && (
-                                <div>
-                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Video</p>
-                                  <button
-                                    type="button"
-                                    onClick={() => setLightboxMedia({ url: resolveMediaUrl(req.video_url), type: 'video' })}
-                                    className="text-xs text-indigo-600 font-bold underline mb-1 block hover:text-indigo-800"
-                                  >
-                                    Open Video Lightbox
-                                  </button>
-                                  <video src={resolveMediaUrl(req.video_url)} controls className="w-full max-h-40 rounded-xl" />
-                                </div>
-                              )}
+                                );
+
+                                return (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-bold text-gray-700 flex items-center justify-between">
+                                      <span>Return Evidence ({items.length} file{items.length !== 1 ? 's' : ''})</span>
+                                      <span className="text-[10px] text-indigo-600 font-bold">Click to view preview</span>
+                                    </p>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                      {items.map((media, idx) => {
+                                        const resolved = resolveMediaUrl(media.url);
+                                        const isBroken = brokenMediaUrls[resolved];
+
+                                        if (isBroken) {
+                                          return (
+                                            <div key={idx} className="h-24 rounded-xl border border-gray-200 bg-gray-100 flex flex-col items-center justify-center p-2 text-center">
+                                              <span className="text-[10px] font-bold text-gray-400">Evidence file unavailable</span>
+                                            </div>
+                                          );
+                                        }
+
+                                        if (media.type === 'video') {
+                                          return (
+                                            <button
+                                              key={idx}
+                                              type="button"
+                                              onClick={() => setLightboxMedia({ url: resolved, type: 'video' })}
+                                              className="relative h-24 rounded-xl border border-indigo-200 bg-indigo-950 overflow-hidden group focus:outline-none flex flex-col items-center justify-center text-white"
+                                            >
+                                              <span className="text-xs font-black text-indigo-100 flex items-center gap-1">
+                                                ▶ Play Video
+                                              </span>
+                                              <span className="text-[9px] text-indigo-300 font-bold mt-1">HTML5 Player</span>
+                                            </button>
+                                          );
+                                        }
+
+                                        return (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setLightboxMedia({ url: resolved, type: 'image' })}
+                                            className="relative h-24 rounded-xl overflow-hidden border border-gray-200 group focus:outline-none bg-gray-100"
+                                          >
+                                            <img
+                                              src={resolved}
+                                              alt={`Evidence ${idx + 1}`}
+                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                              onError={() => setBrokenMediaUrls(prev => ({ ...prev, [resolved]: true }))}
+                                            />
+                                            <span className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 rounded-xl flex items-center justify-center text-white text-[10px] font-bold transition-opacity">
+                                              Zoom
+                                            </span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                               {(req.admin_notes || req.rejection_reason) && (
                                 <div className="p-3 bg-white rounded-xl border border-gray-200">
                                   <p className="text-xs font-bold text-gray-500 mb-1">Admin Response / Rejection Reason</p>
@@ -1124,9 +1166,20 @@ export default function AdminDashboard() {
                 <X className="w-6 h-6" />
               </button>
               {lightboxMedia.type === 'video' ? (
-                <video src={lightboxMedia.url} controls autoPlay className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain" />
+                <video
+                  src={lightboxMedia.url}
+                  controls
+                  autoPlay
+                  preload="metadata"
+                  className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain bg-black"
+                />
               ) : (
-                <img src={lightboxMedia.url} alt="Evidence preview" className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain bg-black/40" />
+                <img
+                  src={lightboxMedia.url}
+                  alt="Evidence preview"
+                  className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain bg-black/40"
+                  onError={() => toast.error('Evidence image could not be loaded')}
+                />
               )}
             </motion.div>
           </div>

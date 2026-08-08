@@ -310,8 +310,35 @@ const deleteProduct = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const formatReturnRequestWithEvidence = (row) => {
+  if (!row) return row;
+  let photos = row.photo_urls || [];
+  if (typeof photos === 'string') {
+    if (photos.startsWith('{') && photos.endsWith('}')) {
+      photos = photos.slice(1, -1).split(',').map(s => s.trim().replace(/^"/, '').replace(/"$/, ''));
+    } else {
+      try { photos = JSON.parse(photos); } catch (_) { photos = [photos]; }
+    }
+  }
+  if (!Array.isArray(photos)) photos = [];
+
+  const evidence = [];
+  photos.forEach(url => {
+    if (url) evidence.push({ type: 'image', url });
+  });
+  if (row.video_url) {
+    evidence.push({ type: 'video', url: row.video_url });
+  }
+
+  return {
+    ...row,
+    photo_urls: photos,
+    evidence,
+  };
+};
+
 // ─── GET ALL RETURN REQUESTS (ADMIN) ───────────────────────────────
-const getAllReturnRequests = async (req, res, next) => {
+const getReturnRequests = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -333,7 +360,7 @@ const getAllReturnRequests = async (req, res, next) => {
     const count = await db.query(
       `SELECT COUNT(*) FROM return_requests rr ${where}`, params
     );
-    res.json({ requests: rows, total: parseInt(count.rows[0].count) });
+    res.json({ requests: rows.map(formatReturnRequestWithEvidence), total: parseInt(count.rows[0].count) });
   } catch (err) { next(err); }
 };
 
@@ -380,8 +407,8 @@ const updateReturnStatus = async (req, res, next) => {
     );
 
     if (!rows.length) return res.status(404).json({ message: 'Return request not found.' });
-    res.json({ request: rows[0] });
+    res.json({ request: formatReturnRequestWithEvidence(rows[0]) });
   } catch (err) { next(err); }
 };
 
-module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct, getAllReturnRequests, updateReturnStatus };
+module.exports = { getDashboard, getOrderDetails, getAllOrders, updateOrderStatus, getAllUsers, createProduct, updateProduct, deleteProduct, getReturnRequests, updateReturnStatus };

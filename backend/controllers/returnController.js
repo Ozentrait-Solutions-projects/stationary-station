@@ -58,6 +58,33 @@ const createReturnRequest = async (req, res, next) => {
   }
 };
 
+const formatReturnRequestWithEvidence = (row) => {
+  if (!row) return row;
+  let photos = row.photo_urls || [];
+  if (typeof photos === 'string') {
+    if (photos.startsWith('{') && photos.endsWith('}')) {
+      photos = photos.slice(1, -1).split(',').map(s => s.trim().replace(/^"/, '').replace(/"$/, ''));
+    } else {
+      try { photos = JSON.parse(photos); } catch (_) { photos = [photos]; }
+    }
+  }
+  if (!Array.isArray(photos)) photos = [];
+
+  const evidence = [];
+  photos.forEach(url => {
+    if (url) evidence.push({ type: 'image', url });
+  });
+  if (row.video_url) {
+    evidence.push({ type: 'video', url: row.video_url });
+  }
+
+  return {
+    ...row,
+    photo_urls: photos,
+    evidence,
+  };
+};
+
 // ─── UPLOAD RETURN EVIDENCE ───────────────────────────────────────
 const uploadReturnEvidence = async (req, res, next) => {
   try {
@@ -93,11 +120,11 @@ const uploadReturnEvidence = async (req, res, next) => {
     }
 
     // Merge with existing photos (up to 5)
-    const existingPhotos = request.photo_urls || [];
+    const existingPhotos = Array.isArray(request.photo_urls) ? request.photo_urls : [];
     const allPhotos = [...existingPhotos, ...photoUrls].slice(0, 5);
 
     if (allPhotos.length === 0 && !videoUrl) {
-      return res.status(400).json({ message: 'At least one photo is required as evidence' });
+      return res.status(400).json({ message: 'At least one photo or video is required as evidence' });
     }
 
     const updated = await db.query(
@@ -107,7 +134,7 @@ const uploadReturnEvidence = async (req, res, next) => {
       [allPhotos, videoUrl, id]
     );
 
-    res.json({ request: updated.rows[0] });
+    res.json({ request: formatReturnRequestWithEvidence(updated.rows[0]) });
   } catch (err) {
     next(err);
   }
@@ -126,7 +153,7 @@ const getMyReturnRequests = async (req, res, next) => {
        ORDER BY rr.created_at DESC`,
       [req.user.id]
     );
-    res.json({ requests: rows });
+    res.json({ requests: rows.map(formatReturnRequestWithEvidence) });
   } catch (err) {
     next(err);
   }
@@ -144,7 +171,7 @@ const getReturnRequest = async (req, res, next) => {
       [id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Return request not found' });
-    res.json({ request: rows[0] });
+    res.json({ request: formatReturnRequestWithEvidence(rows[0]) });
   } catch (err) {
     next(err);
   }

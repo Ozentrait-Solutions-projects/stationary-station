@@ -49,7 +49,11 @@ api.interceptors.response.use(
     let userMsg = "We're having trouble processing your request. Please try again in a moment.";
 
     if (!error.response) {
-      userMsg = "Unable to connect to the server. Please check your internet connection and try again.";
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        userMsg = "This request is taking longer than expected. Please try again.";
+      } else {
+        userMsg = "Unable to connect to the server. Please check your internet connection and try again.";
+      }
     } else if (error.response.status >= 500) {
       userMsg = "Something went wrong on our end. Please try again in a moment.";
     } else if (error.response.data?.message) {
