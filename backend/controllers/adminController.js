@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
-const { getLocalFileUrl } = require('../middleware/upload');
+const { getFileUrl } = require('../middleware/upload');
 const { sendOrderStatusEmail, sendProductOutOfStockEmail } = require('../utils/mailer');
 
 
@@ -164,7 +164,7 @@ const createProduct = async (req, res, next) => {
     }
 
     // req.file is the locally stored file; getLocalFileUrl converts it to a /uploads/... path
-    const uploadedImageUrl = getLocalFileUrl(req);
+    const uploadedImageUrl = getFileUrl(req?.file);
 
     const finalImageUrl = uploadedImageUrl || image_url || null;
     const finalImages = parseArrayField(images);
@@ -209,45 +209,70 @@ const updateProduct = async (req, res, next) => {
     const { id } = req.params;
     const { title, description, price, original_price, category, brand, stock, image_url, images, tags, is_featured, sale_price, return_exchange_available } = req.body;
 
-    // req.file is the locally stored file; getLocalFileUrl converts it to a /uploads/... path
-    const uploadedImageUrl = getLocalFileUrl(req);
+    // Check if product exists
+    const existing = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+    if (!existing.rows.length) return res.status(404).json({ message: 'Product not found.' });
 
+    const currentProduct = existing.rows[0];
+
+    // Validate sale_price if present in body
+    let finalSalePrice = currentProduct.sale_price !== null ? Number(currentProduct.sale_price) : null;
+    if (sale_price !== undefined) {
+      if (sale_price === null || sale_price === '') {
+        finalSalePrice = null;
+      } else {
+        const num = Number(sale_price);
+        if (Number.isNaN(num) || num <= 0) {
+          return res.status(400).json({ message: 'Please enter a valid sale price.' });
+        }
+        const effectivePrice = price !== undefined && price !== null && price !== '' ? Number(price) : Number(currentProduct.price);
+        if (num >= effectivePrice) {
+          return res.status(400).json({ message: 'Sale price must be lower than the original price.' });
+        }
+        finalSalePrice = num;
+      }
+    }
+
+    const uploadedImageUrl = getFileUrl(req?.file);
     const finalImageUrl = uploadedImageUrl || image_url;
     const finalImages = images === undefined ? null : parseArrayField(images);
     const finalTags = tags === undefined ? null : parseArrayField(tags);
     const finalFeatured = parseBooleanField(is_featured);
     const finalReturnExchange = parseBooleanField(return_exchange_available);
-    const finalSalePrice = sale_price !== undefined ? parseNumberField(sale_price) : undefined;
 
-    const { rows } = await db.query(
-      `UPDATE products SET
-        title = COALESCE($1, title), description = COALESCE($2, description),
-        price = COALESCE($3, price), original_price = COALESCE($4, original_price),
-        category = COALESCE($5, category), brand = COALESCE($6, brand),
-        stock = COALESCE($7, stock), image_url = COALESCE($8, image_url),
-        images = COALESCE($9, images), tags = COALESCE($10, tags),
-        is_featured = COALESCE($11, is_featured),
-        sale_price = COALESCE($12, sale_price),
-        return_exchange_available = COALESCE($13, return_exchange_available)
-       WHERE id = $14 RETURNING *`,
-      [
-        title,
-        description,
-        parseNumberField(price),
-        parseNumberField(original_price),
-        category,
-        brand,
-        parseNumberField(stock),
-        finalImageUrl,
-        finalImages,
-        finalTags,
-        finalFeatured,
-        finalSalePrice !== undefined ? finalSalePrice : null,
-        finalReturnExchange,
-        id,
-      ]
-    );
-    if (!rows.length) return res.status(404).json({ message: 'Product not found' });
+    // Build dynamic UPDATE query to handle NULL sale_price and untouched fields properly
+    const updates = [];
+    const values = [];
+    let idx = 1;
+
+    if (title !== undefined && title !== null) { updates.push(`title = $${idx++}`); values.push(title); }
+    if (description !== undefined && description !== null) { updates.push(`description = $${idx++}`); values.push(description); }
+    if (price !== undefined && parseNumberField(price) !== null) { updates.push(`price = $${idx++}`); values.push(parseNumberField(price)); }
+    if (original_price !== undefined) { updates.push(`original_price = $${idx++}`); values.push(parseNumberField(original_price)); }
+    if (category !== undefined && category !== null) { updates.push(`category = $${idx++}`); values.push(category); }
+    if (brand !== undefined) { updates.push(`brand = $${idx++}`); values.push(brand); }
+    if (stock !== undefined && parseNumberField(stock) !== null) { updates.push(`stock = $${idx++}`); values.push(parseNumberField(stock)); }
+    if (finalImageUrl !== undefined && finalImageUrl !== null) { updates.push(`image_url = $${idx++}`); values.push(finalImageUrl); }
+    if (finalImages !== null) { updates.push(`images = $${idx++}`); values.push(finalImages); }
+    if (finalTags !== null) { updates.push(`tags = $${idx++}`); values.push(finalTags); }
+    if (finalFeatured !== null) { updates.push(`is_featured = $${idx++}`); values.push(finalFeatured); }
+    if (finalReturnExchange !== null) { updates.push(`return_exchange_available = $${idx++}`); values.push(finalReturnExchange); }
+
+    // Always update sale_price if specified in payload
+    if (sale_price !== undefined) {
+      updates.push(`sale_price = $${idx++}`);
+      values.push(finalSalePrice);
+    }
+
+    if (updates.length === 0) {
+      return res.json({ product: currentProduct });
+    }
+
+    values.push(id);
+    const queryText = `UPDATE products SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const { rows } = await db.query(queryText, values);
+
+    if (!rows.length) return res.status(404).json({ message: 'Product not found.' });
 
     if (Number(rows[0].stock) === 0) {
       sendProductOutOfStockEmail(req.user.email, rows[0]).catch(err => {
@@ -266,10 +291,10 @@ const deleteProduct = async (req, res, next) => {
 
     // Fetch the image URL before deleting so we can remove it from S3
     const existing = await db.query('SELECT image_url FROM products WHERE id = $1', [id]);
-    if (!existing.rows.length) return res.status(404).json({ message: 'Product not found' });
+    if (!existing.rows.length) return res.status(404).json({ message: 'Product not found.' });
 
     const { rows } = await db.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
-    if (!rows.length) return res.status(404).json({ message: 'Product not found' });
+    if (!rows.length) return res.status(404).json({ message: 'Product not found.' });
 
     // Delete local file if stored in uploads/ (fire-and-forget)
     const imageUrl = existing.rows[0].image_url;
@@ -316,16 +341,45 @@ const getAllReturnRequests = async (req, res, next) => {
 const updateReturnStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, admin_notes } = req.body;
+    let { status, admin_notes, rejection_reason } = req.body;
+
+    const notes = admin_notes || rejection_reason || '';
+
+    // Map uppercase or alias status values to canonical database status values
+    const statusMap = {
+      RETURN_REQUESTED: 'pending',
+      RETURN_APPROVED: 'approved',
+      RETURN_REJECTED: 'rejected',
+      RETURN_PROCESSING: 'pending',
+      RETURN_COMPLETED: 'approved',
+    };
+    if (statusMap[status]) status = statusMap[status];
+
     const valid = ['pending', 'evidence_submitted', 'approved', 'rejected'];
-    if (!valid.includes(status)) return res.status(400).json({ message: 'Invalid status' });
+    if (!valid.includes(status)) {
+      return res.status(400).json({ message: 'Invalid return status' });
+    }
+
+    if (status === 'rejected' && (!notes || !notes.trim())) {
+      return res.status(400).json({ message: 'Please provide a reason for rejecting this return request.' });
+    }
+
+    const adminUserId = req.user?.id || null;
 
     const { rows } = await db.query(
-      `UPDATE return_requests SET status = $1, admin_notes = $2, updated_at = NOW()
-       WHERE id = $3 RETURNING *`,
-      [status, admin_notes || null, id]
+      `UPDATE return_requests SET
+        status = $1::varchar,
+        admin_notes = $2,
+        rejection_reason = $2,
+        updated_at = NOW(),
+        approved_at = CASE WHEN $1::varchar = 'approved' THEN NOW() ELSE approved_at END,
+        rejected_at = CASE WHEN $1::varchar = 'rejected' THEN NOW() ELSE rejected_at END,
+        processed_by = COALESCE($3, processed_by)
+       WHERE id = $4 RETURNING *`,
+      [status, notes.trim() || null, adminUserId, id]
     );
-    if (!rows.length) return res.status(404).json({ message: 'Return request not found' });
+
+    if (!rows.length) return res.status(404).json({ message: 'Return request not found.' });
     res.json({ request: rows[0] });
   } catch (err) { next(err); }
 };

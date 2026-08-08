@@ -471,15 +471,6 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="flex flex-shrink-0">
-                <Link
-                  to="/products?featured=true"
-                  className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-pink-500 to-[#8B5CF6] text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200"
-                >
-                  <Crown className="w-4 h-4" />
-                  Premium Deals
-                </Link>
-              </div>
             </div>
           </div>
         </div>

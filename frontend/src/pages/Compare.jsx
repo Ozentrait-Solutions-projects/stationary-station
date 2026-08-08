@@ -110,7 +110,7 @@ export default function Compare() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start max-w-full">
             
             {/* Compare Columns */}
             {[0, 1].map((index) => {
@@ -182,7 +182,7 @@ export default function Compare() {
               const isSaved = isWishlisted(product.id);
 
               return (
-                <div key={product.id} className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm relative group">
+                <div key={product.id} className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm relative group min-w-0">
                   
                   {/* Remove Button */}
                   <button
@@ -206,7 +206,7 @@ export default function Compare() {
                   </button>
 
                   {showSearchIndex === index && (
-                    <div className="absolute top-12 left-6 right-6 bg-white rounded-xl shadow-lg border border-gray-205 border-gray-200 p-3 z-20 space-y-2">
+                    <div className="absolute top-12 left-0 right-0 sm:left-6 sm:right-6 px-4 sm:px-0 bg-white rounded-xl shadow-lg border border-gray-200 p-3 z-20 space-y-2">
                       <div className="flex items-center h-10 bg-gray-50 rounded-xl border border-gray-200 px-3 py-1">
                         <Search className="w-4 h-4 text-gray-400 mr-2" />
                         <input
@@ -243,7 +243,7 @@ export default function Compare() {
                   )}
 
                   {/* Product Visual */}
-                  <div className="relative aspect-square max-h-56 bg-white rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center p-4 mx-auto mb-6">
+                  <div className="relative w-full aspect-square max-h-56 bg-white rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center p-4 mx-auto mb-6">
                     {discount > 0 && (
                       <span className="absolute top-2 left-2 bg-pink-100 text-pink-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         -{discount}%
@@ -258,7 +258,7 @@ export default function Compare() {
                   </div>
 
                   {/* Information Matrix */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 min-w-0">
                     <div>
                       {product.brand && (
                         <p className="text-[10px] text-indigo-650 font-bold uppercase tracking-wider mb-1">
@@ -267,7 +267,7 @@ export default function Compare() {
                       )}
                       <Link
                         to={`/products/${product.id}`}
-                        className="font-display font-extrabold text-gray-900 hover:text-indigo-600 text-base leading-snug line-clamp-2 transition-colors"
+                        className="font-display font-extrabold text-gray-900 hover:text-indigo-600 text-base leading-snug line-clamp-2 break-words transition-colors"
                       >
                         {product.title}
                       </Link>
@@ -279,7 +279,7 @@ export default function Compare() {
                     </div>
 
                     {/* Pricing comparison */}
-                    <div className="border-y border-gray-100 py-3.5 flex items-baseline gap-2.5">
+                    <div className="border-y border-gray-100 py-3.5 flex flex-wrap items-baseline gap-2.5">
                       <span className="text-2xl font-black text-gray-950">{formatPrice(product.price)}</span>
                       {product.original_price && product.original_price > product.price && (
                         <>
@@ -291,17 +291,17 @@ export default function Compare() {
 
                     {/* Specs Table */}
                     <div className="space-y-3 pt-1 text-sm">
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2">
                         <span className="text-gray-400 font-bold">Category</span>
-                        <span className="text-gray-700 font-semibold">{product.category}</span>
+                        <span className="text-gray-700 font-semibold min-w-0 text-right sm:text-right">{product.category}</span>
                       </div>
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2">
                         <span className="text-gray-400 font-bold">Brand</span>
-                        <span className="text-gray-700 font-semibold">{product.brand || 'Generic'}</span>
+                        <span className="text-gray-700 font-semibold min-w-0 text-right sm:text-right">{product.brand || 'Generic'}</span>
                       </div>
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2">
                         <span className="text-gray-400 font-bold">Availability</span>
-                        <span className={`font-bold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <span className={`font-bold min-w-0 text-right sm:text-right ${product.stock > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {product.stock > 0 ? `In Stock (${product.stock} units)` : 'Out of Stock'}
                         </span>
                       </div>

@@ -55,6 +55,12 @@ export default function AdminDashboard() {
   const [promoSalePrice, setPromoSalePrice] = useState('');
   const [savingPromo, setSavingPromo] = useState(false);
 
+  // Return Rejection Modal & Lightbox Media Preview
+  const [rejectingReturnReq, setRejectingReturnReq] = useState(null);
+  const [rejectionReasonInput, setRejectionReasonInput] = useState('');
+  const [rejectionSubmitting, setRejectionSubmitting] = useState(false);
+  const [lightboxMedia, setLightboxMedia] = useState(null);
+
   // Order detail modal
   const [selectedOrder, setSelectedOrder]     = useState(null);
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
@@ -498,12 +504,18 @@ export default function AdminDashboard() {
                               </div>
                               {req.photo_urls?.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos</p>
+                                  <p className="text-xs font-bold text-gray-500 mb-2">Evidence Photos (Click to preview)</p>
                                   <div className="flex gap-2 flex-wrap">
                                     {req.photo_urls.map((url, i) => (
-                                      <a key={i} href={resolveMediaUrl(url)} target="_blank" rel="noreferrer">
-                                        <img src={resolveMediaUrl(url)} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
-                                      </a>
+                                      <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setLightboxMedia({ url: resolveMediaUrl(url), type: 'image' })}
+                                        className="relative group focus:outline-none"
+                                      >
+                                        <img src={resolveMediaUrl(url)} alt={`Evidence ${i+1}`} className="w-20 h-20 rounded-xl object-cover border border-gray-200 group-hover:opacity-85 transition-opacity" />
+                                        <span className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 rounded-xl flex items-center justify-center text-white text-[10px] font-bold transition-opacity">Zoom</span>
+                                      </button>
                                     ))}
                                   </div>
                                 </div>
@@ -511,13 +523,20 @@ export default function AdminDashboard() {
                               {req.video_url && (
                                 <div>
                                   <p className="text-xs font-bold text-gray-500 mb-2">Evidence Video</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setLightboxMedia({ url: resolveMediaUrl(req.video_url), type: 'video' })}
+                                    className="text-xs text-indigo-600 font-bold underline mb-1 block hover:text-indigo-800"
+                                  >
+                                    Open Video Lightbox
+                                  </button>
                                   <video src={resolveMediaUrl(req.video_url)} controls className="w-full max-h-40 rounded-xl" />
                                 </div>
                               )}
-                              {req.admin_notes && (
-                                <div>
-                                  <p className="text-xs font-bold text-gray-500 mb-1">Admin Notes</p>
-                                  <p className="text-sm text-gray-700">{req.admin_notes}</p>
+                              {(req.admin_notes || req.rejection_reason) && (
+                                <div className="p-3 bg-white rounded-xl border border-gray-200">
+                                  <p className="text-xs font-bold text-gray-500 mb-1">Admin Response / Rejection Reason</p>
+                                  <p className="text-sm text-gray-800 font-semibold">{req.admin_notes || req.rejection_reason}</p>
                                 </div>
                               )}
                               {req.status !== 'approved' && req.status !== 'rejected' && (
@@ -526,28 +545,30 @@ export default function AdminDashboard() {
                                     disabled={updatingReturnId === req.id}
                                     onClick={async () => {
                                       setUpdatingReturnId(req.id);
-                                      await adminService.updateReturnStatus(req.id, 'approved', '');
-                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
-                                      setUpdatingReturnId(null);
-                                      toast.success('Return approved');
+                                      try {
+                                        const res = await adminService.updateReturnStatus(req.id, 'approved', '');
+                                        setReturns(prev => prev.map(r => r.id === req.id ? (res.data.request || { ...r, status: 'approved' }) : r));
+                                        toast.success('Return request approved');
+                                      } catch (err) {
+                                        toast.error(err.response?.data?.message || 'Failed to approve return');
+                                      } finally {
+                                        setUpdatingReturnId(null);
+                                      }
                                     }}
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
                                   >
-                                    ✓ Approve
+                                    {updatingReturnId === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                                    ✓ Approve Return
                                   </button>
                                   <button
                                     disabled={updatingReturnId === req.id}
-                                    onClick={async () => {
-                                      const notes = window.prompt('Reason for rejection (optional):') || '';
-                                      setUpdatingReturnId(req.id);
-                                      await adminService.updateReturnStatus(req.id, 'rejected', notes);
-                                      setReturns(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected', admin_notes: notes } : r));
-                                      setUpdatingReturnId(null);
-                                      toast.success('Return rejected');
+                                    onClick={() => {
+                                      setRejectingReturnReq(req);
+                                      setRejectionReasonInput('');
                                     }}
-                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 rounded-xl transition-colors disabled:opacity-60"
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
                                   >
-                                    ✗ Reject
+                                    ✕ Reject Return
                                   </button>
                                 </div>
                               )}
@@ -614,20 +635,39 @@ export default function AdminDashboard() {
                         <div className="flex gap-2">
                           <button
                             onClick={async () => {
-                              if (!promoProductId) return;
+                              if (!promoProductId) {
+                                toast.error('Please select a product');
+                                return;
+                              }
+                              if (promoSalePrice !== '') {
+                                const num = Number(promoSalePrice);
+                                if (Number.isNaN(num) || num <= 0) {
+                                  toast.error('Please enter a valid sale price.');
+                                  return;
+                                }
+                                if (p && num >= p.price) {
+                                  toast.error('Sale price must be lower than the original price.');
+                                  return;
+                                }
+                              }
                               setSavingPromo(true);
                               try {
-                                await adminService.updateProduct(promoProductId, { sale_price: promoSalePrice ? Number(promoSalePrice) : null });
-                                setProducts(prev => prev.map(x => String(x.id) === promoProductId ? { ...x, sale_price: promoSalePrice ? Number(promoSalePrice) : null } : x));
-                                toast.success(promoSalePrice ? `Sale price set to ₹${promoSalePrice}` : 'Sale price removed');
-                              } catch { toast.error('Failed to update sale price'); }
-                              finally { setSavingPromo(false); }
+                                const payloadVal = promoSalePrice !== '' ? Number(promoSalePrice) : null;
+                                const res = await adminService.updateProduct(promoProductId, { sale_price: payloadVal });
+                                const updatedProd = res.data.product;
+                                setProducts(prev => prev.map(x => String(x.id) === promoProductId ? (updatedProd || { ...x, sale_price: payloadVal }) : x));
+                                toast.success(payloadVal !== null ? 'Sale price updated successfully.' : 'Sale price removed');
+                              } catch (err) {
+                                toast.error(err.response?.data?.message || 'Failed to update sale price');
+                              } finally {
+                                setSavingPromo(false);
+                              }
                             }}
                             disabled={savingPromo}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors disabled:opacity-60 flex items-center gap-2"
                           >
                             {savingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                            {promoSalePrice ? 'Apply Sale' : 'Remove Sale'}
+                            {savingPromo ? 'Updating...' : (promoSalePrice ? 'Apply Sale' : 'Remove Sale')}
                           </button>
                         </div>
                       </div>
@@ -658,9 +698,13 @@ export default function AdminDashboard() {
                           </div>
                           <button
                             onClick={async () => {
-                              await adminService.updateProduct(p.id, { sale_price: null });
-                              setProducts(prev => prev.map(x => x.id === p.id ? { ...x, sale_price: null } : x));
-                              toast.success('Sale price removed');
+                              try {
+                                await adminService.updateProduct(p.id, { sale_price: null });
+                                setProducts(prev => prev.map(x => x.id === p.id ? { ...x, sale_price: null } : x));
+                                toast.success('Sale price removed');
+                              } catch (err) {
+                                toast.error(err.response?.data?.message || 'Failed to remove sale price');
+                              }
                             }}
                             className="text-xs text-rose-600 font-bold hover:text-rose-800 flex-shrink-0"
                           >
@@ -981,6 +1025,113 @@ export default function AdminDashboard() {
           </motion.div>
         </div>
       )}
+
+      {/* ── Rejection Reason Modal ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {rejectingReturnReq && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={() => setRejectingReturnReq(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-gray-100 space-y-4"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-black text-gray-950 text-base">Reject Return Request</h3>
+                <button onClick={() => setRejectingReturnReq(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-400 font-semibold">Product</p>
+                <p className="font-bold text-sm text-gray-800">{rejectingReturnReq.product_title}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Requested by {rejectingReturnReq.user_name}</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                  Reason for rejection <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={rejectionReasonInput}
+                  onChange={e => setRejectionReasonInput(e.target.value)}
+                  placeholder="Please specify why this return is rejected (e.g. Product returned after eligible 7-day return period)..."
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-rose-100 focus:border-rose-400 resize-none"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRejectingReturnReq(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={rejectionSubmitting}
+                  onClick={async () => {
+                    if (!rejectionReasonInput.trim()) {
+                      toast.error('Please provide a reason for rejecting this return request.');
+                      return;
+                    }
+                    setRejectionSubmitting(true);
+                    try {
+                      const res = await adminService.updateReturnStatus(rejectingReturnReq.id, 'rejected', rejectionReasonInput.trim());
+                      const updatedReq = res.data.request;
+                      setReturns(prev => prev.map(r => r.id === rejectingReturnReq.id ? (updatedReq || { ...r, status: 'rejected', admin_notes: rejectionReasonInput.trim(), rejection_reason: rejectionReasonInput.trim() }) : r));
+                      toast.success('Return request rejected');
+                      setRejectingReturnReq(null);
+                      setRejectionReasonInput('');
+                    } catch (err) {
+                      toast.error(err.response?.data?.message || 'Failed to reject return request');
+                    } finally {
+                      setRejectionSubmitting(false);
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors disabled:opacity-60 flex items-center gap-1.5"
+                >
+                  {rejectionSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  Reject Return
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Evidence Lightbox Modal ────────────────────────────────────── */}
+      <AnimatePresence>
+        {lightboxMedia && (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={() => setLightboxMedia(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setLightboxMedia(null)}
+                className="absolute -top-12 right-0 text-white hover:text-gray-300 bg-white/20 hover:bg-white/30 rounded-full p-2 backdrop-blur-sm transition-colors"
+                title="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              {lightboxMedia.type === 'video' ? (
+                <video src={lightboxMedia.url} controls autoPlay className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain" />
+              ) : (
+                <img src={lightboxMedia.url} alt="Evidence preview" className="max-h-[85vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain bg-black/40" />
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

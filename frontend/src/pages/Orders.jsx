@@ -253,11 +253,16 @@ export default function Orders() {
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [returnModal, setReturnModal] = useState(null); // { order, item }
 
-  useEffect(() => {
+  const fetchOrders = () => {
+    setLoading(true);
     orderService.getMyOrders()
       .then(res => setOrders(res.data.orders || []))
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, []);
 
   const handleCancelOrder = async (orderId) => {
@@ -284,9 +289,14 @@ export default function Orders() {
             <h1 className="font-display text-2xl font-black text-gray-900">Your Orders</h1>
             <p className="text-sm text-gray-400 mt-0.5 font-bold">{orders.length} order{orders.length !== 1 ? 's' : ''} placed</p>
           </div>
-          <Link to="/products" className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm">
-            Continue Shopping
-          </Link>
+          <div className="flex items-center gap-2">
+            <button onClick={fetchOrders} className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-3 py-2.5 rounded-xl transition-all shadow-xs text-sm">
+              Refresh
+            </button>
+            <Link to="/products" className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm">
+              Continue Shopping
+            </Link>
+          </div>
         </div>
 
         {loading ? (
@@ -447,54 +457,129 @@ export default function Orders() {
                   </div>
 
                   {/* Order Items */}
-                  <div className="px-4 pb-4 space-y-3">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex items-center gap-4 py-3 border-t border-gray-100">
-                        <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
-                          <img
-                            src={item.image_url}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                            onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=64'; }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/products/${item.product_id}`} className="text-sm font-bold text-gray-800 hover:text-[#6366F1] transition-colors line-clamp-1">
-                            {item.title}
-                          </Link>
-                          <p className="text-xs text-gray-400 font-bold mt-0.5">
-                            Qty: {item.quantity} · {formatPrice(item.price_at_purchase)} each
-                          </p>
-                          <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <Link to={`/products/${item.product_id}`}
-                              className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
-                              Buy it again
-                            </Link>
-                            <span className="text-gray-200">|</span>
-                            <Link to={`/products/${item.product_id}`}
-                              className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
-                              View item
-                            </Link>
-                            {/* Return/Exchange button for delivered orders */}
-                            {isDelivered && (
-                              <>
+                  <div className="px-4 pb-4 space-y-4">
+                    {order.items?.map(item => {
+                      const isApproved = item.return_status === 'approved' || item.return_status === 'RETURN_APPROVED';
+                      const isRejected = item.return_status === 'rejected' || item.return_status === 'RETURN_REJECTED';
+                      const isPending = item.return_status === 'pending' || item.return_status === 'evidence_submitted' || item.return_status === 'RETURN_REQUESTED' || item.return_status === 'RETURN_PROCESSING';
+
+                      return (
+                        <div key={item.id} className="pt-3 border-t border-gray-100">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                              <img
+                                src={item.image_url}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                                onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=64'; }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <Link to={`/products/${item.product_id}`} className="text-sm font-bold text-gray-800 hover:text-[#6366F1] transition-colors line-clamp-1">
+                                {item.title}
+                              </Link>
+                              <p className="text-xs text-gray-400 font-bold mt-0.5">
+                                Qty: {item.quantity} · {formatPrice(item.price_at_purchase)} each
+                              </p>
+                              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                <Link to={`/products/${item.product_id}`}
+                                  className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
+                                  Buy it again
+                                </Link>
                                 <span className="text-gray-200">|</span>
-                                <button
-                                  onClick={() => setReturnModal({ order, item })}
-                                  className="text-xs text-rose-600 font-bold hover:text-rose-800 transition-colors flex items-center gap-1"
-                                >
-                                  <RotateCcw className="w-3 h-3" />
-                                  Return / Exchange
-                                </button>
-                              </>
-                            )}
+                                <Link to={`/products/${item.product_id}`}
+                                  className="text-xs text-indigo-650 font-bold hover:text-indigo-850 transition-colors">
+                                  View item
+                                </Link>
+                                {/* Return/Exchange button for delivered orders if no active return */}
+                                {isDelivered && !item.return_status && (
+                                  <>
+                                    <span className="text-gray-200">|</span>
+                                    <button
+                                      onClick={() => setReturnModal({ order, item })}
+                                      className="text-xs text-rose-600 font-bold hover:text-rose-800 transition-colors flex items-center gap-1"
+                                    >
+                                      <RotateCcw className="w-3 h-3" />
+                                      Return / Exchange
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <p className="font-black text-sm text-gray-900">{formatPrice(item.price_at_purchase * item.quantity)}</p>
+                            </div>
                           </div>
+
+                          {/* ── Return Request Status Cards & Timeline ───────── */}
+                          {isApproved && (
+                            <div className="mt-3 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+                              <div className="flex items-center justify-between flex-wrap gap-1">
+                                <div className="flex items-center gap-1.5 text-emerald-800 font-black text-xs">
+                                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                  <span>Return Approved</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-emerald-700">Updated: {formatDate(item.return_approved_at || item.return_updated_at)}</span>
+                              </div>
+                              <p className="text-xs text-emerald-900 font-semibold">
+                                Your return request for <span className="font-bold">{item.title}</span> has been approved successfully.
+                              </p>
+                              <div className="pt-2 border-t border-emerald-200/70 flex items-center justify-between text-[10px] font-bold text-emerald-800 flex-wrap gap-1">
+                                <span>✓ Return Requested ({formatDate(item.return_created_at)})</span>
+                                <span className="hidden sm:inline">→</span>
+                                <span>✓ Under Review</span>
+                                <span className="hidden sm:inline">→</span>
+                                <span className="font-black text-emerald-900">✓ Return Approved</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {isRejected && (
+                            <div className="mt-3 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl space-y-2.5">
+                              <div className="flex items-center justify-between flex-wrap gap-1">
+                                <div className="flex items-center gap-1.5 text-rose-800 font-black text-xs">
+                                  <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                                  <span>Return Rejected</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-rose-700">Updated: {formatDate(item.return_rejected_at || item.return_updated_at)}</span>
+                              </div>
+                              <p className="text-xs text-rose-950 font-medium">Your return request was rejected by admin.</p>
+                              <div className="p-3 bg-white/90 rounded-xl border border-rose-200 text-xs">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-rose-700 mb-0.5">Reason for Rejection:</p>
+                                <p className="font-bold text-gray-900 leading-relaxed">{item.rejection_reason || 'No reason provided'}</p>
+                              </div>
+                              <div className="pt-2 border-t border-rose-200/70 flex items-center justify-between text-[10px] font-bold flex-wrap gap-1">
+                                <span className="text-gray-500">✓ Return Requested ({formatDate(item.return_created_at)})</span>
+                                <span className="hidden sm:inline text-gray-300">→</span>
+                                <span className="text-gray-500">✓ Under Review</span>
+                                <span className="hidden sm:inline text-gray-300">→</span>
+                                <span className="text-rose-700 font-black">✕ Return Rejected</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {isPending && (
+                            <div className="mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                              <div className="flex items-center justify-between flex-wrap gap-1">
+                                <div className="flex items-center gap-1.5 text-amber-800 font-black text-xs">
+                                  <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                  <span>Return Under Review</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-amber-700">Requested: {formatDate(item.return_created_at)}</span>
+                              </div>
+                              <p className="text-xs text-amber-900 font-semibold">Your return request has been submitted and is under review by our admin team.</p>
+                              <div className="pt-2 border-t border-amber-200/70 flex items-center justify-between text-[10px] font-bold text-amber-800 flex-wrap gap-1">
+                                <span className="font-black">✓ Return Requested</span>
+                                <span className="hidden sm:inline">→</span>
+                                <span className="font-black text-amber-950">⏳ Under Review</span>
+                                <span className="hidden sm:inline">→</span>
+                                <span className="text-gray-400">Decision Pending</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="font-black text-sm text-gray-900">{formatPrice(item.price_at_purchase * item.quantity)}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Delivery info */}
                     {order.shipping_address && (
@@ -528,7 +613,10 @@ export default function Orders() {
             order={returnModal.order}
             item={returnModal.item}
             onClose={() => setReturnModal(null)}
-            onSuccess={() => setReturnModal(null)}
+            onSuccess={() => {
+              setReturnModal(null);
+              fetchOrders();
+            }}
           />
         )}
       </AnimatePresence>

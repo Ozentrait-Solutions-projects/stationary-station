@@ -16,7 +16,7 @@ export default function CompareBar() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-2xl bg-white/90 backdrop-blur-md border border-indigo-100 shadow-2xl rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4"
+        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] inset-x-2 z-40 mx-auto w-full max-w-[92vw] md:max-w-2xl bg-white/90 backdrop-blur-md border border-indigo-100 shadow-2xl rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-3"
       >
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-indigo-55 bg-indigo-50 rounded-xl text-indigo-600">
@@ -33,22 +33,22 @@ export default function CompareBar() {
         </div>
 
         {/* Selected Products Preview */}
-        <div className="flex items-center gap-3 my-2 md:my-0">
+        <div className="flex flex-wrap items-center gap-2 my-2 md:my-0 justify-center md:justify-start">
           {comparedProducts.map((product) => (
             <div
               key={product.id}
-              className="relative flex items-center gap-2 p-1.5 pr-3 bg-gray-50 border border-gray-100 rounded-xl"
+              className="relative flex items-center gap-2 p-1.5 pr-3 bg-gray-50 border border-gray-100 rounded-xl max-w-full"
             >
               <img
                 src={product.image_url}
                 alt={product.title}
-                className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-gray-100"
+                className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-gray-100 flex-shrink-0"
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100';
                 }}
               />
-              <div className="max-w-[100px] md:max-w-[120px]">
-                <p className="text-xs font-bold text-gray-850 truncate">{product.title}</p>
+              <div className="min-w-0 max-w-[100px] md:max-w-[120px]">
+                <p className="text-xs font-bold text-gray-900 truncate">{product.title}</p>
                 <p className="text-[10px] font-black text-indigo-600">{formatPrice(product.price)}</p>
               </div>
               <button
@@ -63,7 +63,7 @@ export default function CompareBar() {
           {comparedProducts.length < 2 && (
             <Link
               to="/products"
-              className="flex items-center justify-center w-[120px] md:w-[150px] h-11 border-2 border-dashed border-gray-200 hover:border-indigo-300 hover:text-indigo-600 rounded-xl bg-gray-50/50 text-[10px] text-gray-400 font-bold transition-all text-center"
+              className="flex items-center justify-center min-w-[120px] md:min-w-[150px] h-11 border-2 border-dashed border-gray-200 hover:border-indigo-300 hover:text-indigo-600 rounded-xl bg-gray-50/50 text-[10px] text-gray-400 font-bold transition-all text-center"
             >
               + Add another product
             </Link>

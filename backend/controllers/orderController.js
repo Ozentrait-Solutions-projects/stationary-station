@@ -151,10 +151,26 @@ const getMyOrders = async (req, res, next) => {
       [req.user.id]
     );
 
-    // Attach items to each order
+    // Attach items with return request info to each order
     const ordersWithItems = await Promise.all(rows.map(async (order) => {
       const items = await db.query(
-        `SELECT oi.*, p.title, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = $1`,
+        `SELECT oi.*, p.title, p.image_url,
+                rr.id as return_id,
+                rr.status as return_status,
+                rr.type as return_type,
+                rr.reason as return_reason,
+                COALESCE(rr.rejection_reason, rr.admin_notes) as rejection_reason,
+                rr.admin_notes,
+                rr.photo_urls as return_photo_urls,
+                rr.video_url as return_video_url,
+                rr.created_at as return_created_at,
+                rr.updated_at as return_updated_at,
+                rr.approved_at as return_approved_at,
+                rr.rejected_at as return_rejected_at
+         FROM order_items oi
+         JOIN products p ON oi.product_id = p.id
+         LEFT JOIN return_requests rr ON (rr.order_id = oi.order_id AND (rr.order_item_id = oi.id OR rr.product_id = oi.product_id))
+         WHERE oi.order_id = $1`,
         [order.id]
       );
       return { ...order, items: items.rows };
@@ -175,8 +191,23 @@ const getOrder = async (req, res, next) => {
     if (!rows.length) return res.status(404).json({ message: 'Order not found' });
 
     const items = await db.query(
-      `SELECT oi.*, p.title, p.image_url, p.category FROM order_items oi
-       JOIN products p ON oi.product_id = p.id WHERE oi.order_id = $1`,
+      `SELECT oi.*, p.title, p.image_url, p.category,
+              rr.id as return_id,
+              rr.status as return_status,
+              rr.type as return_type,
+              rr.reason as return_reason,
+              COALESCE(rr.rejection_reason, rr.admin_notes) as rejection_reason,
+              rr.admin_notes,
+              rr.photo_urls as return_photo_urls,
+              rr.video_url as return_video_url,
+              rr.created_at as return_created_at,
+              rr.updated_at as return_updated_at,
+              rr.approved_at as return_approved_at,
+              rr.rejected_at as return_rejected_at
+       FROM order_items oi
+       JOIN products p ON oi.product_id = p.id
+       LEFT JOIN return_requests rr ON (rr.order_id = oi.order_id AND (rr.order_item_id = oi.id OR rr.product_id = oi.product_id))
+       WHERE oi.order_id = $1`,
       [id]
     );
 

@@ -45,6 +45,12 @@ const initDbTables = async () => {
         ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2),
         ADD COLUMN IF NOT EXISTS return_exchange_available BOOLEAN DEFAULT TRUE;
 
+      ALTER TABLE return_requests
+        ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
+        ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS processed_by INTEGER;
+
       CREATE TABLE IF NOT EXISTS return_requests (
         id              SERIAL PRIMARY KEY,
         order_id        INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
