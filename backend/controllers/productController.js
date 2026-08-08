@@ -60,13 +60,17 @@ const getProducts = async (req, res, next) => {
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const sortMap = {
-      price_asc:        'price ASC',
-      price_desc:       'price DESC',
-      rating_desc:      'rating DESC',
-      created_at_desc:  'created_at DESC',
-      popularity:       'review_count DESC',
+      price_asc:        'price ASC, id DESC',
+      price_desc:       'price DESC, id DESC',
+      rating_desc:      'rating DESC, id DESC',
+      created_at_desc:  'id DESC',
+      popularity:       'review_count DESC, id DESC',
     };
-    const orderBy = sortMap[sort] || 'created_at DESC';
+    const orderBy = sortMap[sort] || 'id DESC';
+
+    const orderClause = (sort === 'created_at_desc' || !sort)
+      ? 'id DESC'
+      : `(sale_price IS NOT NULL) DESC, ${orderBy}`;
 
     // Count total
     const countResult = await db.query(`SELECT COUNT(*) FROM products ${where}`, params);
@@ -76,7 +80,7 @@ const getProducts = async (req, res, next) => {
     params.push(parseInt(limit));
     params.push(offset);
     const { rows } = await db.query(
-      `SELECT * FROM products ${where} ORDER BY (sale_price IS NOT NULL) DESC, ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT * FROM products ${where} ORDER BY ${orderClause} LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 

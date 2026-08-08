@@ -49,11 +49,8 @@ const evidenceFileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-// ─── Local Disk Storage: Products ────────────────────────────────────────────
-const productStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, IMAGE_DIR),
-  filename: (req, file, cb) => cb(null, uniqueFilename(file.originalname)),
-});
+// ─── Memory Storage: Products (Persistent Data URLs for Vercel/Local) ──────────
+const memoryStorage = multer.memoryStorage();
 
 // ─── Local Disk Storage: Return Evidence ─────────────────────────────────────
 const returnStorage = multer.diskStorage({
@@ -66,7 +63,7 @@ const returnStorage = multer.diskStorage({
 
 // ─── Multer Instances ─────────────────────────────────────────────────────────
 const upload = multer({
-  storage: productStorage,
+  storage: memoryStorage,
   fileFilter: imageFileFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
@@ -78,12 +75,16 @@ const uploadEvidence = multer({
 });
 
 /**
- * Get a public URL for a stored file.
- * Supports both local disk uploads and providers that expose `location`.
+ * Get a public URL or Data URL for a stored file.
+ * Supports memory buffers (Base64 Data URLs), S3 location, and local disk paths.
  */
 const getFileUrl = (file) => {
   if (!file) return null;
   if (file.location) return file.location;
+  if (file.buffer) {
+    const mime = file.mimetype || 'image/jpeg';
+    return `data:${mime};base64,${file.buffer.toString('base64')}`;
+  }
   if (!file.path) return null;
 
   const relative = path.relative(UPLOAD_BASE, file.path).replace(/\\/g, '/');

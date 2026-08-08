@@ -76,9 +76,10 @@ export default function AdminDashboard() {
       ]);
       setData(dash.data);
       setOrders(ord.data.orders || []);
-      // Load products for Promotions and Admin Products tab
-      const prodRes = await api.get('/products?limit=100');
-      setProducts(prodRes.data.products || []);
+      // Load products for Promotions and Admin Products tab sorted by newest first
+      const prodRes = await api.get('/products?limit=1000&sort=created_at_desc');
+      const loadedProducts = prodRes.data.products || [];
+      setProducts(loadedProducts.sort((a, b) => (b.id || 0) - (a.id || 0)));
     } catch (err) {
       setDashboardError(true);
       toast.error(err.response?.data?.message || 'Failed to load dashboard data');
