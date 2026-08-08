@@ -118,7 +118,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-[#6366F1] flex-shrink-0" />
-              <span className="break-all">support@nexcart.com</span>
+              <span className="break-all">liveserver09061997@gmail.com</span>
             </div>
           </div>
         </div>
